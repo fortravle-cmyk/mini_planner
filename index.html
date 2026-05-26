@@ -1,204 +1,2462 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Schedule Garden - Miniature Construction Lab Planner</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="bg-world" aria-hidden="true"></div>
-<div class="bg-blur-overlay" aria-hidden="true"></div>
-<div class="bg-dark-overlay" aria-hidden="true"></div>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schedule Garden | Miniature Construction Lab Planner</title>
+  <meta name="description" content="건설 연구원용 Daily, Weekly, Monthly 미니어쳐 일정관리 웹앱" />
 
-<div class="wrap">
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-icon">🏗️</div>
-      <div>
-        <h1>Schedule Garden</h1>
-        <p>Miniature Construction Lab Planner</p>
-      </div>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Varela+Round&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --sky: #bfe8ff;
+      --sky-deep: #84cfff;
+      --ground: #bde8bd;
+      --ground-deep: #79c77c;
+
+      --ink: #172033;
+      --ink-soft: #4b5a70;
+      --muted: #718096;
+      --white: #ffffff;
+      --cream: #fff7df;
+
+      --panel: rgba(255, 255, 255, 0.82);
+      --panel-strong: rgba(255, 255, 255, 0.94);
+      --panel-line: rgba(23, 32, 51, 0.12);
+
+      --blue: #18b7e8;
+      --purple: #9457e8;
+      --orange: #ff9f1c;
+      --green: #33c481;
+      --red: #ff5a4f;
+      --yellow: #ffd43b;
+
+      --study-soft: #d9f6ff;
+      --research-soft: #eadfff;
+      --work-soft: #fff0c2;
+      --life-soft: #dff8ea;
+      --urgent-soft: #ffe2df;
+
+      --shadow: 0 20px 50px rgba(39, 64, 98, 0.20);
+      --toy-shadow: 0 7px 0 rgba(23, 32, 51, 0.13);
+      --toy-shadow-small: 0 4px 0 rgba(23, 32, 51, 0.10);
+
+      --radius-xl: 26px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      min-height: 100%;
+      font-family: "Nunito", "Noto Sans KR", sans-serif;
+      color: var(--ink);
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 14% 10%, rgba(255,255,255,0.9) 0 90px, transparent 96px),
+        radial-gradient(circle at 86% 12%, rgba(255,212,59,0.72) 0 72px, transparent 76px),
+        linear-gradient(180deg, var(--sky) 0%, var(--sky-deep) 38%, var(--ground) 38%, var(--ground-deep) 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -5;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.18) 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: 0.48;
+      pointer-events: none;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    h1, h2, h3, h4,
+    .brand-icon,
+    .toy-btn,
+    .view-tab,
+    .kpi b,
+    .time-label,
+    .month-date,
+    .week-head {
+      font-family: "Varela Round", "Noto Sans KR", sans-serif;
+    }
+
+    /* =========================
+       MINIATURE CONSTRUCTION WORLD
+    ========================== */
+    .mini-world {
+      position: fixed;
+      inset: 0;
+      z-index: -4;
+      pointer-events: none;
+      overflow: hidden;
+      filter: saturate(1.15);
+    }
+
+    .cloud {
+      position: absolute;
+      width: 138px;
+      height: 42px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.80);
+      box-shadow: 0 8px 20px rgba(62, 97, 135, 0.10);
+      animation: cloudMove 48s ease-in-out infinite;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.9);
+    }
+
+    .cloud::before {
+      width: 58px;
+      height: 58px;
+      left: 22px;
+      top: -24px;
+    }
+
+    .cloud::after {
+      width: 44px;
+      height: 44px;
+      right: 26px;
+      top: -14px;
+    }
+
+    .cloud.one {
+      left: 5vw;
+      top: 11vh;
+    }
+
+    .cloud.two {
+      right: 14vw;
+      top: 16vh;
+      transform: scale(0.76);
+      animation-delay: -16s;
+    }
+
+    @keyframes cloudMove {
+      0%, 100% { translate: -24px 0; }
+      50% { translate: 50px 0; }
+    }
+
+    .model-plane {
+      position: absolute;
+      left: 50%;
+      bottom: -190px;
+      width: min(1400px, 120vw);
+      height: 520px;
+      transform: translateX(-50%) perspective(1000px) rotateX(62deg) rotateZ(-1.5deg);
+      border-radius: 110px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.17) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.17) 1px, transparent 1px),
+        #76c979;
+      background-size: 54px 54px;
+      box-shadow: inset 0 -18px 60px rgba(48, 112, 55, 0.20);
+    }
+
+    .model-road {
+      position: absolute;
+      left: 50%;
+      bottom: -114px;
+      width: 300px;
+      height: 590px;
+      transform: translateX(-50%) perspective(780px) rotateX(62deg);
+      border-radius: 82px 82px 0 0;
+      background: #566273;
+      box-shadow: 0 18px 45px rgba(23,32,51,0.18);
+    }
+
+    .model-road::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 24px;
+      width: 7px;
+      height: 500px;
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: repeating-linear-gradient(180deg, #fff 0 26px, transparent 26px 54px);
+      opacity: 0.78;
+    }
+
+    .toy-building {
+      position: absolute;
+      bottom: 146px;
+      width: 66px;
+      height: 86px;
+      border-radius: 15px 15px 7px 7px;
+      background: linear-gradient(180deg, #ffffff, #dff3ff);
+      box-shadow: 0 10px 0 rgba(23,32,51,0.11);
+      opacity: 0.92;
+    }
+
+    .toy-building::before {
+      content: "";
+      position: absolute;
+      inset: 13px 10px;
+      border-radius: 5px;
+      background:
+        repeating-linear-gradient(90deg, #18b7e8 0 7px, transparent 7px 14px),
+        repeating-linear-gradient(0deg, rgba(23,32,51,0.08) 0 9px, transparent 9px 18px);
+      opacity: 0.68;
+    }
+
+    .toy-building.b1 { left: 9vw; transform: scale(0.92); }
+    .toy-building.b2 { right: 10vw; bottom: 190px; transform: scale(1.06); }
+    .toy-building.b3 { left: 23vw; bottom: 105px; transform: scale(0.72); }
+
+    .crane {
+      position: absolute;
+      right: 23vw;
+      bottom: 165px;
+      width: 120px;
+      height: 115px;
+      opacity: 0.75;
+    }
+
+    .crane .mast {
+      position: absolute;
+      left: 30px;
+      bottom: 0;
+      width: 12px;
+      height: 95px;
+      border-radius: 4px;
+      background: #ffb703;
+      box-shadow: 0 7px 0 rgba(23,32,51,0.10);
+    }
+
+    .crane .arm {
+      position: absolute;
+      left: 16px;
+      top: 20px;
+      width: 100px;
+      height: 10px;
+      border-radius: 999px;
+      background: #ffd43b;
+    }
+
+    .crane .hook {
+      position: absolute;
+      right: 12px;
+      top: 29px;
+      width: 3px;
+      height: 36px;
+      background: #172033;
+      opacity: 0.45;
+    }
+
+    .crane .hook::after {
+      content: "";
+      position: absolute;
+      left: -7px;
+      bottom: -8px;
+      width: 16px;
+      height: 12px;
+      border-radius: 3px;
+      border: 3px solid #172033;
+      border-top: 0;
+    }
+
+    .cone {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-left: 13px solid transparent;
+      border-right: 13px solid transparent;
+      border-bottom: 42px solid #ff7a1a;
+      filter: drop-shadow(0 8px 0 rgba(23,32,51,0.10));
+    }
+
+    .cone::after {
+      content: "";
+      position: absolute;
+      left: -9px;
+      top: 25px;
+      width: 18px;
+      height: 5px;
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    .cone.c1 { left: 34vw; bottom: 120px; transform: scale(0.7); }
+    .cone.c2 { right: 33vw; bottom: 130px; transform: scale(0.58); }
+
+    /* =========================
+       APP LAYOUT
+    ========================== */
+    .app-shell {
+      width: min(1360px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 22px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
+      border-radius: 17px;
+      display: grid;
+      place-items: center;
+      font-size: 1.55rem;
+      color: #172033;
+      background: linear-gradient(145deg, #fff6b8, #ffd43b 60%, #ffb703);
+      border: 3px solid rgba(255,255,255,0.95);
+      box-shadow: var(--toy-shadow);
+    }
+
+    .brand h1 {
+      font-size: clamp(1.6rem, 2.5vw, 2.25rem);
+      line-height: 1;
+      font-weight: 900;
+      color: var(--white);
+      text-shadow: 0 2px 12px rgba(23,32,51,0.16);
+      white-space: nowrap;
+    }
+
+    .brand p {
+      margin-top: 4px;
+      color: rgba(255,255,255,0.88);
+      font-size: 0.82rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toy-btn {
+      cursor: pointer;
+      border-radius: 13px;
+      padding: 9px 13px;
+      background: rgba(255,255,255,0.78);
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 900;
+      border: 2px solid rgba(255,255,255,0.92);
+      box-shadow: var(--toy-shadow-small);
+      transition: 0.14s ease;
+      white-space: nowrap;
+    }
+
+    .toy-btn:hover {
+      transform: translateY(-2px);
+      background: #fff;
+    }
+
+    .toy-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(23,32,51,0.12);
+    }
+
+    .toy-btn.primary {
+      background: var(--blue);
+      color: #04202b;
+      border-color: rgba(255,255,255,0.95);
+    }
+
+    .toy-btn.success {
+      background: var(--green);
+      color: #082d1d;
+      border-color: rgba(255,255,255,0.95);
+    }
+
+    .toy-btn.danger {
+      background: var(--red);
+      color: #fff;
+      border-color: rgba(255,255,255,0.95);
+    }
+
+    /* Compact hero */
+    .hero-card {
+      position: relative;
+      height: 124px;
+      margin-bottom: 14px;
+      padding: 16px 18px;
+      border-radius: 24px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.28);
+      border: 2px solid rgba(255,255,255,0.55);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 78% 28%, rgba(255,255,255,0.46), transparent 9rem),
+        linear-gradient(120deg, rgba(255,255,255,0.18), transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) 300px;
+      gap: 18px;
+      align-items: center;
+      height: 100%;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-bottom: 7px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.72);
+      color: #0f7894;
+      font-size: 0.72rem;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,0.88);
+    }
+
+    .hero-title {
+      font-size: clamp(1.55rem, 3vw, 2.55rem);
+      line-height: 1.02;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -0.04em;
+      text-shadow: 0 2px 12px rgba(23,32,51,0.16);
+      word-break: keep-all;
+    }
+
+    .hero-sub {
+      margin-top: 6px;
+      color: rgba(255,255,255,0.88);
+      font-size: 0.86rem;
+      line-height: 1.45;
+      font-weight: 800;
+      word-break: keep-all;
+    }
+
+    .today-mini {
+      position: relative;
+      height: 94px;
+      border-radius: 21px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.42), rgba(255,255,255,0.16)),
+        rgba(255,255,255,0.20);
+      border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 7px 0 rgba(23,32,51,0.10);
+    }
+
+    .today-mini .mini-grid {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.25) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,0.25) 1px, transparent 1px);
+      background-size: 22px 22px;
+      opacity: 0.7;
+    }
+
+    .today-mini .mini-road {
+      position: absolute;
+      left: 50%;
+      bottom: -80px;
+      width: 125px;
+      height: 180px;
+      transform: translateX(-50%) perspective(420px) rotateX(62deg);
+      border-radius: 54px 54px 0 0;
+      background: #566273;
+    }
+
+    .today-mini .mini-block {
+      position: absolute;
+      min-width: 72px;
+      padding: 6px 9px;
+      border-radius: 13px;
+      background: rgba(255,255,255,0.95);
+      color: var(--ink);
+      font-size: 0.68rem;
+      font-weight: 900;
+      box-shadow: 0 5px 0 rgba(23,32,51,0.12);
+      text-align: center;
+    }
+
+    .mini-block.m1 { left: 18px; top: 16px; rotate: -5deg; }
+    .mini-block.m2 { right: 20px; top: 20px; rotate: 4deg; }
+    .mini-block.m3 { left: 50%; bottom: 14px; translate: -50% 0; }
+
+    /* =========================
+       DASHBOARD
+    ========================== */
+    .dashboard {
+      display: grid;
+      grid-template-columns: 306px minmax(520px, 1fr) 306px;
+      gap: 14px;
+      align-items: stretch;
+      height: clamp(620px, calc(100vh - 198px), 720px);
+      min-height: 0;
+    }
+
+    .panel {
+      min-height: 0;
+      height: 100%;
+      border-radius: var(--radius-xl);
+      background-color: var(--panel);
+      background-image:
+        linear-gradient(rgba(24,183,232,0.10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(24,183,232,0.10) 1px, transparent 1px);
+      background-size: 24px 24px;
+      border: 2px solid rgba(255,255,255,0.78);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow), inset 0 3px 0 rgba(255,255,255,0.55);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-head {
+      flex: 0 0 auto;
+      padding: 15px 16px 10px;
+      border-bottom: 2px dashed rgba(23,32,51,0.11);
+      background: rgba(255,255,255,0.32);
+    }
+
+    .panel-title {
+      color: var(--ink);
+      font-size: 1.05rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-sub {
+      margin-top: 3px;
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      font-weight: 800;
+      line-height: 1.35;
+      word-break: keep-all;
+    }
+
+    .view-tabs {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(23,32,51,0.08);
+    }
+
+    .view-tab {
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 8px 4px;
+      background: rgba(255,255,255,0.72);
+      color: var(--ink-soft);
+      border: 2px solid rgba(23,32,51,0.08);
+      box-shadow: 0 3px 0 rgba(23,32,51,0.08);
+      font-size: 0.78rem;
+      font-weight: 900;
+      transition: 0.13s ease;
+    }
+
+    .view-tab.active {
+      background: var(--yellow);
+      color: #2c2400;
+      border-color: rgba(255,255,255,0.9);
+      box-shadow: 0 4px 0 rgba(164,124,0,0.17);
+    }
+
+    /* =========================
+       FORM
+    ========================== */
+    .form-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px 16px 14px;
+      display: grid;
+      gap: 9px;
+      overflow-y: auto;
+      align-content: start;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 4px;
+      color: #52637a;
+      font-size: 0.68rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 2px solid rgba(23,32,51,0.10);
+      background: rgba(255,255,255,0.92);
+      color: var(--ink);
+      outline: none;
+      font-size: 0.82rem;
+      font-weight: 800;
+      transition: 0.15s ease;
+      box-shadow: inset 0 2px 4px rgba(23,32,51,0.04);
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--blue);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(24,183,232,0.18);
+    }
+
+    .field textarea {
+      min-height: 58px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .category-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .cat-pill {
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 6px 8px;
+      color: var(--ink);
+      font-size: 0.68rem;
+      font-weight: 900;
+      opacity: 0.56;
+      border: 2px solid rgba(255,255,255,0.7);
+      box-shadow: 0 3px 0 rgba(23,32,51,0.10);
+      transition: 0.13s ease;
+    }
+
+    .cat-pill.active {
+      opacity: 1;
+      translate: 0 -1px;
+      box-shadow: 0 4px 0 rgba(23,32,51,0.14);
+    }
+
+    .cat-study { background: var(--study-soft); color: #07566b; }
+    .cat-research { background: var(--research-soft); color: #57328c; }
+    .cat-work { background: var(--work-soft); color: #6c5300; }
+    .cat-life { background: var(--life-soft); color: #136b44; }
+    .cat-urgent { background: var(--urgent-soft); color: #9e2b1f; }
+
+    .toggle-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 13px;
+      background: rgba(255,255,255,0.62);
+      border: 2px solid rgba(23,32,51,0.08);
+      color: var(--ink);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .switch {
+      flex: 0 0 auto;
+      width: 43px;
+      height: 24px;
+      border-radius: 999px;
+      padding: 3px;
+      background: #cbd5e1;
+      border: 2px solid rgba(255,255,255,0.9);
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .switch span {
+      display: block;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(23,32,51,0.18);
+      transition: 0.15s;
+    }
+
+    .switch.on {
+      background: var(--green);
+    }
+
+    .switch.on span {
+      translate: 19px 0;
+    }
+
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr 0.55fr;
+      gap: 8px;
+    }
+
+    /* =========================
+       CALENDAR
+    ========================== */
+    .main-calendar {
+      min-width: 0;
+    }
+
+    .calendar-toolbar {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 15px 16px 12px;
+      border-bottom: 2px dashed rgba(23,32,51,0.11);
+      background: rgba(255,255,255,0.34);
+    }
+
+    .date-title h2 {
+      color: var(--ink);
+      font-size: clamp(1.28rem, 2vw, 1.75rem);
+      line-height: 1.05;
+      font-weight: 900;
+    }
+
+    .date-title p {
+      margin-top: 3px;
+      color: var(--ink-soft);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .date-nav {
+      display: flex;
+      gap: 7px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      border: 2px solid rgba(23,32,51,0.08);
+      box-shadow: var(--toy-shadow-small);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 900;
+      transition: 0.13s;
+    }
+
+    .icon-btn:hover {
+      translate: 0 -2px;
+      background: #fff;
+    }
+
+    .icon-btn:active {
+      translate: 0 3px;
+      box-shadow: 0 1px 0 rgba(23,32,51,0.1);
+    }
+
+    .calendar-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 12px 16px 14px;
+      overflow: hidden;
+    }
+
+    .kpi-row {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .kpi {
+      min-height: 60px;
+      border-radius: 16px;
+      padding: 9px 8px;
+      background: rgba(255,255,255,0.70);
+      border: 2px solid rgba(255,255,255,0.88);
+      box-shadow: 0 4px 0 rgba(23,32,51,0.06);
+      text-align: center;
+    }
+
+    .kpi b {
+      display: block;
+      color: var(--ink);
+      font-size: clamp(1.15rem, 2vw, 1.48rem);
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    .kpi span {
+      display: block;
+      margin-top: 5px;
+      color: #0f7894;
+      font-size: 0.63rem;
+      font-weight: 900;
+      line-height: 1.15;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      word-break: keep-all;
+    }
+
+    .calendar-viewport {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .daily-view,
+    .weekly-view,
+    .monthly-view {
+      display: none;
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .daily-view.active,
+    .weekly-view.active,
+    .monthly-view.active {
+      display: block;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 7px;
+    }
+
+    .time-slot {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 10px;
+      min-height: 46px;
+      align-items: start;
+    }
+
+    .time-label {
+      padding-top: 8px;
+      color: #52637a;
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-align: right;
+      border-right: 2px dashed rgba(23,32,51,0.15);
+      padding-right: 10px;
+      white-space: nowrap;
+    }
+
+    .time-lane {
+      min-height: 46px;
+      padding: 6px;
+      border-radius: 14px;
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      background: rgba(255,255,255,0.48);
+      border: 2px dashed rgba(23,32,51,0.13);
+      cursor: pointer;
+      transition: 0.14s;
+    }
+
+    .time-lane:hover {
+      background: rgba(255,255,255,0.76);
+      border-color: rgba(24,183,232,0.5);
+    }
+
+    .task-card {
+      position: relative;
+      min-width: 0;
+      cursor: pointer;
+      border-radius: 14px;
+      padding: 9px 10px 9px 14px;
+      background: var(--task-bg, #fff);
+      color: var(--ink);
+      border: 2px solid rgba(255,255,255,0.78);
+      box-shadow: 0 5px 0 rgba(23,32,51,0.13), inset 0 3px 7px rgba(255,255,255,0.38);
+      overflow: hidden;
+      transition: 0.15s ease;
+    }
+
+    .task-card::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 5px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.55);
+    }
+
+    .task-card::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background: var(--task-color, var(--blue));
+    }
+
+    .task-card:hover {
+      transform: translateY(-2px) rotate(-0.2deg);
+      box-shadow: 0 8px 0 rgba(23,32,51,0.12), 0 12px 20px rgba(23,32,51,0.12);
+      z-index: 2;
+    }
+
+    .task-card.done {
+      opacity: 0.55;
+      filter: grayscale(0.35);
+    }
+
+    .task-card.done .task-title {
+      text-decoration: line-through;
+    }
+
+    .task-time {
+      margin-bottom: 2px;
+      color: rgba(23,32,51,0.62);
+      font-size: 0.66rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .task-title {
+      font-size: 0.82rem;
+      font-weight: 900;
+      line-height: 1.24;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .task-meta span {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.50);
+      color: rgba(23,32,51,0.72);
+      font-size: 0.58rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(100px, 1fr));
+      gap: 8px;
+      min-width: 760px;
+    }
+
+    .week-day {
+      min-height: 282px;
+      max-height: 430px;
+      overflow-y: auto;
+      padding: 8px;
+      border-radius: 17px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      background: rgba(255,255,255,0.52);
+      border: 2px solid rgba(255,255,255,0.84);
+      box-shadow: 0 4px 0 rgba(23,32,51,0.05);
+      cursor: pointer;
+      transition: 0.14s;
+    }
+
+    .week-day:hover {
+      background: rgba(255,255,255,0.78);
+      border-color: rgba(24,183,232,0.45);
+    }
+
+    .week-day.today {
+      background: rgba(255,243,191,0.92);
+      border-color: var(--yellow);
+      box-shadow: 0 5px 0 rgba(164,124,0,0.14);
+    }
+
+    .week-day-head {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 6px;
+      padding-bottom: 6px;
+      border-bottom: 2px dashed rgba(23,32,51,0.13);
+      color: var(--ink);
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .week-day-head span:last-child {
+      color: var(--ink-soft);
+      font-size: 0.68rem;
+      white-space: nowrap;
+    }
+
+    .weekday-row {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(86px, 1fr));
+      gap: 7px;
+      min-width: 700px;
+      margin-bottom: 7px;
+    }
+
+    .weekday-name {
+      text-align: center;
+      color: #0f7894;
+      font-size: 0.7rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(86px, 1fr));
+      gap: 7px;
+      min-width: 700px;
+    }
+
+    .month-cell {
+      min-height: 78px;
+      padding: 7px;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(255,255,255,0.52);
+      border: 2px solid rgba(255,255,255,0.84);
+      box-shadow: 0 4px 0 rgba(23,32,51,0.05);
+      cursor: pointer;
+      transition: 0.14s;
+      overflow: hidden;
+    }
+
+    .month-cell:hover {
+      background: rgba(255,255,255,0.78);
+      border-color: rgba(24,183,232,0.45);
+      transform: translateY(-1px);
+    }
+
+    .month-cell.muted {
+      opacity: 0.42;
+    }
+
+    .month-cell.today {
+      background: rgba(255,243,191,0.92);
+      border-color: var(--yellow);
+    }
+
+    .month-date {
+      flex: 0 0 auto;
+      color: var(--ink);
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .month-preview {
+      display: grid;
+      gap: 3px;
+      margin-top: auto;
+      min-width: 0;
+    }
+
+    .month-mini-task {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      border-radius: 999px;
+      padding: 2px 6px;
+      background: rgba(255,255,255,0.88);
+      color: var(--ink);
+      font-size: 0.56rem;
+      font-weight: 900;
+      box-shadow: 0 2px 0 rgba(23,32,51,0.08);
+    }
+
+    .empty {
+      border-radius: 14px;
+      padding: 12px 10px;
+      background: rgba(255,255,255,0.45);
+      border: 2px dashed rgba(23,32,51,0.14);
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+      line-height: 1.45;
+      text-align: center;
+      word-break: keep-all;
+    }
+
+    /* =========================
+       RIGHT SIDE
+    ========================== */
+    .side-scroll {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      display: grid;
+      align-content: start;
+    }
+
+    .side-section {
+      padding: 14px 16px;
+      border-top: 2px dashed rgba(23,32,51,0.10);
+    }
+
+    .side-section:first-child {
+      border-top: 0;
+    }
+
+    .today-list,
+    .focus-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .mini-progress {
+      height: 12px;
+      margin-top: 10px;
+      border-radius: 999px;
+      background: rgba(23,32,51,0.10);
+      border: 1px solid rgba(23,32,51,0.08);
+      overflow: hidden;
+    }
+
+    .mini-progress span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--orange), var(--yellow), var(--green));
+      transition: width 0.28s ease;
+    }
+
+    .focus-item {
+      display: grid;
+      grid-template-columns: 14px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 9px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.58);
+      border: 2px solid rgba(255,255,255,0.82);
+      box-shadow: 0 3px 0 rgba(23,32,51,0.06);
+      color: var(--ink);
+      font-size: 0.78rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .focus-item span:nth-child(2) {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .focus-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.5);
+    }
+
+    .delete-btn {
+      border-radius: 10px;
+      padding: 4px 7px;
+      background: rgba(23,32,51,0.08);
+      color: var(--ink);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    /* =========================
+       MODAL & TOAST
+    ========================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(23,32,51,0.42);
+      backdrop-filter: blur(14px);
+    }
+
+    .modal-backdrop.show {
+      display: grid;
+    }
+
+    .modal {
+      width: min(560px, 100%);
+      border-radius: 26px;
+      background: rgba(255,255,255,0.96);
+      color: var(--ink);
+      box-shadow: 0 32px 90px rgba(23,32,51,0.32);
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.94);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 18px 10px;
+      background: rgba(255,243,191,0.72);
+      border-bottom: 2px dashed rgba(23,32,51,0.10);
+    }
+
+    .modal-head h3 {
+      color: var(--ink);
+      font-size: 1.22rem;
+      line-height: 1.25;
+      font-weight: 900;
+      word-break: keep-all;
+    }
+
+    .modal-close {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      background: #f1f5f9;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 1.2rem;
+      font-weight: 900;
+    }
+
+    .modal-body {
+      padding: 16px 18px 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .modal .field label {
+      color: #52637a;
+    }
+
+    .modal .field input,
+    .modal .field textarea,
+    .modal .field select {
+      background: #f8fafc;
+      border: 2px solid #dbe3ef;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 9px;
+      justify-content: flex-end;
+      padding: 13px 18px 18px;
+      border-top: 1px solid #e2e8f0;
+      flex-wrap: wrap;
+    }
+
+    .modal-btn {
+      border-radius: 13px;
+      padding: 10px 13px;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-weight: 900;
+    }
+
+    .modal-btn.save {
+      background: var(--blue);
+      color: #04202b;
+    }
+
+    .modal-btn.delete {
+      background: #fee2e2;
+      color: #b91c1c;
+      margin-right: auto;
+    }
+
+    .modal-btn.cancel {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 3000;
+      display: none;
+      max-width: 360px;
+      padding: 13px 15px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.96);
+      color: var(--ink);
+      border: 2px solid rgba(255,255,255,0.95);
+      box-shadow: 0 20px 50px rgba(23,32,51,0.22);
+      font-size: 0.86rem;
+      font-weight: 900;
+      line-height: 1.45;
+    }
+
+    .toast.show {
+      display: block;
+      animation: toastUp 0.25s ease;
+    }
+
+    @keyframes toastUp {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(23,32,51,0.20);
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,0.6);
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================== */
+    @media (max-width: 1180px) {
+      .dashboard {
+        grid-template-columns: 306px minmax(0, 1fr);
+        height: auto;
+      }
+
+      .dashboard > aside:last-child {
+        grid-column: 1 / -1;
+        min-height: 220px;
+        display: flex;
+      }
+
+      .side-scroll {
+        grid-template-columns: repeat(3, 1fr);
+        display: grid;
+      }
+
+      .side-section {
+        border-top: 0;
+        border-left: 2px dashed rgba(23,32,51,0.10);
+      }
+
+      .side-section:first-child {
+        border-left: 0;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        width: min(100% - 24px, 1360px);
+        padding-top: 16px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .hero-card {
+        height: auto;
+      }
+
+      .hero-content {
+        grid-template-columns: 1fr;
+      }
+
+      .today-mini {
+        display: none;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        max-height: none;
+      }
+
+      .main-calendar {
+        height: 700px;
+      }
+
+      .dashboard > aside:last-child {
+        display: block;
+      }
+
+      .side-scroll {
+        display: block;
+      }
+
+      .side-section {
+        border-left: 0;
+        border-top: 2px dashed rgba(23,32,51,0.10);
+      }
+
+      .side-section:first-child {
+        border-top: 0;
+      }
+
+      .kpi-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .brand h1 {
+        white-space: normal;
+        font-size: 1.8rem;
+      }
+
+      .brand p {
+        white-space: normal;
+      }
+
+      .top-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .hero-title {
+        font-size: 1.9rem;
+      }
+
+      .form-grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .date-nav {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .main-calendar {
+        height: 720px;
+      }
+
+      .week-grid,
+      .month-grid,
+      .weekday-row {
+        min-width: 0;
+        grid-template-columns: 1fr;
+      }
+
+      .month-cell {
+        min-height: 74px;
+      }
+
+      .time-slot {
+        grid-template-columns: 48px minmax(0, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="mini-world" aria-hidden="true">
+    <div class="cloud one"></div>
+    <div class="cloud two"></div>
+    <div class="model-plane"></div>
+    <div class="model-road"></div>
+    <div class="toy-building b1"></div>
+    <div class="toy-building b2"></div>
+    <div class="toy-building b3"></div>
+    <div class="crane">
+      <div class="mast"></div>
+      <div class="arm"></div>
+      <div class="hook"></div>
     </div>
-    <div class="top-actions">
-      <button class="toy-btn" id="todayBtn">Today</button>
-      <button class="toy-btn success" id="notifyBtn">🔔 알림 허용</button>
-      <button class="toy-btn warning" id="summaryBtn">오늘 일정 요약</button>
-      <button class="toy-btn danger" id="resetAllBtn">전체 초기화</button>
-    </div>
-  </header>
-  <section class="hero">
-    <div class="hero-card">
-      <h2>건축 연구실의 미니어쳐 플래닝 보드</h2>
-      <p>Daily · Weekly · Monthly 보드를 전환하고, 연구 및 현장 일정 블럭을 직관적으로 조립해보세요.</p>
-    </div>
-    <div class="search-card">
-      <div class="search-row">
-        <input id="searchInput" type="text" placeholder="일정 검색하기"/>
-        <select id="filterCategory">
-          <option value="all">전체 카테고리</option>
-          <option value="study">Study</option>
-          <option value="research">Research</option>
-          <option value="fieldwork">Fieldwork</option>
-          <option value="life">Life</option>
-          <option value="urgent">Urgent</option>
-        </select>
-      </div>
-    </div>
-  </section>
-  <main class="layout">
-    <aside class="panel left-panel">
-      <div class="panel-head">
-        <h3>Research Block Panel</h3>
-        <p>날짜/시간 칸을 클릭하면 자동으로 설정됩니다.</p>
-      </div>
-      <div class="tabs">
-        <button class="tab active" data-view="daily">Daily</button>
-        <button class="tab" data-view="weekly">Weekly</button>
-        <button class="tab" data-view="monthly">Monthly</button>
-      </div>
-      <form class="form" id="taskForm">
-        <input type="hidden" id="taskId"/>
-        <div class="field">
-          <label for="title">일정 블럭 제목</label>
-          <input id="title" type="text" placeholder="예: 구역 A 지반 조사" required/>
-        </div>
-        <div class="two-col">
-          <div class="field">
-            <label for="date">날짜 지정</label>
-            <input id="date" type="date" required/>
-          </div>
-          <div class="field">
-            <label for="time">시작 시간</label>
-            <input id="time" type="time" required/>
-          </div>
-        </div>
-        <div class="two-col">
-          <div class="field">
-            <label for="duration">소요 시간</label>
-            <select id="duration">
-              <option value="30">30분</option>
-              <option value="60" selected>1시간</option>
-              <option value="90">1시간 30분</option>
-              <option value="120">2시간</option>
-              <option value="180">3시간</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="repeat">반복 패턴</label>
-            <select id="repeat">
-              <option value="none">없음</option>
-              <option value="daily">7일간 매일</option>
-              <option value="weekly">4주간 매주</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label>연구 카테고리</label>
-          <div class="category-row">
-            <button type="button" class="chip study active" data-category="study">Study</button>
-            <button type="button" class="chip research" data-category="research">Research</button>
-            <button type="button" class="chip work" data-category="fieldwork">Fieldwork</button>
-            <button type="button" class="chip life" data-category="life">Life</button>
-            <button type="button" class="chip urgent" data-category="urgent">Urgent</button>
-          </div>
-        </div>
-        <div class="field">
-          <label for="priority">중요도</label>
-          <select id="priority">
-            <option value="low">Low</option>
-            <option value="medium" selected>Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="note">세부 지시사항</label>
-          <textarea id="note" placeholder="메모 및 세부 사항"></textarea>
-        </div>
-        <div class="toggle-box">
-          <span>알림 푸시</span>
-          <div class="switch on" id="reminderSwitch"><span></span></div>
-        </div>
-        <button class="toy-btn primary" type="submit" id="submitBtn">일정 블럭 조립</button>
-        <button class="toy-btn" type="button" id="clearBtn">입력창 비우기</button>
-      </form>
-    </aside>
-    <section class="panel main-panel">
-      <div class="calendar-top">
+    <div class="cone c1"></div>
+    <div class="cone c2"></div>
+  </div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">🏗️</div>
         <div>
-          <h2 id="viewTitle">Daily View</h2>
-          <p id="viewSubtitle">오늘의 일정 계획</p>
-        </div>
-        <div class="date-nav">
-          <button class="icon-btn" id="prevBtn">‹</button>
-          <button class="icon-btn" id="goTodayBtn">●</button>
-          <button class="icon-btn" id="nextBtn">›</button>
+          <h1>Schedule Garden</h1>
+          <p>Miniature Construction Lab Planner</p>
         </div>
       </div>
-      <div class="calendar-body">
-        <div class="kpis">
-          <div class="kpi"><b id="kpiTotal">0</b><span>전체 블럭</span></div>
-          <div class="kpi"><b id="kpiToday">0</b><span>오늘 작업</span></div>
-          <div class="kpi"><b id="kpiDone">0%</b><span>진척도</span></div>
-          <div class="kpi"><b id="kpiHigh">0</b><span>경고(High)</span></div>
+
+      <div class="top-actions">
+        <button class="toy-btn" id="todayBtn">Today</button>
+        <button class="toy-btn success" id="notifyBtn">Enable Reminder</button>
+        <button class="toy-btn primary" id="quickAddBtn">+ New Block</button>
+      </div>
+    </header>
+
+    <section class="hero-card">
+      <div class="hero-content">
+        <div>
+          <div class="hero-kicker">Research planning on a miniature construction board</div>
+          <h2 class="hero-title">건축 모형판 위에 연구 일정을 블럭처럼 배치하세요.</h2>
+          <p class="hero-sub">Daily · Weekly · Monthly 뷰로 연구, 현장, 수업, 논문 일정을 작고 선명한 블럭 단위로 관리합니다.</p>
         </div>
-        <div class="viewport">
-          <div class="view active" id="dailyView">
-            <div class="timeline" id="dailyTimeline"></div>
-          </div>
-          <div class="view" id="weeklyView">
-            <div class="week-grid" id="weeklyGrid"></div>
-          </div>
-          <div class="view" id="monthlyView">
-            <div class="weekday-row" id="weekdayRow"></div>
-            <div class="month-grid" id="monthGrid"></div>
-          </div>
+
+        <div class="today-mini" aria-hidden="true">
+          <div class="mini-grid"></div>
+          <div class="mini-road"></div>
+          <div class="mini-block m1">BIM Check</div>
+          <div class="mini-block m2">Field Data</div>
+          <div class="mini-block m3">Paper Review</div>
         </div>
       </div>
     </section>
-    <aside class="panel right-panel">
-      <div class="panel-head">
-        <h3>오늘의 미니 보드</h3>
-        <p>다가오는 일정과 완료 상태</p>
+
+    <main class="dashboard">
+      <aside class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Research Block Panel</div>
+          <div class="panel-sub">연구, 현장, 수업, 논문 일정을 블럭 단위로 조립합니다.</div>
+        </div>
+
+        <div class="view-tabs">
+          <button type="button" class="view-tab active" data-view="daily">Daily</button>
+          <button type="button" class="view-tab" data-view="weekly">Weekly</button>
+          <button type="button" class="view-tab" data-view="monthly">Monthly</button>
+        </div>
+
+        <form class="form-body" id="scheduleForm">
+          <input type="hidden" id="taskId" />
+
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" type="text" placeholder="예: BIM 모델 검토, 논문 수정" required />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="date">Date</label>
+              <input id="date" type="date" required />
+            </div>
+
+            <div class="field">
+              <label for="time">Time</label>
+              <input id="time" type="time" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="duration">Duration</label>
+              <select id="duration">
+                <option value="30">30 min</option>
+                <option value="60" selected>1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+                <option value="180">3 hours</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="repeat">Repeat</label>
+              <select id="repeat">
+                <option value="none">None</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Category</label>
+            <div class="category-row" id="categoryRow">
+              <button type="button" class="cat-pill cat-study active" data-category="study">Study</button>
+              <button type="button" class="cat-pill cat-research" data-category="research">Research</button>
+              <button type="button" class="cat-pill cat-work" data-category="work">Fieldwork</button>
+              <button type="button" class="cat-pill cat-life" data-category="life">Life</button>
+              <button type="button" class="cat-pill cat-urgent" data-category="urgent">Urgent</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="priority">Priority</label>
+            <select id="priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="note">Note</label>
+            <textarea id="note" placeholder="회의 메모, 논문 수정 사항, 현장 데이터 확인 내용 등"></textarea>
+          </div>
+
+          <div class="toggle-line">
+            <span>Reminder at task time</span>
+            <div class="switch on" id="reminderSwitch" role="button" tabindex="0" aria-label="Toggle reminder"><span></span></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="toy-btn primary" type="submit">Save</button>
+            <button class="toy-btn" type="button" id="clearFormBtn">Clear</button>
+          </div>
+        </form>
+      </aside>
+
+      <section class="panel main-calendar">
+        <div class="calendar-toolbar">
+          <div class="date-title">
+            <h2 id="calendarTitle">Daily Site Board</h2>
+            <p id="calendarSub">Miniature view of your day</p>
+          </div>
+
+          <div class="date-nav">
+            <button class="icon-btn" id="prevBtn" title="Previous">‹</button>
+            <button class="icon-btn" id="currentBtn" title="Current">●</button>
+            <button class="icon-btn" id="nextBtn" title="Next">›</button>
+          </div>
+        </div>
+
+        <div class="calendar-body">
+          <div class="kpi-row">
+            <div class="kpi"><b id="kpiTotal">0</b><span>Total blocks</span></div>
+            <div class="kpi"><b id="kpiToday">0</b><span>Today</span></div>
+            <div class="kpi"><b id="kpiDone">0%</b><span>Completion</span></div>
+            <div class="kpi"><b id="kpiFocus">0</b><span>High priority</span></div>
+          </div>
+
+          <div class="calendar-viewport">
+            <div class="daily-view active" id="dailyView">
+              <div class="timeline" id="dailyTimeline"></div>
+            </div>
+
+            <div class="weekly-view" id="weeklyView">
+              <div class="week-grid" id="weekGrid"></div>
+            </div>
+
+            <div class="monthly-view" id="monthlyView">
+              <div class="weekday-row" id="weekdayRow"></div>
+              <div class="month-grid" id="monthGrid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="side-scroll">
+          <div class="side-section">
+            <div class="panel-title">Lab Brief</div>
+            <div class="panel-sub" id="todayBriefText">오늘 일정 요약</div>
+            <div class="mini-progress"><span id="progressBar"></span></div>
+          </div>
+
+          <div class="side-section">
+            <div class="panel-title">Next Up</div>
+            <div class="today-list" id="nextUpList"></div>
+          </div>
+
+          <div class="side-section">
+            <div class="panel-title">Priority Blocks</div>
+            <div class="focus-list" id="focusList"></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="taskModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Schedule Detail</h3>
+        <button class="modal-close" id="modalClose">×</button>
       </div>
-      <div class="right-scroll">
-        <section class="side-box">
-          <h4>오늘 진척도</h4>
-          <p id="todayProgressText">오늘 조립할 블럭이 없습니다.</p>
-          <div class="progress"><span id="todayProgressBar"></span></div>
-        </section>
-        <section class="side-box">
-          <h4>Next Up</h4>
-          <div class="side-list" id="nextList"></div>
-        </section>
-        <section class="side-box">
-          <h4>High 일정</h4>
-          <div class="side-list" id="highList"></div>
-        </section>
+
+      <div class="modal-body" id="modalBody"></div>
+
+      <div class="modal-actions">
+        <button class="modal-btn delete" id="modalDelete">Delete</button>
+        <button class="modal-btn cancel" id="modalDone">Toggle Done</button>
+        <button class="modal-btn save" id="modalEdit">Edit</button>
       </div>
-    </aside>
-  </main>
-</div>
-<div class="modal-backdrop" id="modalBackdrop">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="modalTitle">블럭 상세</h3>
-      <button class="modal-close" id="modalClose">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="info"><label>시간</label><p id="modalTime"></p></div>
-      <div class="info"><label>분류 정보</label><p id="modalMeta"></p></div>
-      <div class="info"><label>세부 지시사항</label><textarea id="modalNote" readonly></textarea></div>
-    </div>
-    <div class="modal-actions">
-      <button class="toy-btn danger" id="deleteTaskBtn">파기</button>
-      <button class="toy-btn success" id="doneTaskBtn">완료 보고</button>
-      <button class="toy-btn primary" id="editTaskBtn">수정하기</button>
     </div>
   </div>
-</div>
-<div class="toast" id="toast"></div>
 
-<script src="app.js"></script>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const STORAGE_KEY = 'scheduleGardenConstructionLabV1';
+
+      const categoryColors = {
+        study: '#18b7e8',
+        research: '#9457e8',
+        work: '#ff9f1c',
+        life: '#33c481',
+        urgent: '#ff5a4f'
+      };
+
+      const categoryBackgrounds = {
+        study: '#d9f6ff',
+        research: '#eadfff',
+        work: '#fff0c2',
+        life: '#dff8ea',
+        urgent: '#ffe2df'
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      const uid = () => {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return `task-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      };
+
+      let tasks = loadTasks();
+      let activeView = 'daily';
+      let currentDate = new Date();
+      let selectedCategory = 'study';
+      let reminderOn = true;
+      let selectedTaskId = null;
+      const notified = new Set();
+
+      function pad(n) {
+        return String(n).padStart(2, '0');
+      }
+
+      function toDateKey(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      }
+
+      function parseLocalDate(key) {
+        const [y, m, d] = key.split('-').map(Number);
+        return new Date(y, m - 1, d);
+      }
+
+      function startOfWeek(date) {
+        const d = new Date(date);
+        d.setDate(d.getDate() - d.getDay());
+        d.setHours(0, 0, 0, 0);
+        return d;
+      }
+
+      function sameDate(a, b) {
+        return toDateKey(a) === toDateKey(b);
+      }
+
+      function getTaskDateTime(task) {
+        return new Date(`${task.date}T${task.time || '00:00'}`);
+      }
+
+      function escapeHtml(text) {
+        return String(text || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function loadTasks() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) return JSON.parse(saved);
+        } catch (e) {
+          console.warn(e);
+        }
+
+        const today = toDateKey(new Date());
+
+        return [
+          {
+            id: uid(),
+            title: 'BIM 모델 검토',
+            date: today,
+            time: '09:30',
+            duration: 60,
+            repeat: 'none',
+            category: 'research',
+            priority: 'high',
+            note: '외벽 패널 상세설계 자동화 모델 검토',
+            reminder: true,
+            done: false
+          },
+          {
+            id: uid(),
+            title: '현장 데이터 정리',
+            date: today,
+            time: '14:00',
+            duration: 90,
+            repeat: 'none',
+            category: 'work',
+            priority: 'medium',
+            note: '건설안전 데이터셋 및 사례 정리',
+            reminder: true,
+            done: false
+          }
+        ];
+      }
+
+      function saveTasks() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      }
+
+      function showToast(message) {
+        const toast = $('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2400);
+      }
+
+      function requestNotificationPermission() {
+        if (!('Notification' in window)) {
+          showToast('이 브라우저는 알림 기능을 지원하지 않습니다.');
+          return;
+        }
+
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            showToast('알림이 활성화되었습니다. 페이지가 열려 있을 때 일정 알림을 받을 수 있어요.');
+          } else {
+            showToast('알림 권한이 허용되지 않았습니다.');
+          }
+        });
+      }
+
+      function checkReminders() {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+        const now = new Date();
+
+        tasks.forEach(task => {
+          if (!task.reminder || task.done) return;
+
+          const due = getTaskDateTime(task);
+          const diff = Math.abs(now - due);
+          const key = `${task.id}-${task.date}-${task.time}`;
+
+          if (diff < 30000 && !notified.has(key)) {
+            notified.add(key);
+            new Notification('Schedule Garden', {
+              body: `${task.time} · ${task.title}`
+            });
+          }
+        });
+      }
+
+      function getTasksForDate(date) {
+        const key = toDateKey(date);
+        return tasks
+          .filter(task => task.date === key)
+          .sort((a, b) => `${a.time}`.localeCompare(`${b.time}`));
+      }
+
+      function getWeekDates(date) {
+        const start = startOfWeek(date);
+
+        return Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          return d;
+        });
+      }
+
+      function updateTitles() {
+        const dateText = currentDate.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          weekday: 'long'
+        });
+
+        const monthText = currentDate.toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long'
+        });
+
+        if (activeView === 'daily') {
+          $('calendarTitle').textContent = 'Daily Site Board';
+          $('calendarSub').textContent = dateText;
+        } else if (activeView === 'weekly') {
+          const week = getWeekDates(currentDate);
+          $('calendarTitle').textContent = 'Weekly Construction Map';
+          $('calendarSub').textContent =
+            `${week[0].toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} - ${week[6].toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}`;
+        } else {
+          $('calendarTitle').textContent = 'Monthly Urban Model';
+          $('calendarSub').textContent = monthText;
+        }
+      }
+
+      function prefillDateTime(date, time = '09:00') {
+        currentDate = new Date(date);
+        $('date').value = toDateKey(currentDate);
+        $('time').value = time;
+        $('taskId').value = '';
+        $('title').focus();
+      }
+
+      function createTaskCard(task) {
+        const card = document.createElement('div');
+        card.className = `task-card ${task.done ? 'done' : ''}`;
+        card.style.setProperty('--task-color', categoryColors[task.category] || categoryColors.study);
+        card.style.setProperty('--task-bg', categoryBackgrounds[task.category] || '#ffffff');
+
+        card.innerHTML = `
+          <div class="task-time">${escapeHtml(task.time)} · ${task.duration} min</div>
+          <div class="task-title">${escapeHtml(task.title)}</div>
+          <div class="task-meta">
+            <span>${escapeHtml(task.category === 'work' ? 'fieldwork' : task.category)}</span>
+            <span>${escapeHtml(task.priority)}</span>
+            ${task.reminder ? '<span>reminder</span>' : ''}
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openTaskModal(task.id);
+        });
+
+        return card;
+      }
+
+      function renderDaily() {
+        const container = $('dailyTimeline');
+        container.innerHTML = '';
+
+        for (let hour = 6; hour <= 23; hour++) {
+          const time = `${pad(hour)}:00`;
+          const slotTasks = getTasksForDate(currentDate).filter(task => Number(task.time.split(':')[0]) === hour);
+
+          const row = document.createElement('div');
+          row.className = 'time-slot';
+
+          row.innerHTML = `
+            <div class="time-label">${time}</div>
+            <div class="time-lane" title="Click to add at ${time}"></div>
+          `;
+
+          const lane = row.querySelector('.time-lane');
+          lane.addEventListener('click', () => prefillDateTime(currentDate, time));
+
+          slotTasks.forEach(task => lane.appendChild(createTaskCard(task)));
+
+          container.appendChild(row);
+        }
+      }
+
+      function renderWeekly() {
+        const grid = $('weekGrid');
+        grid.innerHTML = '';
+
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        getWeekDates(currentDate).forEach((date, idx) => {
+          const day = document.createElement('div');
+          day.className = 'week-day';
+
+          if (sameDate(date, new Date())) day.classList.add('today');
+
+          day.innerHTML = `
+            <div class="week-day-head">
+              <span>${weekdays[idx]}</span>
+              <span>${date.getMonth() + 1}/${date.getDate()}</span>
+            </div>
+          `;
+
+          day.addEventListener('click', () => {
+            prefillDateTime(date, '09:00');
+            showToast(`${date.getMonth() + 1}/${date.getDate()}에 새 일정을 추가할 수 있습니다.`);
+          });
+
+          const dayTasks = getTasksForDate(date);
+
+          if (dayTasks.length) {
+            dayTasks.forEach(task => day.appendChild(createTaskCard(task)));
+          } else {
+            const empty = document.createElement('div');
+            empty.className = 'empty';
+            empty.textContent = 'Click to add block';
+            day.appendChild(empty);
+          }
+
+          grid.appendChild(day);
+        });
+      }
+
+      function renderMonthly() {
+        $('weekdayRow').innerHTML = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+          .map(d => `<div class="weekday-name">${d}</div>`)
+          .join('');
+
+        const grid = $('monthGrid');
+        grid.innerHTML = '';
+
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const first = new Date(year, month, 1);
+        const start = new Date(first);
+        start.setDate(1 - first.getDay());
+
+        const today = new Date();
+
+        for (let i = 0; i < 42; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+
+          const dayTasks = getTasksForDate(d);
+          const cell = document.createElement('div');
+          cell.className = 'month-cell';
+
+          if (d.getMonth() !== month) cell.classList.add('muted');
+          if (sameDate(d, today)) cell.classList.add('today');
+
+          cell.innerHTML = `
+            <div class="month-date">${d.getDate()}</div>
+            <div class="month-preview"></div>
+          `;
+
+          cell.addEventListener('click', () => {
+            prefillDateTime(d, '09:00');
+            showToast(`${d.getMonth() + 1}/${d.getDate()}에 새 일정을 추가할 수 있습니다.`);
+          });
+
+          const preview = cell.querySelector('.month-preview');
+
+          dayTasks.slice(0, 3).forEach(task => {
+            const mini = document.createElement('div');
+            mini.className = 'month-mini-task';
+            mini.style.borderLeft = `5px solid ${categoryColors[task.category] || categoryColors.study}`;
+            mini.textContent = `${task.time} ${task.title}`;
+
+            mini.addEventListener('click', (e) => {
+              e.stopPropagation();
+              openTaskModal(task.id);
+            });
+
+            preview.appendChild(mini);
+          });
+
+          if (dayTasks.length > 3) {
+            const more = document.createElement('div');
+            more.className = 'month-mini-task';
+            more.textContent = `+${dayTasks.length - 3} more`;
+            preview.appendChild(more);
+          }
+
+          grid.appendChild(cell);
+        }
+      }
+
+      function renderSidebars() {
+        const todayTasks = getTasksForDate(new Date());
+        const done = todayTasks.filter(t => t.done).length;
+        const completion = todayTasks.length ? Math.round(done / todayTasks.length * 100) : 0;
+
+        $('todayBriefText').textContent = todayTasks.length
+          ? `${todayTasks.length}개의 연구 블럭 · 완료율 ${completion}%`
+          : '오늘은 아직 등록된 연구 블럭이 없습니다.';
+
+        $('progressBar').style.width = `${completion}%`;
+
+        const nextList = $('nextUpList');
+        nextList.innerHTML = '';
+
+        const upcoming = tasks
+          .filter(t => !t.done && getTaskDateTime(t) >= new Date())
+          .sort((a, b) => getTaskDateTime(a) - getTaskDateTime(b))
+          .slice(0, 4);
+
+        if (!upcoming.length) {
+          nextList.innerHTML = '<div class="empty">다가오는 일정이 없습니다.</div>';
+        } else {
+          upcoming.forEach(task => nextList.appendChild(createTaskCard(task)));
+        }
+
+        const focusList = $('focusList');
+        focusList.innerHTML = '';
+
+        const high = tasks
+          .filter(t => !t.done && t.priority === 'high')
+          .sort((a, b) => getTaskDateTime(a) - getTaskDateTime(b))
+          .slice(0, 5);
+
+        if (!high.length) {
+          focusList.innerHTML = '<div class="empty">High priority 일정이 없습니다.</div>';
+        } else {
+          high.forEach(task => {
+            const item = document.createElement('div');
+            item.className = 'focus-item';
+
+            item.innerHTML = `
+              <span class="focus-dot" style="background:${categoryColors[task.category] || categoryColors.study}"></span>
+              <span>${escapeHtml(task.title)}</span>
+              <button class="delete-btn" title="Done">✓</button>
+            `;
+
+            item.querySelector('button').addEventListener('click', (e) => {
+              e.stopPropagation();
+              task.done = true;
+              saveTasks();
+              renderAll();
+              showToast('Priority block을 완료 처리했습니다.');
+            });
+
+            item.addEventListener('click', () => openTaskModal(task.id));
+            focusList.appendChild(item);
+          });
+        }
+      }
+
+      function renderKpis() {
+        const todayTasks = getTasksForDate(new Date());
+        const done = tasks.filter(t => t.done).length;
+
+        $('kpiTotal').textContent = tasks.length;
+        $('kpiToday').textContent = todayTasks.length;
+        $('kpiDone').textContent = tasks.length ? `${Math.round(done / tasks.length * 100)}%` : '0%';
+        $('kpiFocus').textContent = tasks.filter(t => t.priority === 'high' && !t.done).length;
+      }
+
+      function renderAll() {
+        updateTitles();
+        renderKpis();
+        renderDaily();
+        renderWeekly();
+        renderMonthly();
+        renderSidebars();
+      }
+
+      function setView(view) {
+        activeView = view;
+
+        document.querySelectorAll('.view-tab').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.view === view);
+        });
+
+        $('dailyView').classList.toggle('active', view === 'daily');
+        $('weeklyView').classList.toggle('active', view === 'weekly');
+        $('monthlyView').classList.toggle('active', view === 'monthly');
+
+        renderAll();
+      }
+
+      function clearForm() {
+        $('taskId').value = '';
+        $('title').value = '';
+        $('date').value = toDateKey(currentDate);
+        $('time').value = '09:00';
+        $('duration').value = '60';
+        $('repeat').value = 'none';
+        $('priority').value = 'medium';
+        $('note').value = '';
+
+        reminderOn = true;
+        $('reminderSwitch').classList.add('on');
+
+        setCategory('study');
+      }
+
+      function setCategory(category) {
+        selectedCategory = category;
+
+        document.querySelectorAll('.cat-pill').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.category === category);
+        });
+      }
+
+      function expandRepeat(baseTask) {
+        const repeat = baseTask.repeat;
+
+        if (repeat === 'none') return [baseTask];
+
+        const result = [{ ...baseTask, repeat: 'none' }];
+        const baseDate = parseLocalDate(baseTask.date);
+
+        const count = repeat === 'daily' ? 6 : repeat === 'weekly' ? 7 : 5;
+
+        for (let i = 1; i <= count; i++) {
+          const d = new Date(baseDate);
+
+          if (repeat === 'daily') d.setDate(baseDate.getDate() + i);
+          if (repeat === 'weekly') d.setDate(baseDate.getDate() + i * 7);
+          if (repeat === 'monthly') d.setMonth(baseDate.getMonth() + i);
+
+          result.push({
+            ...baseTask,
+            id: uid(),
+            date: toDateKey(d),
+            repeat: 'none'
+          });
+        }
+
+        return result;
+      }
+
+      function saveForm(e) {
+        e.preventDefault();
+
+        const id = $('taskId').value;
+
+        const task = {
+          id: id || uid(),
+          title: $('title').value.trim(),
+          date: $('date').value,
+          time: $('time').value,
+          duration: Number($('duration').value),
+          repeat: $('repeat').value,
+          category: selectedCategory,
+          priority: $('priority').value,
+          note: $('note').value.trim(),
+          reminder: reminderOn,
+          done: id ? (tasks.find(t => t.id === id)?.done || false) : false
+        };
+
+        if (!task.title || !task.date || !task.time) return;
+
+        if (id) {
+          tasks = tasks.map(t => t.id === id ? { ...task, repeat: 'none' } : t);
+          showToast('일정이 수정되었습니다.');
+        } else {
+          tasks.push(...expandRepeat(task));
+          showToast(task.repeat === 'none' ? '새 일정 블럭이 저장되었습니다.' : '반복 일정 블럭이 생성되었습니다.');
+        }
+
+        saveTasks();
+        currentDate = parseLocalDate(task.date);
+        clearForm();
+        renderAll();
+      }
+
+      function openTaskModal(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+
+        selectedTaskId = id;
+        $('modalTitle').textContent = task.title;
+
+        $('modalBody').innerHTML = `
+          <div class="field">
+            <label>Date & Time</label>
+            <input value="${escapeHtml(task.date)} ${escapeHtml(task.time)} · ${task.duration} min" readonly />
+          </div>
+
+          <div class="field">
+            <label>Category</label>
+            <input value="${escapeHtml(task.category === 'work' ? 'fieldwork' : task.category)} · ${escapeHtml(task.priority)}" readonly />
+          </div>
+
+          <div class="field">
+            <label>Note</label>
+            <textarea readonly>${escapeHtml(task.note || '메모가 없습니다.')}</textarea>
+          </div>
+        `;
+
+        $('taskModal').classList.add('show');
+      }
+
+      function closeModal() {
+        selectedTaskId = null;
+        $('taskModal').classList.remove('show');
+      }
+
+      function editSelectedTask() {
+        const task = tasks.find(t => t.id === selectedTaskId);
+        if (!task) return;
+
+        $('taskId').value = task.id;
+        $('title').value = task.title;
+        $('date').value = task.date;
+        $('time').value = task.time;
+        $('duration').value = task.duration;
+        $('repeat').value = 'none';
+        $('priority').value = task.priority;
+        $('note').value = task.note || '';
+
+        reminderOn = task.reminder;
+        $('reminderSwitch').classList.toggle('on', reminderOn);
+
+        setCategory(task.category);
+        currentDate = parseLocalDate(task.date);
+        setView('daily');
+        closeModal();
+
+        showToast('왼쪽 입력 패널에서 일정을 수정하세요.');
+      }
+
+      function deleteSelectedTask() {
+        if (!selectedTaskId) return;
+
+        tasks = tasks.filter(t => t.id !== selectedTaskId);
+
+        saveTasks();
+        closeModal();
+        renderAll();
+
+        showToast('일정이 삭제되었습니다.');
+      }
+
+      function toggleSelectedDone() {
+        const task = tasks.find(t => t.id === selectedTaskId);
+        if (!task) return;
+
+        task.done = !task.done;
+
+        saveTasks();
+        closeModal();
+        renderAll();
+
+        showToast(task.done ? '일정을 완료 처리했습니다.' : '일정을 미완료로 되돌렸습니다.');
+      }
+
+      function moveDate(direction) {
+        if (activeView === 'daily') currentDate.setDate(currentDate.getDate() + direction);
+        if (activeView === 'weekly') currentDate.setDate(currentDate.getDate() + direction * 7);
+        if (activeView === 'monthly') currentDate.setMonth(currentDate.getMonth() + direction);
+
+        $('date').value = toDateKey(currentDate);
+        renderAll();
+      }
+
+      document.querySelectorAll('.view-tab').forEach(btn => {
+        btn.addEventListener('click', () => setView(btn.dataset.view));
+      });
+
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        btn.addEventListener('click', () => setCategory(btn.dataset.category));
+      });
+
+      $('reminderSwitch').addEventListener('click', () => {
+        reminderOn = !reminderOn;
+        $('reminderSwitch').classList.toggle('on', reminderOn);
+      });
+
+      $('reminderSwitch').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          $('reminderSwitch').click();
+        }
+      });
+
+      $('scheduleForm').addEventListener('submit', saveForm);
+      $('clearFormBtn').addEventListener('click', clearForm);
+
+      $('todayBtn').addEventListener('click', () => {
+        currentDate = new Date();
+        $('date').value = toDateKey(currentDate);
+        setView('daily');
+      });
+
+      $('currentBtn').addEventListener('click', () => {
+        currentDate = new Date();
+        $('date').value = toDateKey(currentDate);
+        renderAll();
+      });
+
+      $('prevBtn').addEventListener('click', () => moveDate(-1));
+      $('nextBtn').addEventListener('click', () => moveDate(1));
+
+      $('quickAddBtn').addEventListener('click', () => {
+        clearForm();
+        $('title').focus();
+      });
+
+      $('notifyBtn').addEventListener('click', requestNotificationPermission);
+
+      $('modalClose').addEventListener('click', closeModal);
+      $('modalDelete').addEventListener('click', deleteSelectedTask);
+      $('modalDone').addEventListener('click', toggleSelectedDone);
+      $('modalEdit').addEventListener('click', editSelectedTask);
+
+      $('taskModal').addEventListener('click', (e) => {
+        if (e.target.id === 'taskModal') closeModal();
+      });
+
+      clearForm();
+      renderAll();
+      setInterval(checkReminders, 15000);
+    });
+  </script>
 </body>
 </html>
