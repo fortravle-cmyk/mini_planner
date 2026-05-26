@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MiniDay Planner | Personal Schedule Garden</title>
+  <meta name="description" content="Daily, Weekly, Monthly 일정관리와 브라우저 알림을 지원하는 개인 일정관리 앱" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #6fb6ff;
+      --sky: #8fd1ff;
+      --grass: #56c271;
+      --grass-dark: #219653;
+      --road: #48515f;
+      --road-line: #f9fafb;
+      --white: #ffffff;
+      --text: #ffffff;
+      --ink: #172033;
+      --muted: rgba(255,255,255,.78);
+      --panel: rgba(255,255,255,.18);
+      --panel-strong: rgba(255,255,255,.28);
+      --border: rgba(255,255,255,.38);
+      --shadow: 0 30px 80px rgba(17, 24, 39, .22);
+      --toy-shadow: 0 18px 0 rgba(0,0,0,.12);
+      --red: #ff4d5f;
+      --yellow: #ffd166;
+      --blue: #3b82f6;
+      --green: #22c55e;
+      --purple: #a855f7;
+      --orange: #ff9f1c;
+      --radius-xl: 34px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --blur: blur(22px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      font-family: "Inter", "Noto Sans KR", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(255,255,255,.55), transparent 20rem),
+        radial-gradient(circle at 88% 16%, rgba(255,209,102,.35), transparent 18rem),
+        linear-gradient(180deg, #7ecbff 0%, #7ecbff 46%, #69c77b 46%, #4aad62 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.16), transparent 18%, transparent 72%, rgba(0,0,0,.10)),
+        radial-gradient(ellipse at center, transparent 36%, rgba(255,255,255,.2) 68%, rgba(255,255,255,.42) 100%);
+      z-index: -4;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    button, input, textarea, select { font: inherit; }
+
+    .mini-world {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -3;
+      overflow: hidden;
+      filter: saturate(1.18);
+    }
+
+    .sun {
+      position: absolute;
+      right: 9vw;
+      top: 7vh;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: #ffd166;
+      box-shadow: 0 0 60px rgba(255,209,102,.65);
+    }
+
+    .cloud {
+      position: absolute;
+      width: 180px;
+      height: 58px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      filter: blur(.2px);
+      opacity: .8;
+      animation: cloudMove 38s linear infinite;
+    }
+
+    .cloud::before, .cloud::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,.78);
+    }
+
+    .cloud::before { width: 84px; height: 84px; left: 28px; top: -36px; }
+    .cloud::after { width: 64px; height: 64px; right: 34px; top: -26px; }
+    .c1 { left: 8vw; top: 14vh; animation-delay: -6s; }
+    .c2 { left: 56vw; top: 22vh; transform: scale(.72); animation-delay: -18s; }
+
+    @keyframes cloudMove {
+      0% { transform: translateX(-40px); }
+      50% { transform: translateX(70px); }
+      100% { transform: translateX(-40px); }
+    }
+
+    .tilt-plane {
+      position: absolute;
+      left: 50%;
+      bottom: -160px;
+      width: min(1320px, 118vw);
+      height: 530px;
+      transform: translateX(-50%) perspective(900px) rotateX(62deg) rotateZ(-3deg);
+      transform-origin: center;
+      border-radius: 120px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.09) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,.09) 1px, transparent 1px),
+        #51bd68;
+      background-size: 56px 56px;
+      box-shadow: 0 -20px 80px rgba(19, 83, 45, .25) inset;
+      filter: blur(.1px);
+    }
+
+    .road {
+      position: absolute;
+      left: 50%;
+      bottom: -90px;
+      width: 360px;
+      height: 640px;
+      transform: translateX(-50%) perspective(700px) rotateX(63deg);
+      background: #364152;
+      border-radius: 90px 90px 0 0;
+      box-shadow: 0 18px 50px rgba(0,0,0,.18);
+    }
+
+    .road::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 30px;
+      width: 10px;
+      height: 540px;
+      transform: translateX(-50%);
+      background: repeating-linear-gradient(180deg, #fff 0 36px, transparent 36px 72px);
+      opacity: .9;
+      border-radius: 99px;
+    }
+
+    .toy-building {
+      position: absolute;
+      bottom: 150px;
+      width: 72px;
+      height: 92px;
+      border-radius: 18px 18px 12px 12px;
+      background: linear-gradient(180deg, #fff, #dbeafe);
+      box-shadow: 0 18px 0 rgba(0,0,0,.15);
+    }
+
+    .toy-building::before {
+      content: "";
+      position: absolute;
+      inset: 15px 13px;
+      background: repeating-linear-gradient(90deg, #60a5fa 0 9px, transparent 9px 18px);
+      opacity: .7;
+      border-radius: 7px;
+    }
+
+    .b1 { left: 12vw; transform: scale(.86); }
+    .b2 { right: 14vw; bottom: 190px; transform: scale(1.1); }
+    .b3 { left: 28vw; bottom: 230px; transform: scale(.58); opacity: .85; }
+
+    .toy-tree {
+      position: absolute;
+      bottom: 150px;
+      width: 30px;
+      height: 54px;
+      background: #8b5e34;
+      border-radius: 10px;
+      box-shadow: 0 12px 0 rgba(0,0,0,.12);
+    }
+
+    .toy-tree::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -38px;
+      width: 70px;
+      height: 70px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    .t1 { left: 22vw; }
+    .t2 { right: 25vw; bottom: 130px; transform: scale(.72); }
+    .t3 { left: 72vw; bottom: 250px; transform: scale(.52); }
+
+    .app-shell {
+      width: min(1240px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 30px 0 52px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 26px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .brand-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #ff4d5f, #ff9f1c);
+      box-shadow: 0 12px 0 rgba(0,0,0,.15);
+      font-size: 1.6rem;
+    }
+
+    .brand h1 {
+      font-size: clamp(1.5rem, 3vw, 2.35rem);
+      line-height: 1;
+      letter-spacing: -.055em;
+      font-weight: 900;
+    }
+
+    .brand p {
+      margin-top: 5px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .92rem;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toy-btn {
+      border: 0;
+      cursor: pointer;
+      border-radius: 18px;
+      padding: 12px 15px;
+      background: rgba(255,255,255,.28);
+      color: var(--white);
+      font-weight: 900;
+      backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 0 rgba(0,0,0,.12);
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .toy-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 0 rgba(0,0,0,.12);
+      background: rgba(255,255,255,.38);
+    }
+
+    .toy-btn.primary {
+      background: linear-gradient(135deg, #ff4d5f, #ff9f1c);
+      border: 0;
+    }
+
+    .hero-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 230px;
+      border-radius: 38px;
+      padding: 28px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.42);
+      backdrop-filter: blur(28px);
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 70% 28%, rgba(255,255,255,.36), transparent 10rem),
+        linear-gradient(120deg, rgba(255,255,255,.12), transparent 45%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.24);
+      color: var(--white);
+      font-weight: 900;
+      font-size: .8rem;
+      border: 1px solid rgba(255,255,255,.38);
+      margin-bottom: 12px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.2rem, 6vw, 5.1rem);
+      line-height: .92;
+      letter-spacing: -.085em;
+      font-weight: 900;
+      max-width: 760px;
+    }
+
+    .hero-sub {
+      margin-top: 15px;
+      max-width: 680px;
+      color: var(--muted);
+      line-height: 1.75;
+      font-weight: 650;
+    }
+
+    .today-mini {
+      position: relative;
+      height: 190px;
+      border-radius: 30px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.10)),
+        rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.42);
+      box-shadow: 0 18px 0 rgba(0,0,0,.12);
+    }
+
+    .today-mini .mini-road {
+      position: absolute;
+      left: 50%;
+      bottom: -110px;
+      width: 180px;
+      height: 310px;
+      transform: translateX(-50%) perspective(500px) rotateX(64deg);
+      background: #394150;
+      border-radius: 70px 70px 0 0;
+    }
+
+    .today-mini .mini-card {
+      position: absolute;
+      min-width: 112px;
+      padding: 10px 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.92);
+      color: var(--ink);
+      box-shadow: 0 10px 0 rgba(0,0,0,.13);
+      font-size: .8rem;
+      font-weight: 900;
+    }
+
+    .m1 { left: 25px; top: 28px; transform: rotate(-4deg); }
+    .m2 { right: 28px; top: 50px; transform: rotate(5deg); }
+    .m3 { left: 50%; bottom: 28px; transform: translateX(-50%) rotate(-1deg); }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 320px 1fr 340px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.38);
+      backdrop-filter: blur(26px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 18px 18px 12px;
+    }
+
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: -.035em;
+    }
+
+    .panel-sub {
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .view-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 0 18px 18px;
+    }
+
+    .view-tab {
+      border: 0;
+      cursor: pointer;
+      border-radius: 15px;
+      padding: 10px;
+      background: rgba(255,255,255,.2);
+      color: var(--white);
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,.32);
+      transition: .18s ease;
+    }
+
+    .view-tab.active {
+      background: var(--white);
+      color: var(--ink);
+      box-shadow: 0 8px 0 rgba(0,0,0,.14);
+    }
+
+    .form-body {
+      padding: 0 18px 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .field label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 900;
+      color: rgba(255,255,255,.88);
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,.44);
+      border-radius: 16px;
+      padding: 12px 13px;
+      background: rgba(255,255,255,.9);
+      color: var(--ink);
+      outline: none;
+      font-weight: 700;
+    }
+
+    .field textarea {
+      min-height: 82px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .category-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .cat-pill {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 10px;
+      color: white;
+      font-size: .76rem;
+      font-weight: 900;
+      cursor: pointer;
+      opacity: .62;
+      transition: .18s ease;
+    }
+
+    .cat-pill.active {
+      opacity: 1;
+      transform: translateY(-2px);
+      box-shadow: 0 7px 0 rgba(0,0,0,.16);
+    }
+
+    .study { background: var(--blue); }
+    .research { background: var(--purple); }
+    .work { background: var(--orange); }
+    .life { background: var(--green); }
+    .urgent { background: var(--red); }
+
+    .toggle-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.16);
+      border: 1px solid rgba(255,255,255,.3);
+      color: var(--white);
+      font-weight: 850;
+      font-size: .88rem;
+    }
+
+    .switch {
+      width: 48px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.35);
+      padding: 4px;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .switch span {
+      display: block;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: .18s ease;
+    }
+
+    .switch.on { background: var(--red); }
+    .switch.on span { transform: translateX(20px); }
+
+    .main-calendar {
+      min-height: 680px;
+    }
+
+    .calendar-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      padding: 18px;
+      border-bottom: 1px solid rgba(255,255,255,.25);
+    }
+
+    .date-nav {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .icon-btn {
+      border: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      background: rgba(255,255,255,.2);
+      color: var(--white);
+      font-size: 1.1rem;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,.32);
+    }
+
+    .date-title h2 {
+      font-size: clamp(1.35rem, 3vw, 2.3rem);
+      line-height: 1;
+      letter-spacing: -.055em;
+      font-weight: 900;
+    }
+
+    .date-title p {
+      color: var(--muted);
+      font-weight: 750;
+      margin-top: 4px;
+      font-size: .86rem;
+    }
+
+    .calendar-body {
+      padding: 18px;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .kpi {
+      min-height: 96px;
+      border-radius: 24px;
+      padding: 14px;
+      background: rgba(255,255,255,.2);
+      border: 1px solid rgba(255,255,255,.32);
+      box-shadow: 0 10px 0 rgba(0,0,0,.10);
+    }
+
+    .kpi b {
+      display: block;
+      font-size: 2rem;
+      line-height: 1;
+      letter-spacing: -.055em;
+      font-weight: 900;
+    }
+
+    .kpi span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .8rem;
+      font-weight: 850;
+    }
+
+    .daily-view,
+    .weekly-view,
+    .monthly-view { display: none; }
+    .daily-view.active,
+    .weekly-view.active,
+    .monthly-view.active { display: block; }
+
+    .timeline {
+      display: grid;
+      gap: 8px;
+    }
+
+    .time-slot {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 12px;
+      align-items: start;
+      min-height: 58px;
+    }
+
+    .time-label {
+      color: rgba(255,255,255,.8);
+      font-family: "Inter", sans-serif;
+      font-weight: 900;
+      font-size: .82rem;
+      padding-top: 8px;
+    }
+
+    .time-lane {
+      min-height: 54px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.13);
+      border: 1px dashed rgba(255,255,255,.35);
+      padding: 7px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .task-card {
+      position: relative;
+      border-radius: 18px;
+      padding: 11px 12px 10px;
+      background: rgba(255,255,255,.92);
+      color: var(--ink);
+      box-shadow: 0 8px 0 rgba(0,0,0,.12);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform .18s ease, opacity .18s ease;
+    }
+
+    .task-card:hover { transform: translateY(-2px); }
+    .task-card.done { opacity: .56; text-decoration: line-through; }
+
+    .task-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 7px;
+      background: var(--task-color, var(--blue));
+    }
+
+    .task-time {
+      font-size: .74rem;
+      color: #64748b;
+      font-weight: 900;
+      margin-bottom: 3px;
+    }
+
+    .task-title {
+      font-size: .94rem;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      font-size: .68rem;
+      font-weight: 900;
+      color: #64748b;
+    }
+
+    .task-meta span {
+      border-radius: 999px;
+      background: #f1f5f9;
+      padding: 4px 7px;
+    }
+
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .week-day {
+      min-height: 430px;
+      border-radius: 24px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.3);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .week-day-head {
+      font-weight: 900;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .week-day-head span:last-child {
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .month-cell {
+      min-height: 116px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.28);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .month-cell:hover {
+      background: rgba(255,255,255,.22);
+      transform: translateY(-2px);
+    }
+
+    .month-cell.muted { opacity: .42; }
+    .month-cell.today {
+      background: rgba(255,255,255,.28);
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.8);
+    }
+
+    .month-date {
+      font-weight: 900;
+      font-size: .86rem;
+    }
+
+    .month-dots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: auto;
+    }
+
+    .dot-task {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    .side-section {
+      padding: 18px;
+      border-top: 1px solid rgba(255,255,255,.25);
+    }
+
+    .side-section:first-of-type { border-top: 0; }
+
+    .today-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .empty {
+      border-radius: 22px;
+      padding: 18px;
+      background: rgba(255,255,255,.16);
+      border: 1px dashed rgba(255,255,255,.36);
+      color: var(--muted);
+      font-weight: 750;
+      line-height: 1.65;
+    }
+
+    .mini-progress {
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,.22);
+      border: 1px solid rgba(255,255,255,.28);
+      margin-top: 10px;
+    }
+
+    .mini-progress span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff4d5f, #ffd166, #22c55e);
+      transition: width .4s ease;
+    }
+
+    .focus-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .focus-item {
+      display: grid;
+      grid-template-columns: 18px 1fr auto;
+      gap: 9px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 17px;
+      background: rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.28);
+      font-weight: 800;
+      font-size: .86rem;
+    }
+
+    .focus-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.18);
+    }
+
+    .delete-btn {
+      border: 0;
+      background: rgba(255,255,255,.22);
+      color: white;
+      border-radius: 12px;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(15,23,42,.42);
+      backdrop-filter: blur(14px);
+    }
+
+    .modal-backdrop.show { display: grid; }
+
+    .modal {
+      width: min(560px, 100%);
+      border-radius: 34px;
+      background: rgba(255,255,255,.94);
+      color: var(--ink);
+      box-shadow: 0 35px 90px rgba(15,23,42,.32);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 22px 22px 12px;
+    }
+
+    .modal-head h3 {
+      font-size: 1.4rem;
+      letter-spacing: -.04em;
+      font-weight: 900;
+    }
+
+    .modal-close {
+      border: 0;
+      border-radius: 16px;
+      width: 42px;
+      height: 42px;
+      background: #f1f5f9;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .modal-body {
+      padding: 0 22px 22px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .modal .field label { color: #475569; }
+    .modal .field input,
+    .modal .field textarea,
+    .modal .field select {
+      background: #f8fafc;
+      border: 1px solid #dbe3ef;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 16px 22px 22px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .modal-btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 15px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .modal-btn.save { background: #3b82f6; color: white; }
+    .modal-btn.delete { background: #fee2e2; color: #b91c1c; margin-right: auto; }
+    .modal-btn.cancel { background: #f1f5f9; color: #334155; }
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 3000;
+      max-width: 360px;
+      display: none;
+      padding: 14px 16px;
+      border-radius: 22px;
+      background: rgba(15,23,42,.86);
+      color: white;
+      box-shadow: 0 20px 60px rgba(15,23,42,.3);
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .toast.show { display: block; animation: toastUp .3s ease; }
+    @keyframes toastUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    @media (max-width: 1120px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .form-grid-2 { grid-template-columns: 1fr 1fr; }
+      .week-grid { grid-template-columns: repeat(2, 1fr); }
+      .week-day { min-height: 240px; }
+    }
+
+    @media (max-width: 760px) {
+      .app-shell { width: min(100% - 24px, 1240px); padding-top: 18px; }
+      .topbar, .hero-content, .calendar-toolbar { flex-direction: column; display: flex; align-items: stretch; }
+      .top-actions { width: 100%; }
+      .top-actions .toy-btn { flex: 1; }
+      .hero-card { padding: 20px; border-radius: 30px; }
+      .hero-content { gap: 18px; }
+      .today-mini { height: 150px; }
+      .form-grid-2, .kpi-row, .week-grid, .month-grid { grid-template-columns: 1fr; }
+      .month-cell { min-height: 92px; }
+      .date-nav { justify-content: space-between; }
+      .time-slot { grid-template-columns: 56px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="mini-world" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="tilt-plane"></div>
+    <div class="road"></div>
+    <div class="toy-building b1"></div>
+    <div class="toy-building b2"></div>
+    <div class="toy-building b3"></div>
+    <div class="toy-tree t1"></div>
+    <div class="toy-tree t2"></div>
+    <div class="toy-tree t3"></div>
+  </div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">🗓️</div>
+        <div>
+          <h1>MiniDay Planner</h1>
+          <p>Daily · Weekly · Monthly Schedule Garden</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="toy-btn" id="todayBtn">Today</button>
+        <button class="toy-btn" id="notifyBtn">Enable Reminder</button>
+        <button class="toy-btn primary" id="quickAddBtn">+ New Schedule</button>
+      </div>
+    </header>
+
+    <section class="hero-card">
+      <div class="hero-content">
+        <div>
+          <div class="hero-kicker">Toy-like planning, serious execution</div>
+          <h2 class="hero-title">오늘의 일정을 작은 도시처럼 정리하세요.</h2>
+          <p class="hero-sub">일정은 브라우저에 자동 저장됩니다. Daily, Weekly, Monthly 뷰를 전환하고, 알림 시간을 지정해 오늘의 중요한 일정을 놓치지 않도록 관리할 수 있습니다.</p>
+        </div>
+        <div class="today-mini" aria-hidden="true">
+          <div class="mini-road"></div>
+          <div class="mini-card m1">Daily Plan</div>
+          <div class="mini-card m2">Weekly Flow</div>
+          <div class="mini-card m3">Monthly Map</div>
+        </div>
+      </div>
+    </section>
+
+    <main class="dashboard">
+      <aside class="panel">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">Schedule Input</div>
+            <div class="panel-sub">새 일정을 기록하고 관리합니다.</div>
+          </div>
+        </div>
+
+        <div class="view-tabs">
+          <button class="view-tab active" data-view="daily">Daily</button>
+          <button class="view-tab" data-view="weekly">Weekly</button>
+          <button class="view-tab" data-view="monthly">Monthly</button>
+        </div>
+
+        <form class="form-body" id="scheduleForm">
+          <input type="hidden" id="taskId" />
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" type="text" placeholder="예: 논문 수정, 수업, 회의" required />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="date">Date</label>
+              <input id="date" type="date" required />
+            </div>
+            <div class="field">
+              <label for="time">Time</label>
+              <input id="time" type="time" required />
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="duration">Duration</label>
+              <select id="duration">
+                <option value="30">30 min</option>
+                <option value="60" selected>1 hour</option>
+                <option value="90">1.5 hours</option>
+                <option value="120">2 hours</option>
+                <option value="180">3 hours</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="repeat">Repeat</label>
+              <select id="repeat">
+                <option value="none">None</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Category</label>
+            <div class="category-row" id="categoryRow">
+              <button type="button" class="cat-pill study active" data-category="study">Study</button>
+              <button type="button" class="cat-pill research" data-category="research">Research</button>
+              <button type="button" class="cat-pill work" data-category="work">Work</button>
+              <button type="button" class="cat-pill life" data-category="life">Life</button>
+              <button type="button" class="cat-pill urgent" data-category="urgent">Urgent</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="priority">Priority</label>
+            <select id="priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="note">Note</label>
+            <textarea id="note" placeholder="Notion처럼 메모를 남겨보세요."></textarea>
+          </div>
+
+          <div class="toggle-line">
+            <span>Reminder at task time</span>
+            <div class="switch on" id="reminderSwitch" role="button" tabindex="0"><span></span></div>
+          </div>
+
+          <button class="toy-btn primary" type="submit">Save Schedule</button>
+          <button class="toy-btn" type="button" id="clearFormBtn">Clear</button>
+        </form>
+      </aside>
+
+      <section class="panel main-calendar">
+        <div class="calendar-toolbar">
+          <div class="date-title">
+            <h2 id="calendarTitle">Today</h2>
+            <p id="calendarSub">Miniature view of your day</p>
+          </div>
+          <div class="date-nav">
+            <button class="icon-btn" id="prevBtn">‹</button>
+            <button class="icon-btn" id="currentBtn">●</button>
+            <button class="icon-btn" id="nextBtn">›</button>
+          </div>
+        </div>
+
+        <div class="calendar-body">
+          <div class="kpi-row">
+            <div class="kpi"><b id="kpiTotal">0</b><span>Total schedules</span></div>
+            <div class="kpi"><b id="kpiToday">0</b><span>Today</span></div>
+            <div class="kpi"><b id="kpiDone">0%</b><span>Completion</span></div>
+            <div class="kpi"><b id="kpiFocus">0</b><span>High priority</span></div>
+          </div>
+
+          <div class="daily-view active" id="dailyView">
+            <div class="timeline" id="dailyTimeline"></div>
+          </div>
+
+          <div class="weekly-view" id="weeklyView">
+            <div class="week-grid" id="weekGrid"></div>
+          </div>
+
+          <div class="monthly-view" id="monthlyView">
+            <div class="month-grid" id="monthGrid"></div>
+          </div>
+        </
