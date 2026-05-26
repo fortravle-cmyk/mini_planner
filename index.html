@@ -1171,4 +1171,495 @@
           <div class="monthly-view" id="monthlyView">
             <div class="month-grid" id="monthGrid"></div>
           </div>
-        </
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="side-section">
+          <div class="panel-title">Today Brief</div>
+          <div class="panel-sub" id="todayBriefText">오늘 일정 요약</div>
+          <div class="mini-progress"><span id="progressBar"></span></div>
+        </div>
+
+        <div class="side-section">
+          <div class="panel-title">Next Up</div>
+          <div class="today-list" id="nextUpList"></div>
+        </div>
+
+        <div class="side-section">
+          <div class="panel-title">Focus Garden</div>
+          <div class="focus-list" id="focusList"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="taskModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Schedule Detail</h3>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-actions">
+        <button class="modal-btn delete" id="modalDelete">Delete</button>
+        <button class="modal-btn cancel" id="modalDone">Toggle Done</button>
+        <button class="modal-btn save" id="modalEdit">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STORAGE_KEY = 'miniDayPlannerTasksV1';
+    const categoryColors = {
+      study: '#3b82f6',
+      research: '#a855f7',
+      work: '#ff9f1c',
+      life: '#22c55e',
+      urgent: '#ff4d5f'
+    };
+
+    let tasks = loadTasks();
+    let activeView = 'daily';
+    let currentDate = new Date();
+    let selectedCategory = 'study';
+    let reminderOn = true;
+    let selectedTaskId = null;
+    const notified = new Set();
+
+    const $ = (id) => document.getElementById(id);
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function toDateKey(date) { return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`; }
+    function parseLocalDate(key) {
+      const [y,m,d] = key.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+    function startOfWeek(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      d.setDate(d.getDate() - day);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+    function sameDate(a, b) { return toDateKey(a) === toDateKey(b); }
+    function getTaskDateTime(task) { return new Date(`${task.date}T${task.time || '00:00'}`); }
+
+    function loadTasks() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch(e) { console.warn(e); }
+      return [
+        {
+          id: crypto.randomUUID(),
+          title: '연구 일정 정리',
+          date: toDateKey(new Date()),
+          time: '09:30',
+          duration: 60,
+          repeat: 'none',
+          category: 'research',
+          priority: 'high',
+          note: '오늘 해야 할 연구 업무를 정리하고 우선순위를 확인하기.',
+          reminder: true,
+          done: false
+        },
+        {
+          id: crypto.randomUUID(),
+          title: '개인 홈페이지 수정',
+          date: toDateKey(new Date()),
+          time: '14:00',
+          duration: 90,
+          repeat: 'none',
+          category: 'work',
+          priority: 'medium',
+          note: 'UI/UX 개선 사항 확인.',
+          reminder: true,
+          done: false
+        }
+      ];
+    }
+
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function showToast(message) {
+      const toast = $('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2800);
+    }
+
+    function requestNotificationPermission() {
+      if (!('Notification' in window)) {
+        showToast('이 브라우저는 알림 기능을 지원하지 않습니다.');
+        return;
+      }
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') showToast('알림이 활성화되었습니다. 페이지가 열려 있을 때 일정 알림을 받을 수 있어요.');
+        else showToast('알림 권한이 허용되지 않았습니다. 브라우저 설정을 확인해주세요.');
+      });
+    }
+
+    function checkReminders() {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      const now = new Date();
+      tasks.forEach(task => {
+        if (!task.reminder || task.done) return;
+        const due = getTaskDateTime(task);
+        const diff = Math.abs(now - due);
+        const key = `${task.id}-${task.date}-${task.time}`;
+        if (diff < 30000 && !notified.has(key)) {
+          notified.add(key);
+          new Notification('MiniDay Planner', {
+            body: `${task.time} · ${task.title}`,
+          });
+        }
+      });
+    }
+
+    function getVisibleTasksForDate(date) {
+      const key = toDateKey(date);
+      return tasks
+        .filter(task => task.date === key)
+        .sort((a,b) => `${a.time}`.localeCompare(`${b.time}`));
+    }
+
+    function getWeekDates(date) {
+      const start = startOfWeek(date);
+      return Array.from({length: 7}, (_, i) => {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        return d;
+      });
+    }
+
+    function updateTitles() {
+      const dateText = currentDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+      const monthText = currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      if (activeView === 'daily') {
+        $('calendarTitle').textContent = 'Daily Garden';
+        $('calendarSub').textContent = dateText;
+      } else if (activeView === 'weekly') {
+        const week = getWeekDates(currentDate);
+        $('calendarTitle').textContent = 'Weekly Roadmap';
+        $('calendarSub').textContent = `${week[0].toLocaleDateString('ko-KR', {month:'short', day:'numeric'})} - ${week[6].toLocaleDateString('ko-KR', {month:'short', day:'numeric'})}`;
+      } else {
+        $('calendarTitle').textContent = 'Monthly Miniature Map';
+        $('calendarSub').textContent = monthText;
+      }
+    }
+
+    function renderDaily() {
+      const container = $('dailyTimeline');
+      container.innerHTML = '';
+      for (let hour = 6; hour <= 23; hour++) {
+        const time = `${pad(hour)}:00`;
+        const slotTasks = getVisibleTasksForDate(currentDate).filter(task => Number(task.time.split(':')[0]) === hour);
+        const row = document.createElement('div');
+        row.className = 'time-slot';
+        row.innerHTML = `<div class="time-label">${time}</div><div class="time-lane"></div>`;
+        const lane = row.querySelector('.time-lane');
+        if (slotTasks.length) slotTasks.forEach(task => lane.appendChild(createTaskCard(task)));
+        container.appendChild(row);
+      }
+    }
+
+    function renderWeekly() {
+      const grid = $('weekGrid');
+      grid.innerHTML = '';
+      const weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      getWeekDates(currentDate).forEach((date, idx) => {
+        const day = document.createElement('div');
+        day.className = 'week-day';
+        day.innerHTML = `<div class="week-day-head"><span>${weekdays[idx]}</span><span>${date.getMonth()+1}/${date.getDate()}</span></div>`;
+        const dayTasks = getVisibleTasksForDate(date);
+        if (dayTasks.length) dayTasks.forEach(task => day.appendChild(createTaskCard(task)));
+        else {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'No schedule';
+          day.appendChild(empty);
+        }
+        grid.appendChild(day);
+      });
+    }
+
+    function renderMonthly() {
+      const grid = $('monthGrid');
+      grid.innerHTML = '';
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const first = new Date(year, month, 1);
+      const start = new Date(first);
+      start.setDate(1 - first.getDay());
+      const today = new Date();
+
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const cell = document.createElement('div');
+        cell.className = 'month-cell';
+        if (d.getMonth() !== month) cell.classList.add('muted');
+        if (sameDate(d, today)) cell.classList.add('today');
+        const key = toDateKey(d);
+        const dayTasks = tasks.filter(task => task.date === key);
+        cell.innerHTML = `<div class="month-date">${d.getDate()}</div><div class="month-dots"></div>`;
+        const dots = cell.querySelector('.month-dots');
+        dayTasks.slice(0, 8).forEach(task => {
+          const dot = document.createElement('span');
+          dot.className = 'dot-task';
+          dot.style.background = categoryColors[task.category] || categoryColors.study;
+          dots.appendChild(dot);
+        });
+        cell.addEventListener('click', () => {
+          currentDate = d;
+          setView('daily');
+        });
+        grid.appendChild(cell);
+      }
+    }
+
+    function createTaskCard(task) {
+      const card = document.createElement('div');
+      card.className = `task-card ${task.done ? 'done' : ''}`;
+      card.style.setProperty('--task-color', categoryColors[task.category] || categoryColors.study);
+      card.innerHTML = `
+        <div class="task-time">${task.time} · ${task.duration} min</div>
+        <div class="task-title">${escapeHtml(task.title)}</div>
+        <div class="task-meta"><span>${task.category}</span><span>${task.priority}</span>${task.reminder ? '<span>reminder</span>' : ''}</div>
+      `;
+      card.addEventListener('click', () => openTaskModal(task.id));
+      return card;
+    }
+
+    function renderSidebars() {
+      const todayTasks = getVisibleTasksForDate(new Date());
+      const done = todayTasks.filter(t => t.done).length;
+      const completion = todayTasks.length ? Math.round(done / todayTasks.length * 100) : 0;
+      $('todayBriefText').textContent = todayTasks.length ? `${todayTasks.length}개의 일정 · 완료율 ${completion}%` : '오늘은 아직 등록된 일정이 없습니다.';
+      $('progressBar').style.width = `${completion}%`;
+
+      const nextList = $('nextUpList');
+      nextList.innerHTML = '';
+      const upcoming = tasks
+        .filter(t => !t.done && getTaskDateTime(t) >= new Date())
+        .sort((a,b) => getTaskDateTime(a) - getTaskDateTime(b))
+        .slice(0, 4);
+      if (!upcoming.length) nextList.innerHTML = '<div class="empty">다가오는 일정이 없습니다.</div>';
+      else upcoming.forEach(task => nextList.appendChild(createTaskCard(task)));
+
+      const focusList = $('focusList');
+      focusList.innerHTML = '';
+      const high = tasks.filter(t => !t.done && t.priority === 'high').slice(0, 5);
+      if (!high.length) focusList.innerHTML = '<div class="empty">High priority 일정이 없습니다.</div>';
+      else high.forEach(task => {
+        const item = document.createElement('div');
+        item.className = 'focus-item';
+        item.innerHTML = `<span class="focus-dot" style="background:${categoryColors[task.category] || categoryColors.study}"></span><span>${escapeHtml(task.title)}</span><button class="delete-btn">✓</button>`;
+        item.querySelector('button').addEventListener('click', () => {
+          task.done = true;
+          saveTasks();
+          renderAll();
+        });
+        focusList.appendChild(item);
+      });
+    }
+
+    function renderKpis() {
+      const todayTasks = getVisibleTasksForDate(new Date());
+      const done = tasks.filter(t => t.done).length;
+      $('kpiTotal').textContent = tasks.length;
+      $('kpiToday').textContent = todayTasks.length;
+      $('kpiDone').textContent = tasks.length ? `${Math.round(done / tasks.length * 100)}%` : '0%';
+      $('kpiFocus').textContent = tasks.filter(t => t.priority === 'high' && !t.done).length;
+    }
+
+    function renderAll() {
+      updateTitles();
+      renderKpis();
+      renderDaily();
+      renderWeekly();
+      renderMonthly();
+      renderSidebars();
+    }
+
+    function setView(view) {
+      activeView = view;
+      document.querySelectorAll('.view-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+      $('dailyView').classList.toggle('active', view === 'daily');
+      $('weeklyView').classList.toggle('active', view === 'weekly');
+      $('monthlyView').classList.toggle('active', view === 'monthly');
+      renderAll();
+    }
+
+    function clearForm() {
+      $('taskId').value = '';
+      $('title').value = '';
+      $('date').value = toDateKey(currentDate);
+      $('time').value = '09:00';
+      $('duration').value = '60';
+      $('repeat').value = 'none';
+      $('priority').value = 'medium';
+      $('note').value = '';
+      reminderOn = true;
+      $('reminderSwitch').classList.add('on');
+      setCategory('study');
+    }
+
+    function setCategory(category) {
+      selectedCategory = category;
+      document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.category === category));
+    }
+
+    function expandRepeat(baseTask) {
+      const repeat = baseTask.repeat;
+      if (repeat === 'none') return [baseTask];
+      const result = [baseTask];
+      const baseDate = parseLocalDate(baseTask.date);
+      const count = repeat === 'daily' ? 6 : repeat === 'weekly' ? 7 : 5;
+      for (let i = 1; i <= count; i++) {
+        const d = new Date(baseDate);
+        if (repeat === 'daily') d.setDate(baseDate.getDate() + i);
+        if (repeat === 'weekly') d.setDate(baseDate.getDate() + i * 7);
+        if (repeat === 'monthly') d.setMonth(baseDate.getMonth() + i);
+        result.push({ ...baseTask, id: crypto.randomUUID(), date: toDateKey(d), repeat: 'none' });
+      }
+      return result;
+    }
+
+    function saveForm(e) {
+      e.preventDefault();
+      const id = $('taskId').value;
+      const task = {
+        id: id || crypto.randomUUID(),
+        title: $('title').value.trim(),
+        date: $('date').value,
+        time: $('time').value,
+        duration: Number($('duration').value),
+        repeat: $('repeat').value,
+        category: selectedCategory,
+        priority: $('priority').value,
+        note: $('note').value.trim(),
+        reminder: reminderOn,
+        done: id ? (tasks.find(t => t.id === id)?.done || false) : false
+      };
+
+      if (!task.title || !task.date || !task.time) return;
+
+      if (id) {
+        tasks = tasks.map(t => t.id === id ? task : t);
+        showToast('일정이 수정되었습니다.');
+      } else {
+        tasks.push(...expandRepeat(task));
+        showToast(task.repeat === 'none' ? '새 일정이 저장되었습니다.' : '반복 일정이 생성되었습니다.');
+      }
+      saveTasks();
+      currentDate = parseLocalDate(task.date);
+      clearForm();
+      renderAll();
+    }
+
+    function openTaskModal(id) {
+      const task = tasks.find(t => t.id === id);
+      if (!task) return;
+      selectedTaskId = id;
+      $('modalTitle').textContent = task.title;
+      $('modalBody').innerHTML = `
+        <div class="field"><label>Date & Time</label><input value="${task.date} ${task.time}" readonly /></div>
+        <div class="field"><label>Category</label><input value="${task.category} · ${task.priority}" readonly /></div>
+        <div class="field"><label>Note</label><textarea readonly>${escapeHtml(task.note || '메모가 없습니다.')}</textarea></div>
+      `;
+      $('taskModal').classList.add('show');
+    }
+
+    function closeModal() {
+      selectedTaskId = null;
+      $('taskModal').classList.remove('show');
+    }
+
+    function editSelectedTask() {
+      const task = tasks.find(t => t.id === selectedTaskId);
+      if (!task) return;
+      $('taskId').value = task.id;
+      $('title').value = task.title;
+      $('date').value = task.date;
+      $('time').value = task.time;
+      $('duration').value = task.duration;
+      $('repeat').value = 'none';
+      $('priority').value = task.priority;
+      $('note').value = task.note || '';
+      reminderOn = task.reminder;
+      $('reminderSwitch').classList.toggle('on', reminderOn);
+      setCategory(task.category);
+      currentDate = parseLocalDate(task.date);
+      setView('daily');
+      closeModal();
+      showToast('왼쪽 입력 패널에서 일정을 수정하세요.');
+    }
+
+    function deleteSelectedTask() {
+      if (!selectedTaskId) return;
+      tasks = tasks.filter(t => t.id !== selectedTaskId);
+      saveTasks();
+      closeModal();
+      renderAll();
+      showToast('일정이 삭제되었습니다.');
+    }
+
+    function toggleSelectedDone() {
+      const task = tasks.find(t => t.id === selectedTaskId);
+      if (!task) return;
+      task.done = !task.done;
+      saveTasks();
+      closeModal();
+      renderAll();
+      showToast(task.done ? '일정을 완료 처리했습니다.' : '일정을 미완료로 되돌렸습니다.');
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function moveDate(direction) {
+      if (activeView === 'daily') currentDate.setDate(currentDate.getDate() + direction);
+      if (activeView === 'weekly') currentDate.setDate(currentDate.getDate() + direction * 7);
+      if (activeView === 'monthly') currentDate.setMonth(currentDate.getMonth() + direction);
+      $('date').value = toDateKey(currentDate);
+      renderAll();
+    }
+
+    document.querySelectorAll('.view-tab').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    document.querySelectorAll('.cat-pill').forEach(btn => btn.addEventListener('click', () => setCategory(btn.dataset.category)));
+    $('reminderSwitch').addEventListener('click', () => {
+      reminderOn = !reminderOn;
+      $('reminderSwitch').classList.toggle('on', reminderOn);
+    });
+    $('scheduleForm').addEventListener('submit', saveForm);
+    $('clearFormBtn').addEventListener('click', clearForm);
+    $('todayBtn').addEventListener('click', () => { currentDate = new Date(); $('date').value = toDateKey(currentDate); renderAll(); });
+    $('currentBtn').addEventListener('click', () => { currentDate = new Date(); $('date').value = toDateKey(currentDate); renderAll(); });
+    $('prevBtn').addEventListener('click', () => moveDate(-1));
+    $('nextBtn').addEventListener('click', () => moveDate(1));
+    $('quickAddBtn').addEventListener('click', () => { clearForm(); $('title').focus(); });
+    $('notifyBtn').addEventListener('click', requestNotificationPermission);
+    $('modalClose').addEventListener('click', closeModal);
+    $('modalDelete').addEventListener('click', deleteSelectedTask);
+    $('modalDone').addEventListener('click', toggleSelectedDone);
+    $('modalEdit').addEventListener('click', editSelectedTask);
+    $('taskModal').addEventListener('click', (e) => { if (e.target.id === 'taskModal') closeModal(); });
+
+    clearForm();
+    renderAll();
+    setInterval(checkReminders, 15000);
+  </script>
+</body>
+</html>
