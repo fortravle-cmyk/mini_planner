@@ -1,3 +1,10 @@
+요청하신 피드백을 반영하여 세로로 과도하게 늘어나는 요소를 압축하고, 전체 레이아웃을 한 화면에 조화롭게 들어오는 토이 박스(Diorama Control Panel) 형태로 재조정했습니다.
+
+캘린더 본문과 타임라인 영역에 내부 스크롤을 적용하여 전체 페이지가 아래로 길어지는 현상을 방지했으며, 가로 배치를 최적화하여 마치 아기자기한 미니 정원 조종판을 보는 듯한 UX를 완성했습니다. 카테고리 칩과 피드백 시스템의 디자인도 더욱 쨍하고 플라스틱 장난감 패키지 같은 질감으로 강화했습니다.
+
+새로운 전체 index.html 코드입니다. 파일을 저장하여 확인해보세요.
+
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -487,4 +494,291 @@
       let tasks = fetchTasks();
       let activeViewMode = 'daily';
       let pivotDate = new Date();
-      let pickedCategory
+      let pickedCategory = 'study';
+      let isNotificationActive = true;
+      let focusedTaskId = null;
+      const pushedAlertSet = new Set();
+
+      function formatDigit(n) { return String(n).padStart(2, '0'); }
+      function makeDateKey(d) { return `${d.getFullYear()}-${formatDigit(d.getMonth()+1)}-${formatDigit(d.getDate())}`; }
+      function resolveDateKey(key) { const [y,m,d] = key.split('-').map(Number); return new Date(y, m - 1, d); }
+      function getSundayNode(date) { const d = new Date(date); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d; }
+      function verifyIdentityDate(a, b) { return makeDateKey(a) === makeDateKey(b); }
+      function escapeOutput(text) { return String(text).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+
+      function fetchTasks() {
+        try { const stored = localStorage.getItem(KEY); if (stored) return JSON.parse(stored); } catch(e) { console.warn(e); }
+        const todayKey = makeDateKey(new Date());
+        return [
+          { id: generateUid(), title: '연구 핵심 파이프라인 수립', date: todayKey, time: '10:00', duration: 60, repeat: 'none', category: 'research', priority: 'high', note: '안전 보건 시스템 인프라 구축 흐름 정의.', reminder: true, done: false },
+          { id: generateUid(), title: '가든 컴팩트 다이어리 검증', date: todayKey, time: '15:30', duration: 90, repeat: 'none', category: 'study', priority: 'medium', note: 'UI 스크롤 압축 본문 가독성 테스트.', reminder: true, done: true }
+        ];
+      }
+      function commitTasks() { localStorage.setItem(KEY, JSON.stringify(tasks)); }
+      function showToastMessage(msg) { const bar = $('gardenToast'); bar.textContent = msg; bar.classList.add('show'); setTimeout(() => bar.classList.remove('show'), 2200); }
+
+      function requestPushPermission() {
+        if (!('Notification' in window)) { showToastMessage('푸시 알림 미지원 브라우저입니다.'); return; }
+        Notification.requestPermission().then((perm) => {
+          if (perm === 'granted') showToastMessage('브라우저 푸시 가든이 승인되었습니다.');
+          else showToastMessage('알림 권한이 비활성화 상태입니다.');
+        });
+      }
+
+      function scanTimeReminders() {
+        if (!('Notification' in window) || Notification.permission !== 'granted') return;
+        const currentStamp = new Date();
+        const stampStr = `${formatDigit(currentStamp.getHours())}:${formatDigit(currentStamp.getMinutes())}`;
+        const dayStr = makeDateKey(currentStamp);
+
+        tasks.forEach(t => {
+          if (!t.reminder || t.done || t.date !== dayStr || t.time !== stampStr) return;
+          const identityKey = `${t.id}-${t.date}-${t.time}`;
+          if (!pushedAlertSet.has(identityKey)) {
+            pushedAlertSet.add(identityKey);
+            new Notification('MiniDay Garden', { body: `지정 시간 일정: ${t.title} (${t.time})` });
+          }
+        });
+      }
+
+      function obtainTasksSpecificDate(d) {
+        const k = makeDateKey(d);
+        return tasks.filter(t => t.date === k).sort((a,b) => a.time.localeCompare(b.time));
+      }
+      function obtainWeekRangeArray(date) {
+        const sun = getSundayNode(date);
+        return Array.from({length: 7}, (_, i) => { const d = new Date(sun); d.setDate(sun.getDate() + i); return d; });
+      }
+
+      function updateUIHeaderTitles() {
+        const koLongString = pivotDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+        const enMonthString = pivotDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        if (activeViewMode === 'daily') { $('boardMainTitle').textContent = 'Daily Miniature'; $('boardSubTitle').textContent = koLongString; }
+        else if (activeViewMode === 'weekly') {
+          const w = obtainWeekRangeArray(pivotDate);
+          $('boardMainTitle').textContent = 'Weekly Flow'; $('boardSubTitle').textContent = `${w[0].getMonth()+1}.${w[0].getDate()} - ${w[6].getMonth()+1}.${w[6].getDate()}`;
+        } else { $('boardMainTitle').textContent = 'Monthly Map System'; $('boardSubTitle').textContent = enMonthString; }
+      }
+
+      function prefillFormMatrix(date, hourString = '09:00') {
+        pivotDate = new Date(date);
+        $('date').value = makeDateKey(pivotDate);
+        $('time').value = hourString;
+        $('taskUid').value = '';
+        $('title').focus();
+      }
+
+      function buildTaskCardElement(t) {
+        const block = document.createElement('div');
+        block.className = `task-card ${t.done ? 'done' : ''}`;
+        block.style.setProperty('--task-color', cColors[t.category] || '#2563eb');
+        block.innerHTML = `<div class="task-time">${t.time} · ${t.duration}m</div><div class="task-title">${escapeOutput(t.title)}</div><div class="task-meta"><span>${t.category}</span><span>${t.priority}</span></div>`;
+        block.addEventListener('click', (ev) => { ev.stopPropagation(); unfoldDetailModal(t.id); });
+        return block;
+      }
+
+      function renderDailyTimeline() {
+        const box = $('dailyMatrix'); box.innerHTML = '';
+        const dayList = obtainTasksSpecificDate(pivotDate);
+
+        for (let hour = 6; hour <= 23; hour++) {
+          const formattedHour = `${formatDigit(hour)}:00`;
+          const cluster = dayList.filter(t => parseInt(t.time.split(':')[0]) === hour);
+          
+          const row = document.createElement('div'); row.className = 'time-slot';
+          row.innerHTML = `<div class="time-label">${formattedHour}</div><div class="time-lane" title="${formattedHour} 타임 블록 심기"></div>`;
+          const lane = row.querySelector('.time-lane');
+          lane.addEventListener('click', () => prefillFormMatrix(pivotDate, `${formatDigit(hour)}:00`));
+          
+          cluster.forEach(t => lane.appendChild(buildTaskCardElement(t)));
+          box.appendChild(row);
+        }
+      }
+
+      function renderWeeklyTimeline() {
+        const box = $('weeklyMatrix'); box.innerHTML = '';
+        const weekLabels = ['일','월','화','수','목','금','토'];
+        
+        obtainWeekRangeArray(pivotDate).forEach((d, idx) => {
+          const col = document.createElement('div'); col.className = 'week-day';
+          if (verifyIdentityDate(d, new Date())) col.classList.add('today');
+          col.innerHTML = `<div class="week-day-head"><span>${weekLabels[idx]}</span><span>${d.getMonth()+1}/${d.getDate()}</span></div>`;
+          col.addEventListener('click', () => { prefillFormMatrix(d, '09:00'); showToastMessage(`${d.getDate()}일 인풋 타임라인 동기화`); });
+          
+          const cluster = obtainTasksSpecificDate(d);
+          if (cluster.length) cluster.forEach(t => col.appendChild(buildTaskCardElement(t)));
+          else { const emp = document.createElement('div'); emp.className = 'empty'; emp.textContent = '블록 비어있음'; col.appendChild(emp); }
+          box.appendChild(col);
+        });
+      }
+
+      function renderMonthlyTimeline() {
+        $('weekdayHeader').innerHTML = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(day => `<div class="weekday-name">${day}</div>`).join('');
+        const box = $('monthlyMatrix'); box.innerHTML = '';
+        const y = pivotDate.getFullYear(); const m = pivotDate.getMonth();
+        const startDayNode = new Date(y, m, 1);
+        const engine = new Date(startDayNode); engine.setDate(1 - startDayNode.getDay());
+        const realToday = new Date();
+
+        for (let i = 0; i < 42; i++) {
+          const targetNode = new Date(engine);
+          const cluster = obtainTasksSpecificDate(targetNode);
+          
+          const cell = document.createElement('div'); cell.className = 'month-cell';
+          if (targetNode.getMonth() !== m) cell.classList.add('muted');
+          if (verifyIdentityDate(targetNode, realToday)) cell.classList.add('today');
+          
+          cell.innerHTML = `<div class="month-date">${targetNode.getDate()}</div><div class="month-preview"></div>`;
+          cell.addEventListener('click', () => { prefillFormMatrix(targetNode, '09:00'); showToastMessage(`${targetNode.getMonth()+1}/${targetNode.getDate()}일 편집 포커스`); });
+          
+          const previewArea = cell.querySelector('.month-preview');
+          cluster.slice(0, 2).forEach(t => {
+            const slab = document.createElement('div'); slab.className = 'month-mini-task';
+            slab.style.borderLeft = `3px solid ${cColors[t.category] || '#2563eb'}`;
+            slab.textContent = t.title;
+            slab.addEventListener('click', (e) => { e.stopPropagation(); unfoldDetailModal(t.id); });
+            previewArea.appendChild(slab);
+          });
+          if (cluster.length > 2) { const more = document.createElement('div'); more.className = 'month-mini-task'; more.textContent = `+${cluster.length - 2} blocks`; previewArea.appendChild(more); }
+          
+          box.appendChild(cell);
+          engine.setDate(engine.getDate() + 1);
+        }
+      }
+
+      function renderUtilitySidebars() {
+        const todayCluster = obtainTasksSpecificDate(new Date());
+        const completedCount = todayCluster.filter(t => t.done).length;
+        const progressRatio = todayCluster.length ? Math.round(completedCount / todayCluster.length * 100) : 0;
+        
+        $('sideProgressSummary').textContent = todayCluster.length ? `오늘 블록 ${todayCluster.length}개 중 ${completedCount}개 수집 완료 (${progressRatio}%)` : '오늘 배치된 다이어리 블록이 없습니다.';
+        $('sidePercentBar').style.width = `${progressRatio}%`;
+
+        const nextBox = $('sideNextBox'); nextBox.innerHTML = '';
+        const futureCluster = tasks.filter(t => !t.done && new Date(`${t.date}T${t.time}`) >= new Date()).sort((a,b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`)).slice(0, 3);
+        if (!futureCluster.length) nextBox.innerHTML = '<div class="empty">대기 중인 다음 일정이 없습니다.</div>';
+        else futureCluster.forEach(t => nextBox.appendChild(buildTaskCardElement(t)));
+
+        const highBox = $('sideHighFocusBox'); highBox.innerHTML = '';
+        const highCluster = tasks.filter(t => !t.done && t.priority === 'high').sort((a,b) => a.date.localeCompare(b.date)).slice(0, 3);
+        if (!highCluster.length) highBox.innerHTML = '<div class="empty">우선 제어 블록이 없습니다.</div>';
+        else highCluster.forEach(t => {
+          const item = document.createElement('div'); item.className = 'focus-item';
+          item.innerHTML = `<span class="focus-dot" style="background:${cColors[t.category] || '#2563eb'}"></span><span>${escapeOutput(t.title)}</span><button class="check-btn" title="완료 처리">✓</button>`;
+          item.querySelector('.check-btn').addEventListener('click', (e) => { e.stopPropagation(); t.done = true; commitTasks(); refreshAllViewports(); showToastMessage('포커스 미션 클리어!'); });
+          item.addEventListener('click', () => unfoldDetailModal(t.id));
+          highBox.appendChild(item);
+        });
+      }
+
+      function renderKpiMetrics() {
+        const todayCount = obtainTasksSpecificDate(new Date()).length;
+        const totalDone = tasks.filter(t => t.done).length;
+        $('vKpiTotal').textContent = tasks.length;
+        $('vKpiToday').textContent = todayCount;
+        $('vKpiDone').textContent = tasks.length ? `${Math.round(totalDone / tasks.length * 100)}%` : '0%';
+        $('vKpiHigh').textContent = tasks.filter(t => t.priority === 'high' && !t.done).length;
+      }
+
+      function refreshAllViewports() { updateUIHeaderTitles(); renderKpiMetrics(); renderDaily(); renderWeeklyTimeline(); renderMonthlyTimeline(); renderUtilitySidebars(); }
+
+      function renderDaily() { renderDailyTimeline(); }
+
+      function changeActiveViewFrame(targetMode) {
+        activeViewMode = targetMode;
+        document.querySelectorAll('.view-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.view === targetMode));
+        $('canvasDaily').classList.toggle('active', targetMode === 'daily');
+        $('canvasWeekly').classList.toggle('active', targetMode === 'weekly');
+        $('canvasMonthly').classList.toggle('active', targetMode === 'monthly');
+        refreshAllViewports();
+      }
+
+      function executeClearForm() {
+        $('taskUid').value = ''; $('title').value = ''; $('date').value = makeDateKey(pivotDate); $('time').value = '09:00'; $('duration').value = '60'; $('repeat').value = 'none'; $('priority').value = 'medium'; $('note').value = '';
+        isNotificationActive = true; $('pushSwitch').classList.add('on'); changeCategorySelection('study');
+      }
+      function changeCategorySelection(cat) { pickedCategory = cat; document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.category === cat)); }
+
+      function compileRepeatedBlocks(base) {
+        if (base.repeat === 'none') return [base];
+        const packet = [base]; const seedDate = resolveDateKey(base.date); const iterations = base.repeat === 'daily' ? 5 : 4;
+        for (let i = 1; i <= iterations; i++) {
+          const d = new Date(seedDate);
+          if (base.repeat === 'daily') d.setDate(seedDate.getDate() + i);
+          if (base.repeat === 'weekly') d.setDate(seedDate.getDate() + i * 7);
+          packet.push({ ...base, id: generateUid(), date: makeDateKey(d), repeat: 'none' });
+        }
+        return packet;
+      }
+
+      function saveFormPackage(e) {
+        e.preventDefault();
+        const id = $('taskUid').value;
+        const task = { id: id || generateUid(), title: $('title').value.trim(), date: $('date').value, time: $('time').value, duration: Number($('duration').value), repeat: $('repeat').value, category: pickedCategory, priority: $('priority').value, note: $('note').value.trim(), reminder: isNotificationActive, done: id ? (tasks.find(t => t.id === id)?.done || false) : false };
+        
+        if (!task.title || !task.date || !task.time) return;
+        
+        if (id) { tasks = tasks.map(t => t.id === id ? task : t); showToastMessage('블록 레이아웃 수정 완료.'); }
+        else { tasks.push(...compileRepeatedBlocks(task)); showToastMessage('가든에 다이어리 블록 배치 완료.'); }
+        
+        commitTasks(); pivotDate = resolveDateKey(task.date); executeClearForm(); refreshAllViewports();
+      }
+
+      function unfoldDetailModal(id) {
+        const t = tasks.find(item => item.id === id); if (!t) return;
+        focusedTaskId = id; $('modalHeadTitle').textContent = t.title;
+        $('modalTimeText').textContent = `${t.date} ${t.time} (${t.duration}분 프레임)`;
+        $('modalMetaText').textContent = `분류: ${t.category.toUpperCase()} · 중요도: ${t.priority.toUpperCase()}`;
+        $('modalNoteArea').value = t.note || '메모 컴포넌트가 비어있습니다.';
+        $('notionModal').classList.add('show');
+      }
+      function foldModalWindow() { focusedTaskId = null; $('notionModal').classList.remove('show'); }
+
+      function shiftTargetDate(direction) {
+        if (activeViewMode === 'daily') pivotDate.setDate(pivotDate.getDate() + direction);
+        if (activeViewMode === 'weekly') pivotDate.setDate(pivotDate.getDate() + direction * 7);
+        if (activeViewMode === 'monthly') pivotDate.setMonth(pivotDate.getMonth() + direction);
+        $('date').value = makeDateKey(pivotDate); refreshAllViewports();
+      }
+
+      document.querySelectorAll('.view-tab').forEach(btn => btn.addEventListener('click', () => changeActiveViewFrame(btn.dataset.view)));
+      document.querySelectorAll('.cat-pill').forEach(btn => btn.addEventListener('click', () => changeCategorySelection(btn.dataset.category)));
+      
+      $('pushSwitch').addEventListener('click', () => { isNotificationActive = !isNotificationActive; $('pushSwitch').classList.toggle('on', isNotificationActive); });
+      $('schedulerForm').addEventListener('submit', saveFormPackage);
+      $('clearFormBtn').addEventListener('click', executeClearForm);
+      
+      $('todayNavBtn').addEventListener('click', () => { pivotDate = new Date(); $('date').value = makeDateKey(pivotDate); changeActiveViewFrame('daily'); });
+      $('moveTodayBtn').addEventListener('click', () => { pivotDate = new Date(); $('date').value = makeDateKey(pivotDate); refreshAllViewports(); });
+      $('movePrevBtn').addEventListener('click', () => shiftTargetDate(-1));
+      $('moveNextBtn').addEventListener('click', () => shiftTargetDate(1));
+      
+      $('resetPanelBtn').addEventListener('click', () => { executeClearForm(); showToastMessage('인풋 패널 초기화됨'); });
+      $('pushPermissionBtn').addEventListener('click', requestPushPermission);
+      $('modalCloseBtn').addEventListener('click', foldModalWindow);
+      
+      $('modalActionDelete').addEventListener('click', () => {
+        if (!focusedTaskId) return; tasks = tasks.filter(t => t.id !== focusedTaskId);
+        commitTasks(); foldModalWindow(); refreshAllViewports(); showToastMessage('지정 블록을 철거했습니다.');
+      });
+      $('modalActionDone').addEventListener('click', () => {
+        const t = tasks.find(item => item.id === focusedTaskId); if (!t) return;
+        t.done = !t.done; commitTasks(); foldModalWindow(); refreshAllViewports();
+        showToastMessage(t.done ? '미션 컴플리트 블록 처리' : '미완료 상태 복원');
+      });
+      $('modalActionEdit').addEventListener('click', () => {
+        const t = tasks.find(item => item.id === focusedTaskId); if (!t) return;
+        $('taskUid').value = t.id; $('title').value = t.title; $('date').value = t.date; $('time').value = t.time; $('duration').value = t.duration; $('repeat').value = t.repeat || 'none'; $('priority').value = t.priority; $('note').value = t.note || '';
+        isNotificationActive = t.reminder; $('pushSwitch').classList.toggle('on', isNotificationActive);
+        changeCategorySelection(t.category); pivotDate = resolveDateKey(t.date); changeActiveViewFrame('daily');
+        foldModalWindow(); showToastMessage('조종 패널에 블록 로드됨.');
+      });
+      $('notionModal').addEventListener('click', (e) => { if (e.target.id === 'notionModal') foldModalWindow(); });
+
+      executeClearForm(); refreshAllViewports(); setInterval(scanTimeReminders, 12000);
+    });
+  </script>
+</body>
+</html>
+
+```
