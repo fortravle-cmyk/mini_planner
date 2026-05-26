@@ -1,775 +1,206 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MiniDay Planner | Personal Schedule Garden</title>
-  <meta name="description" content="Daily, Weekly, Monthly 일정관리와 브라우저 알림을 지원하는 나만의 일정관리 앱" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Inter:wght@400;600;700;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
-
-  <style>
-    :root {
-      --sky-1: #a4dcff;
-      --sky-2: #7ec7ff;
-      --grass-1: #8ce69d;
-      --grass-2: #52ba70;
-      --white: #ffffff;
-      --ink: #111a2e;
-      --muted: rgba(255, 255, 255, 0.85);
-      --panel: rgba(255, 255, 255, 0.24);
-      --panel-strong: rgba(255, 255, 255, 0.38);
-      --line: rgba(255, 255, 255, 0.45);
-      --shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
-      --toy-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
-      
-      /* 선명한 완구풍 색상 구성 */
-      --blue: #2563eb;
-      --purple: #9333ea;
-      --orange: #ea580c;
-      --green: #16a34a;
-      --red: #dc2626;
-      --yellow: #facc15;
-      
-      --radius-xl: 24px;
-      --radius-lg: 16px;
-      --radius-md: 12px;
-      --blur: blur(20px);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-
-    body {
-      min-height: 100vh;
-      font-family: "Inter", "Noto Sans KR", sans-serif;
-      color: #fff;
-      background:
-        radial-gradient(circle at 15% 10%, rgba(255,255,255,.6), transparent 25rem),
-        radial-gradient(circle at 85% 15%, rgba(255,242,180,.4), transparent 22rem),
-        linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 35%, var(--grass-1) 35%, var(--grass-2) 100%);
-      background-attachment: fixed;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: -4;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,.15), transparent 20%, transparent 75%, rgba(0,0,0,.1)),
-        radial-gradient(ellipse at center, transparent 40%, rgba(255,255,255,.15) 70%, rgba(255,255,255,.3) 100%);
-    }
-
-    h1, h2, h3, .toy-logo { font-family: "Gaegu", "Noto Sans KR", sans-serif; font-weight: 700; letter-spacing: -0.01em; }
-
-    /* 장난감 미니어처 디오라마 배경 기믹 */
-    .mini-world { position: fixed; inset: 0; z-index: -3; pointer-events: none; overflow: hidden; filter: saturate(1.25) contrast(1.05) blur(0.3px); }
-    .sun { position: absolute; right: 10vw; top: 6vh; width: 84px; height: 84px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 44px rgba(250, 204, 21, 0.6); }
-    .cloud { position: absolute; width: 140px; height: 44px; border-radius: 999px; background: rgba(255,255,255,.82); animation: cloudMove 50s ease-in-out infinite; }
-    .cloud::before, .cloud::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,.9); }
-    .cloud::before { width: 60px; height: 60px; left: 20px; top: -25px; }
-    .cloud::after { width: 45px; height: 45px; right: 25px; top: -15px; }
-    .c1 { left: 6vw; top: 10vh; animation-delay: -3s; }
-    .c2 { left: 65vw; top: 14vh; transform: scale(.7); animation-delay: -15s; }
-    @keyframes cloudMove { 0%, 100% { translate: -20px 0; } 50% { translate: 45px 0; } }
-
-    .tilt-plane {
-      position: absolute; left: 50%; bottom: -200px; width: min(1440px, 120vw); height: 500px;
-      transform: translateX(-50%) perspective(1100px) rotateX(63deg) rotateZ(-1.5deg);
-      border-radius: 90px;
-      background:
-        linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(255,255,255,.1) 1px, transparent 1px),
-        #4fcf6a;
-      background-size: 44px 44px;
-      box-shadow: 0 -15px 50px rgba(16, 74, 38, .25) inset;
-    }
-    .road { position: absolute; left: 50%; bottom: -110px; width: 260px; height: 550px; transform: translateX(-50%) perspective(800px) rotateX(63deg); background: #434c5e; border-radius: 60px 60px 0 0; box-shadow: 0 12px 35px rgba(0,0,0,.2); }
-    .road::before { content: ""; position: absolute; left: 50%; top: 20px; width: 6px; height: 450px; transform: translateX(-50%); background: repeating-linear-gradient(180deg, #fff 0 24px, transparent 24px 48px); opacity: .75; }
-
-    .toy-building { position: absolute; bottom: 130px; width: 54px; height: 74px; border-radius: 12px 12px 6px 6px; background: linear-gradient(180deg, #fff, #f0fdf4); box-shadow: 0 10px 0 rgba(0,0,0,.12); }
-    .b1 { left: 12vw; transform: scale(.85); }
-    .b2 { right: 15vw; bottom: 150px; transform: scale(1); }
-
-    /* 메인 컨테이너 구조 설정 */
-    .app-shell { width: min(1360px, calc(100% - 32px)); margin: 0 auto; padding: 20px 0; }
-
-    /* 컴팩트 헤더 탑바 */
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(135deg, #ff4d6d, #f97316); box-shadow: var(--toy-shadow); font-size: 1.4rem; }
-    .brand h1 { font-size: 2rem; line-height: 1; color: #fff; }
-    .brand p { margin-top: 4px; color: var(--muted); font-weight: 700; font-size: .85rem; font-family: "Inter", sans-serif; }
-    .top-actions { display: flex; gap: 8px; align-items: center; }
-
-    /* 플라스틱 질감 버튼 */
-    .toy-btn { cursor: pointer; border: 0; border-radius: 12px; padding: 9px 14px; background: rgba(255,255,255,.22); color: var(--white); font-weight: 800; font-size: .84rem; backdrop-filter: var(--blur); border: 1px solid var(--line); box-shadow: 0 5px 0 rgba(0,0,0,.15); transition: all .12s ease; }
-    .toy-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 0 rgba(0,0,0,.15); background: rgba(255,255,255,.32); }
-    .toy-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,.15); }
-    .toy-btn.primary { background: linear-gradient(135deg, #2563eb, #3b82f6); border: 0; }
-    .toy-btn.success { background: linear-gradient(135deg, #16a34a, #22c55e); border: 0; }
-
-    /* 미니 브리핑 보드 (상단 가로형 압축) */
-    .hero-card { border-radius: 20px; padding: 14px 20px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); backdrop-filter: var(--blur); box-shadow: var(--shadow); margin-bottom: 16px; }
-    .hero-content { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
-    .hero-title { font-size: 1.5rem; color: #fff; }
-    .hero-sub { color: var(--muted); font-size: .88rem; font-weight: 600; margin-top: 2px; }
-
-    /* 메인 3분할 픽스드 대시보드 시스템 */
-    .dashboard { display: grid; grid-template-columns: 310px 1fr 310px; gap: 16px; align-items: stretch; height: 720px; }
-    .panel { display: flex; flex-direction: column; border-radius: var(--radius-xl); background: var(--panel); border: 1px solid var(--line); backdrop-filter: var(--blur); box-shadow: var(--shadow); overflow: hidden; height: 100%; }
-    
-    .panel-head { padding: 16px 16px 10px; flex: 0 0 auto; }
-    .panel-title { font-size: 1.25rem; font-weight: 700; color: #fff; }
-    .panel-sub { color: var(--muted); font-size: .78rem; font-weight: 600; margin-top: 2px; }
-
-    .view-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 0 16px 12px; flex: 0 0 auto; }
-    .view-tab { cursor: pointer; border: 0; border-radius: 10px; padding: 8px 4px; background: rgba(255,255,255,.14); color: var(--white); font-weight: 800; font-size: .8rem; border: 1px solid rgba(255,255,255,.18); transition: .12s; }
-    .view-tab.active { background: var(--white); color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.12); }
-
-    /* 좌측 입력 폼 패널 스크롤 지정 */
-    .form-scroll-box { padding: 0 16px 16px; display: grid; gap: 10px; overflow-y: auto; flex: 1 1 auto; }
-    .field label { display: block; font-size: .75rem; font-weight: 800; color: rgba(255,255,255,.9); margin-bottom: 4px; }
-    .field input, .field textarea, .field select { width: 100%; border: 1px solid rgba(255,255,255,.35); border-radius: 10px; padding: 9px 11px; background: rgba(255,255,255,.94); color: var(--ink); outline: none; font-weight: 650; font-size: .85rem; }
-    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--blue); }
-    .field textarea { min-height: 60px; resize: vertical; }
-    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-    /* 완구 부품 모양 카테고리 칩 */
-    .category-row { display: flex; flex-wrap: wrap; gap: 4px; }
-    .cat-pill { border: 0; border-radius: 999px; padding: 5px 9px; color: white; font-size: .7rem; font-weight: 800; cursor: pointer; opacity: .45; transition: all .12s ease; border: 1px solid rgba(255,255,255,.2); }
-    .cat-pill.active { opacity: 1; transform: scale(1.05); box-shadow: 0 4px 0 rgba(0,0,0,.15); }
-
-    .toggle-line { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border-radius: 10px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); font-weight: 800; font-size: .8rem; }
-    .switch { width: 38px; height: 20px; border-radius: 999px; background: rgba(255,255,255,.25); padding: 2px; cursor: pointer; transition: .15s ease; }
-    .switch span { display: block; width: 16px; height: 16px; background: white; border-radius: 50%; transition: .15s ease; }
-    .switch.on { background: var(--green); }
-    .switch.on span { transform: translateX(18px); }
-
-    /* 중앙 메인 달력 제어 시스템 */
-    .calendar-toolbar { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.18); flex: 0 0 auto; }
-    .date-nav { display: flex; gap: 5px; align-items: center; }
-    .icon-btn { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; cursor: pointer; background: rgba(255,255,255,.15); color: var(--white); font-size: 1rem; font-weight: 900; border: 1px solid rgba(255,255,255,.2); }
-    
-    .calendar-body { padding: 14px 16px; flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; }
-    
-    /* 계기판 스코어 KPI */
-    .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; flex: 0 0 auto; }
-    .kpi { border-radius: var(--radius-lg); padding: 8px 4px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2); box-shadow: 0 4px 0 rgba(0,0,0,.05); text-align: center; }
-    .kpi b { display: block; font-size: 1.35rem; font-weight: 900; line-height: 1.1; }
-    .kpi span { display: block; margin-top: 4px; color: var(--muted); font-size: .68rem; font-weight: 700; }
-
-    /* 메인 정원 뷰포트 영역 스크롤 바인딩 */
-    .view-scroll-viewport { flex: 1 1 auto; overflow-y: auto; padding-right: 2px; }
-
-    /* 데일리 타임라인 슬림화 */
-    .timeline { display: grid; gap: 6px; }
-    .time-slot { display: grid; grid-template-columns: 50px minmax(0, 1fr); gap: 10px; align-items: start; min-height: 44px; }
-    .time-label { color: rgba(255,255,255,.9); font-weight: 800; font-size: .75rem; padding-top: 6px; font-family: "Inter", sans-serif; }
-    .time-lane { min-height: 42px; border-radius: 10px; background: rgba(255,255,255,.1); border: 1px dashed rgba(255,255,255,.25); padding: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 5px; }
-
-    /* 토이 패키지 스타일의 노션 카드 */
-    .task-card { position: relative; border-radius: 11px; padding: 6px 8px 6px 12px; background: rgba(255,255,255,.94); color: var(--ink); box-shadow: 0 4px 0 rgba(0,0,0,.12); overflow: hidden; cursor: pointer; transition: transform .12s, opacity .12s; }
-    .task-card:hover { transform: translateY(-1px); }
-    .task-card.done { opacity: .52; }
-    .task-card.done .task-title { text-decoration: line-through; }
-    .task-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--task-color, var(--blue)); }
-    .task-time { font-size: .65rem; color: #64748b; font-weight: 700; }
-    .task-title { font-size: .8rem; font-weight: 900; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .task-meta { display: flex; gap: 4px; margin-top: 3px; font-size: .6rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
-    .task-meta span { background: #e2e8f0; padding: 1px 4px; border-radius: 3px; }
-
-    /* 위클리 격자 압축 */
-    .week-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; height: 100%; }
-    .week-day { min-height: 480px; border-radius: 12px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.2); padding: 6px; display: flex; flex-direction: column; gap: 5px; }
-    .week-day.today { box-shadow: inset 0 0 0 2px #fff; background: rgba(255,255,255,.15); }
-    .week-day-head { font-weight: 900; display: flex; justify-content: space-between; font-size: .75rem; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 2px; }
-
-    /* 먼슬리 격자 압축 */
-    .weekday-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-bottom: 4px; flex: 0 0 auto; }
-    .weekday-name { text-align: center; color: rgba(255,255,255,.85); font-weight: 900; font-size: .7rem; }
-    .month-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-    .month-cell { min-height: 74px; border-radius: 12px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); padding: 5px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; }
-    .month-cell.muted { opacity: .35; }
-    .month-cell.today { background: rgba(255,255,255,.2); box-shadow: inset 0 0 0 2px #fff; }
-    .month-date { font-weight: 900; font-size: .75rem; font-family: "Inter", sans-serif; }
-    .month-preview { display: flex; flex-direction: column; gap: 2px; margin-top: auto; }
-    .month-mini-task { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; border-radius: 3px; padding: 1px 3px; background: rgba(255,255,255,.85); color: var(--ink); font-size: .58rem; font-weight: 800; }
-
-    /* 우측 사이드 브리핑 리스트 상시 고정 박스 */
-    .side-scroll-box { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
-    .side-section { padding: 14px 16px; border-top: 1px solid rgba(255,255,255,.15); }
-    .side-section:first-of-type { border-top: 0; }
-    .side-list { display: grid; gap: 6px; margin-top: 8px; }
-    .empty { border-radius: 12px; padding: 10px; background: rgba(255,255,255,.08); border: 1px dashed rgba(255,255,255,.2); color: var(--muted); font-size: .75rem; text-align: center; }
-    
-    .mini-progress { height: 8px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.2); margin-top: 8px; }
-    .mini-progress span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ff4d6d, #10b981); transition: width .3s ease; }
-
-    .focus-item { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 10px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.2); font-weight: 700; font-size: .78rem; }
-    .focus-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .check-btn { border-radius: 6px; width: 20px; height: 20px; background: rgba(255,255,255,.2); color: white; cursor: pointer; font-weight: 900; font-size: .7rem; display: grid; place-items: center; }
-
-    /* 스크롤바 토이 가든 커스텀 스타일 */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
-
-    /* 대화상자 모달 팝업 */
-    .modal-backdrop { position: fixed; inset: 0; z-index: 2000; display: none; place-items: center; padding: 16px; background: rgba(11,16,26,.45); backdrop-filter: blur(10px); }
-    .modal-backdrop.show { display: grid; }
-    .modal { width: min(440px, 100%); border-radius: 20px; background: #fff; color: var(--ink); box-shadow: 0 25px 60px rgba(0,0,0,0.25); overflow: hidden; }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid #e2e8f0; }
-    .modal-head h3 { font-size: 1.15rem; font-weight: 900; }
-    .modal-close { border: 0; background: transparent; font-size: 1.3rem; cursor: pointer; color: #64748b; }
-    .modal-body { padding: 16px; display: grid; gap: 10px; }
-    .info-block label { display: block; font-size: .7rem; font-weight: 700; color: #64748b; margin-bottom: 2px; }
-    .info-block p { font-size: .85rem; font-weight: 650; background: #f8fafc; padding: 8px 10px; border-radius: 6px; }
-    .info-block textarea { width: 100%; border: 0; background: #f8fafc; border-radius: 6px; padding: 8px 10px; font-size: .85rem; height: 80px; outline: none; }
-    .modal-actions { display: flex; gap: 6px; justify-content: flex-end; padding: 10px 16px 14px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
-    .m-btn { border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer; font-size: .8rem; }
-    .m-btn.danger { background: #fee2e2; color: #ef4444; margin-right: auto; }
-    .m-btn.success { background: #d1fae5; color: #065f46; }
-    .m-btn.primary { background: #e0f2fe; color: #0369a1; }
-
-    /* 토스트 알림 메시지 시스템 */
-    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 3000; max-width: 320px; display: none; padding: 12px 16px; border-radius: 14px; background: rgba(17,26,46,.92); color: white; font-weight: 600; font-size: .82rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-    .toast.show { display: block; animation: toastUp .2s ease; }
-    @keyframes toastUp { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-    /* 미디어 쿼리 최적화 */
-    @media (max-width: 1100px) {
-      .dashboard { grid-template-columns: 290px 1fr; height: auto; }
-      .dashboard > aside:last-child { grid-column: 1 / -1; height: auto; }
-      .side-scroll-box { display: grid; grid-template-columns: repeat(3, 1fr); }
-      .side-section { border-top: 0; border-left: 1px solid rgba(255,255,255,.15); }
-      .side-section:first-of-type { border-left: 0; }
-    }
-    @media (max-width: 760px) {
-      .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .dashboard { grid-template-columns: 1fr; }
-      .side-scroll-box { display: block; }
-      .side-section { border-left: 0; border-top: 1px solid rgba(255,255,255,.15); }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Schedule Garden - Miniature Construction Lab Planner</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="bg-world" aria-hidden="true"></div>
+<div class="bg-blur-overlay" aria-hidden="true"></div>
+<div class="bg-dark-overlay" aria-hidden="true"></div>
 
-  <div class="mini-world" aria-hidden="true">
-    <div class="sun"></div>
-    <div class="cloud c1"></div>
-    <div class="cloud c2"></div>
-    <div class="tilt-plane"></div>
-    <div class="road"></div>
-    <div class="toy-building b1"></div>
-    <div class="toy-building b2"></div>
-  </div>
-
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-icon">🏡</div>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🏗️</div>
+      <div>
+        <h1>Schedule Garden</h1>
+        <p>Miniature Construction Lab Planner</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="toy-btn" id="todayBtn">Today</button>
+      <button class="toy-btn success" id="notifyBtn">🔔 알림 허용</button>
+      <button class="toy-btn warning" id="summaryBtn">오늘 일정 요약</button>
+      <button class="toy-btn danger" id="resetAllBtn">전체 초기화</button>
+    </div>
+  </header>
+  <section class="hero">
+    <div class="hero-card">
+      <h2>건축 모형판 위에 연구 일정을 블럭처럼 배치하세요.</h2>
+      <p>연구, 현장, 수업, 논문 일정을 블럭 단위로 조립합니다.</p>
+    </div>
+    <div class="search-card">
+      <div class="search-row">
+        <input id="searchInput" type="text" placeholder="일정 검색하기"/>
+        <select id="filterCategory">
+          <option value="all">전체 카테고리</option>
+          <option value="study">Study</option>
+          <option value="research">Research</option>
+          <option value="fieldwork">Fieldwork</option>
+          <option value="life">Life</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+    </div>
+  </section>
+  <main class="layout">
+    <aside class="panel left-panel">
+      <div class="panel-head">
+        <h3>Research Block Panel</h3>
+        <p>날짜/시간 칸을 클릭하면 자동으로 설정됩니다.</p>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-view="daily">Daily</button>
+        <button class="tab" data-view="weekly">Weekly</button>
+        <button class="tab" data-view="monthly">Monthly</button>
+      </div>
+      <form class="form" id="taskForm">
+        <input type="hidden" id="taskId"/>
+        <div class="field">
+          <label for="title">일정 블럭 제목</label>
+          <input id="title" type="text" placeholder="예: 구역 A 지반 조사" required/>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="date">날짜 지정</label>
+            <input id="date" type="date" required/>
+          </div>
+          <div class="field">
+            <label for="time">시작 시간</label>
+            <input id="time" type="time" required/>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="field">
+            <label for="duration">소요 시간</label>
+            <select id="duration">
+              <option value="30">30분</option>
+              <option value="60" selected>1시간</option>
+              <option value="90">1시간 30분</option>
+              <option value="120">2시간</option>
+              <option value="180">3시간</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="repeat">반복 패턴</label>
+            <select id="repeat">
+              <option value="none">없음</option>
+              <option value="daily">7일간 매일</option>
+              <option value="weekly">4주간 매주</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>연구 카테고리</label>
+          <div class="category-row">
+            <button type="button" class="chip study active" data-category="study">Study</button>
+            <button type="button" class="chip research" data-category="research">Research</button>
+            <button type="button" class="chip work" data-category="fieldwork">Fieldwork</button>
+            <button type="button" class="chip life" data-category="life">Life</button>
+            <button type="button" class="chip urgent" data-category="urgent">Urgent</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="priority">중요도</label>
+          <select id="priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="note">세부 지시사항</label>
+          <textarea id="note" placeholder="메모 및 세부 사항"></textarea>
+        </div>
+        <div class="toggle-box">
+          <span>알림 푸시</span>
+          <div class="switch on" id="reminderSwitch"><span></span></div>
+        </div>
+        <div class="two-col" style="margin-top:4px;">
+          <button class="toy-btn primary" type="submit" id="submitBtn">블럭 조립</button>
+          <button class="toy-btn" type="button" id="clearBtn">입력 비우기</button>
+        </div>
+      </form>
+    </aside>
+    <section class="panel main-panel">
+      <div class="calendar-top">
         <div>
-          <h1>Schedule Garden</h1>
-          <p>Miniature Control Panel</p>
+          <h2 id="viewTitle">Daily Site Board</h2>
+          <p id="viewSubtitle">오늘의 일정 계획</p>
+        </div>
+        <div class="date-nav">
+          <button class="icon-btn" id="prevBtn">‹</button>
+          <button class="icon-btn" id="goTodayBtn">●</button>
+          <button class="icon-btn" id="nextBtn">›</button>
         </div>
       </div>
-      <div class="top-actions">
-        <button class="toy-btn" id="todayNavBtn">Today</button>
-        <button class="toy-btn success" id="pushPermissionBtn">🔔 알림 허용</button>
-        <button class="toy-btn primary" id="resetPanelBtn">+ 포커스 리셋</button>
-      </div>
-    </header>
-
-    <section class="hero-card">
-      <div class="hero-content">
-        <div>
-          <h2 class="hero-title">장난감 정원처럼 직관적으로 다이어리를 관리하세요.</h2>
-          <p class="hero-sub">모든 타임 블록과 인풋 데이터는 브라우저 내부 스토리지에 즉시 기재 및 세이브됩니다.</p>
+      <div class="calendar-body">
+        <div class="kpis">
+          <div class="kpi"><b id="kpiTotal">0</b><span>전체 블럭</span></div>
+          <div class="kpi"><b id="kpiToday">0</b><span>오늘 작업</span></div>
+          <div class="kpi"><b id="kpiDone">0%</b><span>진척도</span></div>
+          <div class="kpi"><b id="kpiHigh">0</b><span>경고(High)</span></div>
+        </div>
+        <div class="viewport">
+          <div class="view active" id="dailyView">
+            <div class="timeline" id="dailyTimeline"></div>
+          </div>
+          <div class="view" id="weeklyView">
+            <div class="week-grid" id="weeklyGrid"></div>
+          </div>
+          <div class="view" id="monthlyView">
+            <div class="weekday-row" id="weekdayRow"></div>
+            <div class="month-grid" id="monthGrid"></div>
+          </div>
         </div>
       </div>
     </section>
-
-    <main class="dashboard">
-      
-      <aside class="panel">
-        <div class="panel-head">
-          <div class="panel-title">인풋 조종 패널</div>
-          <p class="panel-sub">원하는 블록 단위의 세부 일정을 할당합니다.</p>
-        </div>
-
-        <div class="view-tabs">
-          <button type="button" class="view-tab active" data-view="daily">Daily</button>
-          <button type="button" class="view-tab" data-view="weekly">Weekly</button>
-          <button type="button" class="view-tab" data-view="monthly">Monthly</button>
-        </div>
-
-        <form class="form-scroll-box" id="schedulerForm">
-          <input type="hidden" id="taskUid" />
-          
-          <div class="field">
-            <label for="title">할 일 제목</label>
-            <input id="title" type="text" placeholder="예: 학과 연구실 미팅 참여" required />
-          </div>
-
-          <div class="form-grid-2">
-            <div class="field">
-              <label for="date">날짜 지정</label>
-              <input id="date" type="date" required />
-            </div>
-            <div class="field">
-              <label for="time">시작 타임</label>
-              <input id="time" type="time" required />
-            </div>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="field">
-              <label for="duration">소요 주기</label>
-              <select id="duration">
-                <option value="30">30 min</option>
-                <option value="60" selected>1 hour</option>
-                <option value="90">1.5 hours</option>
-                <option value="120">2 hours</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="repeat">반복 패턴</label>
-              <select id="repeat">
-                <option value="none">없음</option>
-                <option value="daily">매일 반복</option>
-                <option value="weekly">매주 반복</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label>정원 카테고리 알약</label>
-            <div class="category-row">
-              <button type="button" class="cat-pill cat-study active" data-category="study">Study</button>
-              <button type="button" class="cat-pill cat-research" data-category="research">Research</button>
-              <button type="button" class="cat-pill cat-work" data-category="work">Work</button>
-              <button type="button" class="cat-pill cat-life" data-category="life">Life</button>
-              <button type="button" class="cat-pill cat-urgent" data-category="urgent">Urgent</button>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="priority">중요도 필터</label>
-            <select id="priority">
-              <option value="low">Low (낮음)</option>
-              <option value="medium" selected>Medium (보통)</option>
-              <option value="high">High (우선)</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="note">노션 스타일 상세 메모</label>
-            <textarea id="note" placeholder="메모 및 하이퍼링크 세부 내용 기재"></textarea>
-          </div>
-
-          <div class="toggle-line">
-            <span>브라우저 정각 타임 푸시</span>
-            <div class="switch on" id="pushSwitch" role="button" tabindex="0"><span></span></div>
-          </div>
-
-          <button class="toy-btn primary" type="submit">가든 보드에 블록 심기</button>
-        </form>
-      </aside>
-
-      <section class="panel main-calendar">
-        <div class="calendar-toolbar">
-          <div>
-            <h2 id="boardMainTitle">Daily Miniature</h2>
-            <p id="boardSubTitle">정밀 제어 뷰포트</p>
-          </div>
-          <div class="date-nav">
-            <button class="icon-btn" id="movePrevBtn">‹</button>
-            <button class="icon-btn" id="moveTodayBtn">●</button>
-            <button class="icon-btn" id="moveNextBtn">›</button>
-          </div>
-        </div>
-
-        <div class="calendar-body">
-          <div class="kpi-row">
-            <div class="kpi"><b id="vKpiTotal">0</b><span>전체 일정 수</span></div>
-            <div class="kpi"><b id="vKpiToday">0</b><span>오늘의 블록</span></div>
-            <div class="kpi"><b id="vKpiDone">0%</b><span>완료율</span></div>
-            <div class="kpi"><b id="vKpiHigh">0</b><span>High 우선순위</span></div>
-          </div>
-
-          <div class="view-scroll-viewport">
-            
-            <div class="daily-view active" id="canvasDaily">
-              <div class="timeline" id="dailyMatrix"></div>
-            </div>
-
-            <div class="weekly-view" id="canvasWeekly">
-              <div class="week-grid" id="weeklyMatrix"></div>
-            </div>
-
-            <div class="monthly-view" id="canvasMonthly">
-              <div class="weekday-row" id="weekdayHeader"></div>
-              <div class="month-grid" id="monthlyMatrix"></div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      <aside class="panel">
-        <div class="side-scroll-box">
-          
-          <div class="side-section">
-            <h3 class="panel-title">오늘의 에코 달성 지표</h3>
-            <p class="panel-sub" id="sideProgressSummary">로드 중</p>
-            <div class="mini-progress"><span id="sidePercentBar"></span></div>
-          </div>
-
-          <div class="side-section">
-            <h3 class="panel-title">Next Up (다가오는 블록)</h3>
-            <div class="side-list" id="sideNextBox"></div>
-          </div>
-
-          <div class="side-section">
-            <h3 class="panel-title">High 정원 전용 트래커</h3>
-            <div class="side-list" id="sideHighFocusBox"></div>
-          </div>
-
-        </div>
-      </aside>
-    </main>
-  </div>
-
-  <div class="modal-backdrop" id="notionModal">
-    <div class="modal">
-      <div class="modal-head">
-        <h3 id="modalHeadTitle">상세 블록 레이아웃</h3>
-        <button class="modal-close" id="modalCloseBtn">×</button>
+    <aside class="panel right-panel">
+      <div class="panel-head">
+        <h3>Lab Brief</h3>
+        <p>요약 및 포커스 블럭</p>
       </div>
-      <div class="modal-body">
-        <div class="info-block">
-          <label>매핑 타임 프레임</label>
-          <p id="modalTimeText"></p>
-        </div>
-        <div class="info-block">
-          <label>식별 메타 태그</label>
-          <p id="modalMetaText"></p>
-        </div>
-        <div class="info-block">
-          <label>상세 노트 트리</label>
-          <textarea id="modalNoteArea" readonly></textarea>
-        </div>
+      <div class="right-scroll">
+        <section class="side-box">
+          <h4>오늘 진척도</h4>
+          <p id="todayProgressText">오늘 조립할 블럭이 없습니다.</p>
+          <div class="progress"><span id="todayProgressBar"></span></div>
+        </section>
+        <section class="side-box">
+          <h4>Next Up</h4>
+          <div class="side-list" id="nextList"></div>
+        </section>
+        <section class="side-box">
+          <h4>Priority Blocks</h4>
+          <div class="side-list" id="highList"></div>
+        </section>
       </div>
-      <div class="modal-actions">
-        <button class="m-btn danger" id="modalActionDelete">블록 철거</button>
-        <button class="m-btn success" id="modalActionDone">달성 상태 변경</button>
-        <button class="m-btn primary" id="modalActionEdit">인풋 로드 수정</button>
-      </div>
+    </aside>
+  </main>
+</div>
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">블럭 상세</h3>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="info"><label>시간</label><p id="modalTime"></p></div>
+      <div class="info"><label>분류 정보</label><p id="modalMeta"></p></div>
+      <div class="info"><label>세부 지시사항</label><textarea id="modalNote" readonly></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="toy-btn danger" id="deleteTaskBtn">파기</button>
+      <button class="toy-btn success" id="doneTaskBtn">완료 보고</button>
+      <button class="toy-btn primary" id="editTaskBtn">수정하기</button>
     </div>
   </div>
+</div>
+<div class="toast" id="toast"></div>
 
-  <div class="toast" id="gardenToast"></div>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const KEY = 'miniDayPlannerTasksV4_Compact';
-      const cColors = { study: '#2563eb', research: '#9333ea', work: '#ea580c', life: '#16a34a', urgent: '#dc2626' };
-      const $ = (id) => document.getElementById(id);
-      const generateUid = () => `block-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-
-      let tasks = fetchTasks();
-      let activeViewMode = 'daily';
-      let pivotDate = new Date();
-      let pickedCategory = 'study';
-      let isNotificationActive = true;
-      let focusedTaskId = null;
-      const pushedAlertSet = new Set();
-
-      function formatDigit(n) { return String(n).padStart(2, '0'); }
-      function makeDateKey(d) { return `${d.getFullYear()}-${formatDigit(d.getMonth()+1)}-${formatDigit(d.getDate())}`; }
-      function resolveDateKey(key) { const [y,m,d] = key.split('-').map(Number); return new Date(y, m - 1, d); }
-      function getSundayNode(date) { const d = new Date(date); d.setDate(d.getDate() - d.getDay()); d.setHours(0,0,0,0); return d; }
-      function verifyIdentityDate(a, b) { return makeDateKey(a) === makeDateKey(b); }
-      function escapeOutput(text) { return String(text).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
-
-      function fetchTasks() {
-        try { const stored = localStorage.getItem(KEY); if (stored) return JSON.parse(stored); } catch(e) { console.warn(e); }
-        const todayKey = makeDateKey(new Date());
-        return [
-          { id: generateUid(), title: '연구 핵심 파이프라인 수립', date: todayKey, time: '10:00', duration: 60, repeat: 'none', category: 'research', priority: 'high', note: '안전 보건 시스템 인프라 구축 흐름 정의.', reminder: true, done: false },
-          { id: generateUid(), title: '가든 컴팩트 다이어리 검증', date: todayKey, time: '15:30', duration: 90, repeat: 'none', category: 'study', priority: 'medium', note: 'UI 스크롤 압축 본문 가독성 테스트.', reminder: true, done: true }
-        ];
-      }
-      function commitTasks() { localStorage.setItem(KEY, JSON.stringify(tasks)); }
-      function showToastMessage(msg) { const bar = $('gardenToast'); bar.textContent = msg; bar.classList.add('show'); setTimeout(() => bar.classList.remove('show'), 2200); }
-
-      function requestPushPermission() {
-        if (!('Notification' in window)) { showToastMessage('푸시 알림 미지원 브라우저입니다.'); return; }
-        Notification.requestPermission().then((perm) => {
-          if (perm === 'granted') showToastMessage('브라우저 푸시 가든이 승인되었습니다.');
-          else showToastMessage('알림 권한이 비활성화 상태입니다.');
-        });
-      }
-
-      function scanTimeReminders() {
-        if (!('Notification' in window) || Notification.permission !== 'granted') return;
-        const currentStamp = new Date();
-        const stampStr = `${formatDigit(currentStamp.getHours())}:${formatDigit(currentStamp.getMinutes())}`;
-        const dayStr = makeDateKey(currentStamp);
-
-        tasks.forEach(t => {
-          if (!t.reminder || t.done || t.date !== dayStr || t.time !== stampStr) return;
-          const identityKey = `${t.id}-${t.date}-${t.time}`;
-          if (!pushedAlertSet.has(identityKey)) {
-            pushedAlertSet.add(identityKey);
-            new Notification('MiniDay Garden', { body: `지정 시간 일정: ${t.title} (${t.time})` });
-          }
-        });
-      }
-
-      function obtainTasksSpecificDate(d) {
-        const k = makeDateKey(d);
-        return tasks.filter(t => t.date === k).sort((a,b) => a.time.localeCompare(b.time));
-      }
-      function obtainWeekRangeArray(date) {
-        const sun = getSundayNode(date);
-        return Array.from({length: 7}, (_, i) => { const d = new Date(sun); d.setDate(sun.getDate() + i); return d; });
-      }
-
-      function updateUIHeaderTitles() {
-        const koLongString = pivotDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-        const enMonthString = pivotDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-        if (activeViewMode === 'daily') { $('boardMainTitle').textContent = 'Daily Miniature'; $('boardSubTitle').textContent = koLongString; }
-        else if (activeViewMode === 'weekly') {
-          const w = obtainWeekRangeArray(pivotDate);
-          $('boardMainTitle').textContent = 'Weekly Flow'; $('boardSubTitle').textContent = `${w[0].getMonth()+1}.${w[0].getDate()} - ${w[6].getMonth()+1}.${w[6].getDate()}`;
-        } else { $('boardMainTitle').textContent = 'Monthly Map System'; $('boardSubTitle').textContent = enMonthString; }
-      }
-
-      function prefillFormMatrix(date, hourString = '09:00') {
-        pivotDate = new Date(date);
-        $('date').value = makeDateKey(pivotDate);
-        $('time').value = hourString;
-        $('taskUid').value = '';
-        $('title').focus();
-      }
-
-      function buildTaskCardElement(t) {
-        const block = document.createElement('div');
-        block.className = `task-card ${t.done ? 'done' : ''}`;
-        block.style.setProperty('--task-color', cColors[t.category] || '#2563eb');
-        block.innerHTML = `<div class="task-time">${t.time} · ${t.duration}m</div><div class="task-title">${escapeOutput(t.title)}</div><div class="task-meta"><span>${t.category}</span><span>${t.priority}</span></div>`;
-        block.addEventListener('click', (ev) => { ev.stopPropagation(); unfoldDetailModal(t.id); });
-        return block;
-      }
-
-      function renderDailyTimeline() {
-        const box = $('dailyMatrix'); box.innerHTML = '';
-        const dayList = obtainTasksSpecificDate(pivotDate);
-
-        for (let hour = 6; hour <= 23; hour++) {
-          const formattedHour = `${formatDigit(hour)}:00`;
-          const cluster = dayList.filter(t => parseInt(t.time.split(':')[0]) === hour);
-          
-          const row = document.createElement('div'); row.className = 'time-slot';
-          row.innerHTML = `<div class="time-label">${formattedHour}</div><div class="time-lane" title="${formattedHour} 타임 블록 심기"></div>`;
-          const lane = row.querySelector('.time-lane');
-          lane.addEventListener('click', () => prefillFormMatrix(pivotDate, `${formatDigit(hour)}:00`));
-          
-          cluster.forEach(t => lane.appendChild(buildTaskCardElement(t)));
-          box.appendChild(row);
-        }
-      }
-
-      function renderWeeklyTimeline() {
-        const box = $('weeklyMatrix'); box.innerHTML = '';
-        const weekLabels = ['일','월','화','수','목','금','토'];
-        
-        obtainWeekRangeArray(pivotDate).forEach((d, idx) => {
-          const col = document.createElement('div'); col.className = 'week-day';
-          if (verifyIdentityDate(d, new Date())) col.classList.add('today');
-          col.innerHTML = `<div class="week-day-head"><span>${weekLabels[idx]}</span><span>${d.getMonth()+1}/${d.getDate()}</span></div>`;
-          col.addEventListener('click', () => { prefillFormMatrix(d, '09:00'); showToastMessage(`${d.getDate()}일 인풋 타임라인 동기화`); });
-          
-          const cluster = obtainTasksSpecificDate(d);
-          if (cluster.length) cluster.forEach(t => col.appendChild(buildTaskCardElement(t)));
-          else { const emp = document.createElement('div'); emp.className = 'empty'; emp.textContent = '블록 비어있음'; col.appendChild(emp); }
-          box.appendChild(col);
-        });
-      }
-
-      function renderMonthlyTimeline() {
-        $('weekdayHeader').innerHTML = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(day => `<div class="weekday-name">${day}</div>`).join('');
-        const box = $('monthlyMatrix'); box.innerHTML = '';
-        const y = pivotDate.getFullYear(); const m = pivotDate.getMonth();
-        const startDayNode = new Date(y, m, 1);
-        const engine = new Date(startDayNode); engine.setDate(1 - startDayNode.getDay());
-        const realToday = new Date();
-
-        for (let i = 0; i < 42; i++) {
-          const targetNode = new Date(engine);
-          const cluster = obtainTasksSpecificDate(targetNode);
-          
-          const cell = document.createElement('div'); cell.className = 'month-cell';
-          if (targetNode.getMonth() !== m) cell.classList.add('muted');
-          if (verifyIdentityDate(targetNode, realToday)) cell.classList.add('today');
-          
-          cell.innerHTML = `<div class="month-date">${targetNode.getDate()}</div><div class="month-preview"></div>`;
-          cell.addEventListener('click', () => { prefillFormMatrix(targetNode, '09:00'); showToastMessage(`${targetNode.getMonth()+1}/${targetNode.getDate()}일 편집 포커스`); });
-          
-          const previewArea = cell.querySelector('.month-preview');
-          cluster.slice(0, 2).forEach(t => {
-            const slab = document.createElement('div'); slab.className = 'month-mini-task';
-            slab.style.borderLeft = `3px solid ${cColors[t.category] || '#2563eb'}`;
-            slab.textContent = t.title;
-            slab.addEventListener('click', (e) => { e.stopPropagation(); unfoldDetailModal(t.id); });
-            previewArea.appendChild(slab);
-          });
-          if (cluster.length > 2) { const more = document.createElement('div'); more.className = 'month-mini-task'; more.textContent = `+${cluster.length - 2} blocks`; previewArea.appendChild(more); }
-          
-          box.appendChild(cell);
-          engine.setDate(engine.getDate() + 1);
-        }
-      }
-
-      function renderUtilitySidebars() {
-        const todayCluster = obtainTasksSpecificDate(new Date());
-        const completedCount = todayCluster.filter(t => t.done).length;
-        const progressRatio = todayCluster.length ? Math.round(completedCount / todayCluster.length * 100) : 0;
-        
-        $('sideProgressSummary').textContent = todayCluster.length ? `오늘 블록 ${todayCluster.length}개 중 ${completedCount}개 수집 완료 (${progressRatio}%)` : '오늘 배치된 다이어리 블록이 없습니다.';
-        $('sidePercentBar').style.width = `${progressRatio}%`;
-
-        const nextBox = $('sideNextBox'); nextBox.innerHTML = '';
-        const futureCluster = tasks.filter(t => !t.done && new Date(`${t.date}T${t.time}`) >= new Date()).sort((a,b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`)).slice(0, 3);
-        if (!futureCluster.length) nextBox.innerHTML = '<div class="empty">대기 중인 다음 일정이 없습니다.</div>';
-        else futureCluster.forEach(t => nextBox.appendChild(buildTaskCardElement(t)));
-
-        const highBox = $('sideHighFocusBox'); highBox.innerHTML = '';
-        const highCluster = tasks.filter(t => !t.done && t.priority === 'high').sort((a,b) => a.date.localeCompare(b.date)).slice(0, 3);
-        if (!highCluster.length) highBox.innerHTML = '<div class="empty">우선 제어 블록이 없습니다.</div>';
-        else highCluster.forEach(t => {
-          const item = document.createElement('div'); item.className = 'focus-item';
-          item.innerHTML = `<span class="focus-dot" style="background:${cColors[t.category] || '#2563eb'}"></span><span>${escapeOutput(t.title)}</span><button class="check-btn" title="완료 처리">✓</button>`;
-          item.querySelector('.check-btn').addEventListener('click', (e) => { e.stopPropagation(); t.done = true; commitTasks(); refreshAllViewports(); showToastMessage('포커스 미션 클리어!'); });
-          item.addEventListener('click', () => unfoldDetailModal(t.id));
-          highBox.appendChild(item);
-        });
-      }
-
-      function renderKpiMetrics() {
-        const todayCount = obtainTasksSpecificDate(new Date()).length;
-        const totalDone = tasks.filter(t => t.done).length;
-        $('vKpiTotal').textContent = tasks.length;
-        $('vKpiToday').textContent = todayCount;
-        $('vKpiDone').textContent = tasks.length ? `${Math.round(totalDone / tasks.length * 100)}%` : '0%';
-        $('vKpiHigh').textContent = tasks.filter(t => t.priority === 'high' && !t.done).length;
-      }
-
-      function refreshAllViewports() { updateUIHeaderTitles(); renderKpiMetrics(); renderDaily(); renderWeeklyTimeline(); renderMonthlyTimeline(); renderUtilitySidebars(); }
-
-      function renderDaily() { renderDailyTimeline(); }
-
-      function changeActiveViewFrame(targetMode) {
-        activeViewMode = targetMode;
-        document.querySelectorAll('.view-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.view === targetMode));
-        $('canvasDaily').classList.toggle('active', targetMode === 'daily');
-        $('canvasWeekly').classList.toggle('active', targetMode === 'weekly');
-        $('canvasMonthly').classList.toggle('active', targetMode === 'monthly');
-        refreshAllViewports();
-      }
-
-      function executeClearForm() {
-        $('taskUid').value = ''; $('title').value = ''; $('date').value = makeDateKey(pivotDate); $('time').value = '09:00'; $('duration').value = '60'; $('repeat').value = 'none'; $('priority').value = 'medium'; $('note').value = '';
-        isNotificationActive = true; $('pushSwitch').classList.add('on'); changeCategorySelection('study');
-      }
-      function changeCategorySelection(cat) { pickedCategory = cat; document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.category === cat)); }
-
-      function compileRepeatedBlocks(base) {
-        if (base.repeat === 'none') return [base];
-        const packet = [base]; const seedDate = resolveDateKey(base.date); const iterations = base.repeat === 'daily' ? 5 : 4;
-        for (let i = 1; i <= iterations; i++) {
-          const d = new Date(seedDate);
-          if (base.repeat === 'daily') d.setDate(seedDate.getDate() + i);
-          if (base.repeat === 'weekly') d.setDate(seedDate.getDate() + i * 7);
-          packet.push({ ...base, id: generateUid(), date: makeDateKey(d), repeat: 'none' });
-        }
-        return packet;
-      }
-
-      function saveFormPackage(e) {
-        e.preventDefault();
-        const id = $('taskUid').value;
-        const task = { id: id || generateUid(), title: $('title').value.trim(), date: $('date').value, time: $('time').value, duration: Number($('duration').value), repeat: $('repeat').value, category: pickedCategory, priority: $('priority').value, note: $('note').value.trim(), reminder: isNotificationActive, done: id ? (tasks.find(t => t.id === id)?.done || false) : false };
-        
-        if (!task.title || !task.date || !task.time) return;
-        
-        if (id) { tasks = tasks.map(t => t.id === id ? task : t); showToastMessage('블록 레이아웃 수정 완료.'); }
-        else { tasks.push(...compileRepeatedBlocks(task)); showToastMessage('가든에 다이어리 블록 배치 완료.'); }
-        
-        commitTasks(); pivotDate = resolveDateKey(task.date); executeClearForm(); refreshAllViewports();
-      }
-
-      function unfoldDetailModal(id) {
-        const t = tasks.find(item => item.id === id); if (!t) return;
-        focusedTaskId = id; $('modalHeadTitle').textContent = t.title;
-        $('modalTimeText').textContent = `${t.date} ${t.time} (${t.duration}분 프레임)`;
-        $('modalMetaText').textContent = `분류: ${t.category.toUpperCase()} · 중요도: ${t.priority.toUpperCase()}`;
-        $('modalNoteArea').value = t.note || '메모 컴포넌트가 비어있습니다.';
-        $('notionModal').classList.add('show');
-      }
-      function foldModalWindow() { focusedTaskId = null; $('notionModal').classList.remove('show'); }
-
-      function shiftTargetDate(direction) {
-        if (activeViewMode === 'daily') pivotDate.setDate(pivotDate.getDate() + direction);
-        if (activeViewMode === 'weekly') pivotDate.setDate(pivotDate.getDate() + direction * 7);
-        if (activeViewMode === 'monthly') pivotDate.setMonth(pivotDate.getMonth() + direction);
-        $('date').value = makeDateKey(pivotDate); refreshAllViewports();
-      }
-
-      document.querySelectorAll('.view-tab').forEach(btn => btn.addEventListener('click', () => changeActiveViewFrame(btn.dataset.view)));
-      document.querySelectorAll('.cat-pill').forEach(btn => btn.addEventListener('click', () => changeCategorySelection(btn.dataset.category)));
-      
-      $('pushSwitch').addEventListener('click', () => { isNotificationActive = !isNotificationActive; $('pushSwitch').classList.toggle('on', isNotificationActive); });
-      $('schedulerForm').addEventListener('submit', saveFormPackage);
-      $('clearFormBtn').addEventListener('click', executeClearForm);
-      
-      $('todayNavBtn').addEventListener('click', () => { pivotDate = new Date(); $('date').value = makeDateKey(pivotDate); changeActiveViewFrame('daily'); });
-      $('moveTodayBtn').addEventListener('click', () => { pivotDate = new Date(); $('date').value = makeDateKey(pivotDate); refreshAllViewports(); });
-      $('movePrevBtn').addEventListener('click', () => shiftTargetDate(-1));
-      $('moveNextBtn').addEventListener('click', () => shiftTargetDate(1));
-      
-      $('resetPanelBtn').addEventListener('click', () => { executeClearForm(); showToastMessage('인풋 패널 초기화됨'); });
-      $('pushPermissionBtn').addEventListener('click', requestPushPermission);
-      $('modalCloseBtn').addEventListener('click', foldModalWindow);
-      
-      $('modalActionDelete').addEventListener('click', () => {
-        if (!focusedTaskId) return; tasks = tasks.filter(t => t.id !== focusedTaskId);
-        commitTasks(); foldModalWindow(); refreshAllViewports(); showToastMessage('지정 블록을 철거했습니다.');
-      });
-      $('modalActionDone').addEventListener('click', () => {
-        const t = tasks.find(item => item.id === focusedTaskId); if (!t) return;
-        t.done = !t.done; commitTasks(); foldModalWindow(); refreshAllViewports();
-        showToastMessage(t.done ? '미션 컴플리트 블록 처리' : '미완료 상태 복원');
-      });
-      $('modalActionEdit').addEventListener('click', () => {
-        const t = tasks.find(item => item.id === focusedTaskId); if (!t) return;
-        $('taskUid').value = t.id; $('title').value = t.title; $('date').value = t.date; $('time').value = t.time; $('duration').value = t.duration; $('repeat').value = t.repeat || 'none'; $('priority').value = t.priority; $('note').value = t.note || '';
-        isNotificationActive = t.reminder; $('pushSwitch').classList.toggle('on', isNotificationActive);
-        changeCategorySelection(t.category); pivotDate = resolveDateKey(t.date); changeActiveViewFrame('daily');
-        foldModalWindow(); showToastMessage('조종 패널에 블록 로드됨.');
-      });
-      $('notionModal').addEventListener('click', (e) => { if (e.target.id === 'notionModal') foldModalWindow(); });
-
-      executeClearForm(); refreshAllViewports(); setInterval(scanTimeReminders, 12000);
-    });
-  </script>
+<script src="app.js"></script>
 </body>
 </html>
