@@ -3,36 +3,36 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Schedule Garden</title>
+<title>Schedule Garden - Construction Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Varela+Round&display=swap');
 
 :root {
-  /* Cute, bright miniature village */
-  --bg-image: url('https://images.unsplash.com/photo-1518398492021-39656a422180?q=80&w=2560&auto=format&fit=crop');
+  /* Miniature Construction/Urban Aerial */
+  --bg-image: url('https://images.unsplash.com/photo-1541888086425-d81bb19240f5?q=80&w=2560&auto=format&fit=crop');
   
   --text-main: #FFFFFF;
   --text-muted: rgba(255, 255, 255, 0.75);
   --text-dim: rgba(255, 255, 255, 0.5);
   
-  /* Classic Toy Block Colors (Saturated, friendly) */
-  --c-study: #007AFF; /* Apple Blue */
-  --c-research: #AF52DE; /* Apple Purple */
-  --c-work: #FF9500; /* Apple Orange */
-  --c-life: #34C759; /* Apple Green */
-  --c-urgent: #FF3B30; /* Apple Red */
+  /* Construction/Research Accents (Saturated, friendly) */
+  --c-study: #00E5FF; /* Cyan Blueprint */
+  --c-research: #9C27B0; /* Purple Survey */
+  --c-work: #FFD600; /* Safety Yellow */
+  --c-life: #00E676; /* Green Infrastructure */
+  --c-urgent: #FF3D00; /* Alert Orange/Red */
   
-  /* Toy Package Card - Friendly Navy */
-  --panel-bg: rgba(30, 41, 59, 0.85); 
-  --panel-border: rgba(255, 255, 255, 0.25);
+  /* Blueprint Panel Background */
+  --panel-bg: rgba(14, 30, 56, 0.9); 
+  --panel-border: rgba(255, 255, 255, 0.3);
   
-  /* Chunky, soft radii */
-  --radius-xl: 32px;
-  --radius-lg: 24px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
+  /* Toy Brick Radii (More structured, blocky but rounded) */
+  --radius-xl: 20px;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -69,22 +69,27 @@ h1, h2, h3, h4, .brand-icon, .kpi b, .time-label, .month-date, .week-head, .toy-
   font-family: 'Varela Round', sans-serif;
 }
 
-/* --- LAYOUT & PANELS (TOY PACKAGE) --- */
+/* --- LAYOUT & PANELS (TOY PACKAGE + BLUEPRINT) --- */
 .wrap { width: min(1500px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0 50px; }
 .hero { display: grid; grid-template-columns: 1.5fr 1fr; gap: 24px; margin-bottom: 24px; }
 .layout { display: grid; grid-template-columns: 360px 1fr 340px; gap: 24px; align-items: stretch; }
 .left-panel, .main-panel, .right-panel { display: flex; flex-direction: column; height: 780px; overflow: hidden; }
 
 .panel, .hero-card, .search-card, .modal {
-  background: var(--panel-bg);
+  background-color: var(--panel-bg);
+  /* Blueprint Grid Pattern */
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  border: 3px solid var(--panel-border);
+  border: 4px solid var(--panel-border);
   border-radius: var(--radius-xl);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), inset 0 4px 10px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), inset 0 4px 0 rgba(255, 255, 255, 0.15);
   position: relative;
 }
 
-.panel-head { padding: 24px 30px 16px; border-bottom: 2px solid rgba(255,255,255,0.08); }
+.panel-head { padding: 24px 30px 16px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); border-radius: calc(var(--radius-xl) - 4px) calc(var(--radius-xl) - 4px) 0 0; }
 .panel-head h3 { font-size: 24px; color: #fff; letter-spacing: 0.5px; }
 .panel-head p { margin-top: 6px; font-size: 14px; color: var(--text-muted); font-weight: 600; }
 
@@ -93,49 +98,49 @@ h1, h2, h3, h4, .brand-icon, .kpi b, .time-label, .month-date, .week-head, .toy-
 .brand { display: flex; align-items: center; gap: 16px; }
 .brand-icon {
   width: 60px; height: 60px; display: grid; place-items: center;
-  border-radius: 20px; background: linear-gradient(135deg, #fff, #e2e8f0);
-  border: 3px solid rgba(255,255,255,0.5); font-size: 32px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  border-radius: 16px; background: linear-gradient(135deg, #FFD600, #FF9500);
+  border: 4px solid rgba(255,255,255,0.8); font-size: 32px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3); color: #000;
 }
 .brand h1 { font-size: 36px; color: #fff; text-shadow: 0 4px 10px rgba(0,0,0,0.5); line-height: 1.1; }
-.brand p { font-size: 15px; color: #94a3b8; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
+.brand p { font-size: 15px; color: var(--c-study); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; }
 
 .hero-card { padding: 28px 34px; }
 .hero-card h2 { font-size: 26px; color: #fff; line-height: 1.4; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 .hero-card p { font-size: 16px; color: var(--text-muted); font-weight: 600; }
 
-/* --- BUTTONS (CHUNKY TOYS) --- */
+/* --- BUTTONS (CONSTRUCTION BRICKS) --- */
 .toy-btn {
-  background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3);
-  color: #fff; border-radius: 999px; padding: 14px 28px;
-  text-transform: uppercase; font-size: 14px; font-weight: 700; letter-spacing: 1px; 
-  cursor: pointer; transition: 0.15s;
-  box-shadow: 0 6px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15); border: 3px solid rgba(255,255,255,0.4);
+  color: #fff; border-radius: var(--radius-md); padding: 14px 28px;
+  text-transform: uppercase; font-size: 14px; font-weight: 800; letter-spacing: 1px; 
+  cursor: pointer; transition: 0.1s;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2);
 }
-.toy-btn:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); box-shadow: 0 8px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.3); }
-.toy-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.2); }
+.toy-btn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.6); }
+.toy-btn:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2); }
 
-.toy-btn.primary { background: var(--c-study); border-color: rgba(255,255,255,0.6); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.toy-btn.success { background: var(--c-life); border-color: rgba(255,255,255,0.6); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.toy-btn.warning { background: var(--c-work); border-color: rgba(255,255,255,0.6); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.toy-btn.danger { background: var(--c-urgent); border-color: rgba(255,255,255,0.6); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.toy-btn.primary { background: var(--c-study); color: #000; border-color: rgba(255,255,255,0.8); }
+.toy-btn.success { background: var(--c-life); color: #000; border-color: rgba(255,255,255,0.8); }
+.toy-btn.warning { background: var(--c-work); color: #000; border-color: rgba(255,255,255,0.8); }
+.toy-btn.danger { background: var(--c-urgent); color: #fff; border-color: rgba(255,255,255,0.8); }
 
 /* --- FORMS & INPUTS --- */
 .search-card { padding: 20px 28px; display: grid; align-items: center; }
 .search-row { display: grid; grid-template-columns: 1fr 160px; gap: 16px; }
 
 input, select, textarea {
-  background: rgba(0, 0, 0, 0.25); border: 2px solid rgba(255,255,255,0.15);
+  background: rgba(0, 0, 0, 0.4); border: 2px solid rgba(255,255,255,0.2);
   color: #fff; border-radius: var(--radius-sm); padding: 14px 18px;
   font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 700;
-  box-shadow: inset 0 4px 8px rgba(0,0,0,0.2); outline: none; transition: 0.2s;
+  box-shadow: inset 0 4px 8px rgba(0,0,0,0.4); outline: none; transition: 0.2s;
 }
 input::placeholder, textarea::placeholder { color: var(--text-dim); }
 input:focus, select:focus, textarea:focus {
-  border-color: #fff; background: rgba(0,0,0,0.4);
-  box-shadow: inset 0 4px 8px rgba(0,0,0,0.3), 0 0 0 4px rgba(255,255,255,0.1);
+  border-color: var(--c-study); background: rgba(0,0,0,0.6);
+  box-shadow: inset 0 4px 8px rgba(0,0,0,0.5), 0 0 0 4px rgba(0,229,255,0.2);
 }
-select option { background: #1e293b; color: #fff; font-weight: 700; }
+select option { background: #0e1e38; color: #fff; font-weight: 700; }
 
 .form { padding: 20px 30px 30px; display: grid; gap: 20px; overflow-y: auto; }
 .field label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
@@ -144,54 +149,55 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
 /* Chips */
 .category-row { display: flex; flex-wrap: wrap; gap: 10px; }
 .chip {
-  background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.1);
-  color: var(--text-muted); padding: 10px 18px; border-radius: 999px;
-  font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;
-  text-transform: uppercase; letter-spacing: 1px;
+  background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.2);
+  color: var(--text-muted); padding: 10px 18px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.15s;
+  text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 0 rgba(0,0,0,0.2);
 }
-.chip.active { color: #fff; transform: scale(1.05); border-color: rgba(255,255,255,0.6); box-shadow: 0 6px 12px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.chip.study.active { background: var(--c-study); }
+.chip:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
+.chip.active { color: #fff; border-color: rgba(255,255,255,0.8); transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.chip.study.active { background: var(--c-study); color: #000; text-shadow: none; }
 .chip.research.active { background: var(--c-research); }
-.chip.work.active { background: var(--c-work); }
-.chip.life.active { background: var(--c-life); }
+.chip.work.active { background: var(--c-work); color: #000; text-shadow: none; }
+.chip.life.active { background: var(--c-life); color: #000; text-shadow: none; }
 .chip.urgent.active { background: var(--c-urgent); }
 
 /* Switch */
 .toggle-box {
   display: flex; justify-content: space-between; align-items: center;
-  background: rgba(0,0,0,0.2); padding: 14px 20px; border-radius: var(--radius-sm);
-  border: 2px solid rgba(255,255,255,0.1); font-size: 14px; font-weight: 800; color: #fff;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.3); padding: 14px 20px; border-radius: var(--radius-sm);
+  border: 2px solid rgba(255,255,255,0.15); font-size: 14px; font-weight: 800; color: #fff;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
-.switch { width: 56px; height: 32px; background: rgba(0,0,0,0.4); border-radius: 999px; padding: 4px; cursor: pointer; transition: 0.2s; border: 2px solid rgba(255,255,255,0.15); }
+.switch { width: 56px; height: 32px; background: rgba(0,0,0,0.5); border-radius: 999px; padding: 4px; cursor: pointer; transition: 0.2s; border: 2px solid rgba(255,255,255,0.2); }
 .switch span { display: block; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.4); transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.switch.on { background: var(--c-life); border-color: rgba(255,255,255,0.5); }
+.switch.on { background: var(--c-life); border-color: rgba(255,255,255,0.6); }
 .switch.on span { transform: translateX(24px); }
 
 /* --- CALENDAR MAIN VIEW --- */
-.calendar-top { display: flex; justify-content: space-between; align-items: center; padding: 30px 30px 24px; border-bottom: 2px solid rgba(255,255,255,0.08); }
-.calendar-top h2 { font-size: 34px; color: #fff; margin-bottom: 6px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+.calendar-top { display: flex; justify-content: space-between; align-items: center; padding: 30px 30px 24px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.15); }
+.calendar-top h2 { font-size: 34px; color: #fff; margin-bottom: 6px; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
 .calendar-top p { font-size: 15px; color: var(--text-muted); font-weight: 600; }
 
 .date-nav { display: flex; gap: 10px; }
 .icon-btn {
-  width: 44px; height: 44px; border-radius: var(--radius-sm); border: 2px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.1); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; transition: 0.2s; display: grid; place-items: center;
-  box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+  width: 44px; height: 44px; border-radius: var(--radius-sm); border: 3px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; transition: 0.1s; display: grid; place-items: center;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.2);
 }
-.icon-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.15); }
+.icon-btn:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
 
 .calendar-body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 24px 30px 30px; }
 
 /* KPIs */
 .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
 .kpi {
-  background: rgba(0, 0, 0, 0.25); border: 2px solid rgba(255,255,255,0.1);
+  background: rgba(0, 0, 0, 0.35); border: 3px solid rgba(255,255,255,0.15);
   border-radius: var(--radius-lg); padding: 20px 16px; text-align: center;
-  box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
+  box-shadow: inset 0 4px 10px rgba(0,0,0,0.4);
 }
-.kpi b { font-size: 40px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.4); line-height: 1; }
-.kpi span { display: block; margin-top: 8px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
+.kpi b { font-size: 40px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,0.5); line-height: 1; }
+.kpi span { display: block; margin-top: 8px; font-size: 12px; font-weight: 800; color: var(--c-study); text-transform: uppercase; letter-spacing: 1.5px; }
 
 .viewport { flex: 1; overflow-y: auto; padding-right: 12px; }
 .view { display: none; } .view.active { display: block; }
@@ -199,80 +205,83 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
 /* Timeline (Daily) */
 .timeline { display: grid; gap: 12px; }
 .time-row { display: grid; grid-template-columns: 64px 1fr; gap: 20px; min-height: 64px; }
-.time-label { font-size: 15px; color: var(--text-muted); padding-top: 12px; text-align: right; font-weight: 700; }
+.time-label { font-size: 15px; color: var(--text-muted); padding-top: 12px; text-align: right; font-weight: 700; border-right: 2px dashed rgba(255,255,255,0.2); padding-right: 16px; }
 .time-lane {
   border-radius: var(--radius-md); padding: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;
-  background: rgba(0,0,0,0.15); border: 2px dashed rgba(255,255,255,0.15); cursor: pointer; transition: 0.2s;
+  background: rgba(0,0,0,0.2); border: 2px dashed rgba(255,255,255,0.2); cursor: pointer; transition: 0.2s;
 }
-.time-lane:hover { background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.3); }
+.time-lane:hover { background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.4); }
 
-/* Task Cards (Chunky Toy Blocks) */
+/* Task Cards (Construction Bricks) */
 .task-card {
   border-radius: var(--radius-md); padding: 16px;
   background: var(--task-color, rgba(255,255,255,0.1));
-  border: 2px solid rgba(255,255,255,0.5);
-  box-shadow: 0 6px 0 rgba(0,0,0,0.15), inset 0 4px 8px rgba(255,255,255,0.3);
-  color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-  cursor: pointer; transition: 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 3px solid rgba(255,255,255,0.5);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.25), inset 0 4px 8px rgba(255,255,255,0.4);
+  color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  cursor: pointer; transition: 0.15s;
   position: relative; overflow: hidden;
 }
-.task-card:hover { transform: translateY(-4px); box-shadow: 0 10px 0 rgba(0,0,0,0.15), inset 0 4px 8px rgba(255,255,255,0.4); z-index: 10; }
-.task-card:active { transform: translateY(2px); box-shadow: 0 4px 0 rgba(0,0,0,0.15), inset 0 4px 8px rgba(255,255,255,0.4); }
-.task-card.done { opacity: 0.6; filter: grayscale(0.5); }
+.task-card.cat-study, .task-card.cat-work, .task-card.cat-life {
+  color: #000; text-shadow: none; border-color: rgba(255,255,255,0.8);
+}
+.task-card:active { transform: translateY(6px); box-shadow: 0 0 0 rgba(0,0,0,0.25), inset 0 2px 4px rgba(255,255,255,0.5); }
+.task-card.done { opacity: 0.6; filter: grayscale(0.6); }
 .task-card.done .task-title { text-decoration: line-through; }
 
-.task-time { font-size: 12px; font-weight: 800; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.task-time { font-size: 12px; font-weight: 900; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
 .task-title { font-size: 16px; font-weight: 800; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Nunito', sans-serif; }
 .task-meta { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 .task-meta span {
-  padding: 4px 10px; border-radius: 999px; background: rgba(0,0,0,0.25);
-  font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+  padding: 4px 10px; border-radius: 4px; background: rgba(0,0,0,0.2);
+  font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border: 1px solid rgba(0,0,0,0.1);
 }
 
 /* Weekly Grid */
 .week-grid { display: grid; grid-template-columns: repeat(7, minmax(130px, 1fr)); gap: 16px; min-width: 950px; }
 .week-day {
   min-height: 540px; border-radius: var(--radius-lg); padding: 16px; display: flex; flex-direction: column; gap: 12px;
-  background: rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.05); transition: 0.2s; cursor: pointer;
+  background: rgba(0,0,0,0.2); border: 3px solid rgba(255,255,255,0.1); transition: 0.2s; cursor: pointer;
 }
-.week-day:hover { background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.15); }
-.week-day.today { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.1); box-shadow: inset 0 0 20px rgba(255,255,255,0.1); }
-.week-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 2px solid rgba(255,255,255,0.1); font-size: 15px; color: #cbd5e1; font-weight: 700; }
+.week-day:hover { background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.25); }
+.week-day.today { border-color: var(--c-work); background: rgba(255,214,0,0.15); box-shadow: inset 0 0 20px rgba(255,214,0,0.2); }
+.week-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 3px solid rgba(255,255,255,0.15); font-size: 15px; color: #cbd5e1; font-weight: 800; }
 .week-list { display: grid; gap: 10px; }
 
 /* Monthly Grid */
 .weekday-row { display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 12px; min-width: 750px; margin-bottom: 12px; }
-.weekday-name { text-align: center; font-size: 13px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; }
+.weekday-name { text-align: center; font-size: 13px; font-weight: 800; color: var(--c-study); text-transform: uppercase; letter-spacing: 1.5px; }
 .month-grid { display: grid; grid-template-columns: repeat(7, minmax(100px, 1fr)); gap: 12px; min-width: 750px; }
 .month-cell {
   min-height: 110px; border-radius: var(--radius-md); padding: 10px; display: flex; flex-direction: column; gap: 6px;
-  background: rgba(0,0,0,0.15); border: 2px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.2s;
+  background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;
 }
-.month-cell:hover { background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.2); }
+.month-cell:hover { background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.3); }
 .month-cell.muted { opacity: 0.4; }
-.month-cell.today { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.1); }
+.month-cell.today { border-color: var(--c-work); background: rgba(255,214,0,0.15); }
 .month-date { font-size: 20px; color: #fff; font-weight: 800; margin-bottom: 2px; }
 .month-task {
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 8px; padding: 6px 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px; padding: 6px 8px;
   background: var(--task-color, rgba(255,255,255,0.1)); color: #fff; font-size: 12px; font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.4); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 2px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,255,255,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.4);
 }
+.month-task.cat-study, .month-task.cat-work, .month-task.cat-life { color: #000; text-shadow: none; }
 
-.empty { border-radius: var(--radius-md); padding: 20px; text-align: center; font-size: 14px; font-weight: 700; color: var(--text-dim); border: 2px dashed rgba(255,255,255,0.15); }
+.empty { border-radius: var(--radius-sm); padding: 20px; text-align: center; font-size: 14px; font-weight: 800; color: var(--text-dim); border: 2px dashed rgba(255,255,255,0.2); background: rgba(0,0,0,0.1); }
 
 /* --- RIGHT SIDEBAR --- */
 .right-scroll { flex: 1; overflow-y: auto; padding: 24px 30px 30px; display: grid; gap: 20px; align-content: start; }
-.side-box { padding: 24px; border-radius: var(--radius-lg); background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.08); box-shadow: inset 0 4px 10px rgba(0,0,0,0.2); }
+.side-box { padding: 24px; border-radius: var(--radius-lg); background: rgba(0,0,0,0.25); border: 3px solid rgba(255,255,255,0.1); box-shadow: inset 0 4px 10px rgba(0,0,0,0.3); }
 .side-box h4 { font-size: 20px; color: #fff; margin-bottom: 6px; }
 .side-box p { font-size: 14px; color: var(--text-muted); font-weight: 700; }
 
-.progress { margin-top: 16px; height: 14px; border-radius: 999px; background: rgba(0,0,0,0.5); overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,0.4); }
-.progress span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--c-study), var(--c-life)); transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3); }
+.progress { margin-top: 16px; height: 16px; border-radius: 4px; background: rgba(0,0,0,0.6); overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+.progress span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--c-work), var(--c-urgent)); transition: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: inset 0 2px 4px rgba(255,255,255,0.3); }
 
 .side-list { margin-top: 16px; display: grid; gap: 10px; }
 .mini-task {
   border-radius: var(--radius-md); padding: 14px; background: rgba(255,255,255,0.08);
-  border: 2px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s;
+  border: 2px solid rgba(255,255,255,0.15); cursor: pointer; transition: 0.2s;
 }
 .mini-task:hover { background: rgba(255,255,255,0.15); transform: translateX(6px); border-color: rgba(255,255,255,0.3); }
 .mini-task b { display: block; font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 6px; }
@@ -281,38 +290,40 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
 /* Tabs */
 .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 24px 30px 0; }
 .tab {
-  background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.1); color: var(--text-muted);
-  padding: 14px; border-radius: var(--radius-md); font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; font-family: 'Varela Round', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+  background: rgba(0,0,0,0.3); border: 3px solid rgba(255,255,255,0.15); color: var(--text-muted);
+  padding: 14px; border-radius: var(--radius-md); font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.15s; font-family: 'Varela Round', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.2);
 }
-.tab.active { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.4); box-shadow: 0 6px 12px rgba(0,0,0,0.2); }
-.tab:hover:not(.active) { background: rgba(255,255,255,0.1); color: #fff; }
+.tab:active { transform: translateY(4px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
+.tab.active { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.5); box-shadow: 0 6px 12px rgba(0,0,0,0.3); transform: translateY(2px); }
+.tab:hover:not(.active) { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); }
 
 /* --- MODAL --- */
-.modal-backdrop { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 24px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.modal-backdrop { position: fixed; inset: 0; z-index: 100; display: none; place-items: center; padding: 24px; background: rgba(14, 30, 56, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 .modal-backdrop.show { display: grid; }
 .modal { width: min(540px, 100%); }
-.modal-head { display: flex; justify-content: space-between; align-items: center; padding: 28px 32px; border-bottom: 2px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); }
+.modal-head { display: flex; justify-content: space-between; align-items: center; padding: 28px 32px; border-bottom: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); border-radius: calc(var(--radius-xl) - 4px) calc(var(--radius-xl) - 4px) 0 0; }
 .modal-head h3 { font-size: 26px; font-weight: 800; }
-.modal-close { background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; transition: 0.2s; }
-.modal-close:hover { color: #fff; transform: scale(1.1); }
+.modal-close { background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; transition: 0.2s; font-weight: 900; }
+.modal-close:hover { color: #fff; transform: scale(1.2); }
 .modal-body { padding: 32px; display: grid; gap: 20px; }
-.info label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; }
-.info p, .info textarea { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: var(--radius-sm); padding: 16px; color: #fff; font-size: 16px; font-weight: 700; }
-.modal-actions { display: flex; justify-content: flex-end; gap: 16px; padding: 24px 32px; border-top: 2px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); }
+.info label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: 800; color: var(--c-study); text-transform: uppercase; letter-spacing: 1.5px; }
+.info p, .info textarea { background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); padding: 16px; color: #fff; font-size: 16px; font-weight: 700; box-shadow: inset 0 4px 6px rgba(0,0,0,0.3); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 16px; padding: 24px 32px; border-top: 3px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.25); border-radius: 0 0 calc(var(--radius-xl) - 4px) calc(var(--radius-xl) - 4px); }
 
 /* --- TOAST --- */
 .toast {
   position: fixed; right: 30px; bottom: 30px; z-index: 200; display: none; max-width: 400px;
-  padding: 20px 24px; border-radius: var(--radius-md); background: rgba(30, 41, 59, 0.95);
-  border: 2px solid rgba(255,255,255,0.2); color: #fff; font-size: 16px; font-weight: 800;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.5); backdrop-filter: blur(16px);
+  padding: 20px 24px; border-radius: var(--radius-md); background: rgba(14, 30, 56, 0.95);
+  border: 3px solid rgba(255,255,255,0.3); color: #fff; font-size: 16px; font-weight: 800;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6); backdrop-filter: blur(16px);
 }
 .toast.show { display: block; animation: toastUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 @keyframes toastUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 999px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 999px; border: 2px solid var(--panel-bg); }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
 
 @media(max-width:1180px){.layout{grid-template-columns:360px 1fr}.right-panel{grid-column:1/-1;height:auto}.right-scroll{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:820px){.hero{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.left-panel,.main-panel,.right-panel{height:auto}.main-panel{min-height:700px}.right-scroll{grid-template-columns:1fr}.topbar{flex-direction:column;align-items:flex-start}.kpis{grid-template-columns:repeat(2,1fr)}}
@@ -325,10 +336,10 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
 <div class="wrap">
   <header class="topbar">
     <div class="brand">
-      <div class="brand-icon">🏡</div>
+      <div class="brand-icon">🏗️</div>
       <div>
         <h1>Schedule Garden</h1>
-        <p>Miniature Control Panel</p>
+        <p>Miniature Urban Lab</p>
       </div>
     </div>
     <div class="top-actions">
@@ -340,8 +351,8 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
   </header>
   <section class="hero">
     <div class="hero-card">
-      <h2>미니어쳐 블럭처럼 귀엽고 직관적인 일정 관리</h2>
-      <p>Daily · Weekly · Monthly 캘린더를 전환하고, 날짜를 눌러 일정 블럭을 추가해보세요.</p>
+      <h2>미니어쳐 블럭처럼 직관적인 건설 연구 일정 관리</h2>
+      <p>Daily · Weekly · Monthly 캘린더를 전환하고, 날짜를 눌러 연구 및 공사 블럭을 조립해보세요.</p>
     </div>
     <div class="search-card">
       <div class="search-row">
@@ -360,8 +371,8 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
   <main class="layout">
     <aside class="panel left-panel">
       <div class="panel-head">
-        <h3>인풋 조종 패널</h3>
-        <p>날짜/시간 칸을 클릭하면 자동으로 입력됩니다.</p>
+        <h3>통제 패널</h3>
+        <p>날짜/시간 칸을 클릭하면 자동으로 설정됩니다.</p>
       </div>
       <div class="tabs">
         <button class="tab active" data-view="daily">Daily</button>
@@ -371,8 +382,8 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
       <form class="form" id="taskForm">
         <input type="hidden" id="taskId"/>
         <div class="field">
-          <label for="title">할 일 제목</label>
-          <input id="title" type="text" placeholder="예: 학과 연구실 미팅 참여" required/>
+          <label for="title">블럭(일정) 제목</label>
+          <input id="title" type="text" placeholder="예: 구역 A 지반 조사" required/>
         </div>
         <div class="two-col">
           <div class="field">
@@ -405,7 +416,7 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
           </div>
         </div>
         <div class="field">
-          <label>카테고리</label>
+          <label>연구 카테고리</label>
           <div class="category-row">
             <button type="button" class="chip study active" data-category="study">Study</button>
             <button type="button" class="chip research" data-category="research">Research</button>
@@ -423,14 +434,14 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
           </select>
         </div>
         <div class="field">
-          <label for="note">메모</label>
+          <label for="note">세부 지시사항</label>
           <textarea id="note" placeholder="메모 및 세부 사항"></textarea>
         </div>
         <div class="toggle-box">
           <span>알림 푸시</span>
           <div class="switch on" id="reminderSwitch"><span></span></div>
         </div>
-        <button class="toy-btn primary" type="submit" id="submitBtn">가든 보드에 블럭 심기</button>
+        <button class="toy-btn primary" type="submit" id="submitBtn">보드에 블럭 조립하기</button>
         <button class="toy-btn" type="button" id="clearBtn">입력창 비우기</button>
       </form>
     </aside>
@@ -448,10 +459,10 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
       </div>
       <div class="calendar-body">
         <div class="kpis">
-          <div class="kpi"><b id="kpiTotal">0</b><span>전체</span></div>
-          <div class="kpi"><b id="kpiToday">0</b><span>오늘</span></div>
-          <div class="kpi"><b id="kpiDone">0%</b><span>완료율</span></div>
-          <div class="kpi"><b id="kpiHigh">0</b><span>High</span></div>
+          <div class="kpi"><b id="kpiTotal">0</b><span>전체 블럭</span></div>
+          <div class="kpi"><b id="kpiToday">0</b><span>오늘 작업</span></div>
+          <div class="kpi"><b id="kpiDone">0%</b><span>진척도</span></div>
+          <div class="kpi"><b id="kpiHigh">0</b><span>경고(High)</span></div>
         </div>
         <div class="viewport">
           <div class="view active" id="dailyView">
@@ -474,8 +485,8 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
       </div>
       <div class="right-scroll">
         <section class="side-box">
-          <h4>오늘 완료율</h4>
-          <p id="todayProgressText">오늘 일정이 없습니다.</p>
+          <h4>오늘 진척도</h4>
+          <p id="todayProgressText">오늘 조립할 블럭이 없습니다.</p>
           <div class="progress"><span id="todayProgressBar"></span></div>
         </section>
         <section class="side-box">
@@ -493,17 +504,17 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
 <div class="modal-backdrop" id="modalBackdrop">
   <div class="modal">
     <div class="modal-head">
-      <h3 id="modalTitle">일정 상세</h3>
+      <h3 id="modalTitle">블럭 상세</h3>
       <button class="modal-close" id="modalClose">×</button>
     </div>
     <div class="modal-body">
       <div class="info"><label>시간</label><p id="modalTime"></p></div>
-      <div class="info"><label>메타 정보</label><p id="modalMeta"></p></div>
-      <div class="info"><label>메모</label><textarea id="modalNote" readonly></textarea></div>
+      <div class="info"><label>분류 정보</label><p id="modalMeta"></p></div>
+      <div class="info"><label>세부 지시사항</label><textarea id="modalNote" readonly></textarea></div>
     </div>
     <div class="modal-actions">
-      <button class="toy-btn danger" id="deleteTaskBtn">삭제</button>
-      <button class="toy-btn success" id="doneTaskBtn">완료 전환</button>
+      <button class="toy-btn danger" id="deleteTaskBtn">파기</button>
+      <button class="toy-btn success" id="doneTaskBtn">완료 보고</button>
       <button class="toy-btn primary" id="editTaskBtn">수정하기</button>
     </div>
   </div>
@@ -513,7 +524,7 @@ select option { background: #1e293b; color: #fff; font-weight: 700; }
 document.addEventListener("DOMContentLoaded",()=>{
 const SK="schedule_garden_v2";
 const $=id=>document.getElementById(id);
-const colorMap={study:"#007AFF",research:"#AF52DE",work:"#FF9500",life:"#34C759",urgent:"#FF3B30"};
+const colorMap={study:"#00E5FF",research:"#9C27B0",work:"#FFD600",life:"#00E676",urgent:"#FF3D00"};
 let tasks=loadTasks(),activeView="daily",pivotDate=new Date(),selectedCategory="study",reminderEnabled=true,selectedTaskId=null;
 const notifiedSet=new Set();
 
@@ -528,8 +539,8 @@ function loadTasks(){
   try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r)}catch(e){}
   const t=dateKey(new Date());
   return[
-    {id:createId(),title:"연구 핵심 파이프라인 수립",date:t,time:"10:00",duration:60,repeat:"none",category:"research",priority:"high",note:"오늘 해야 할 핵심 작업",reminder:true,done:false},
-    {id:createId(),title:"미니 다이어리 검증",date:t,time:"15:30",duration:90,repeat:"none",category:"study",priority:"medium",note:"UI 및 기능 테스트",reminder:true,done:false}
+    {id:createId(),title:"구역 A 지반 조사 보고서 작성",date:t,time:"10:00",duration:60,repeat:"none",category:"research",priority:"high",note:"오늘 제출 필요",reminder:true,done:false},
+    {id:createId(),title:"설계 도면 검토 회의",date:t,time:"15:30",duration:90,repeat:"none",category:"study",priority:"medium",note:"시공사 미팅",reminder:true,done:false}
   ];
 }
 function saveTasks(){localStorage.setItem(SK,JSON.stringify(tasks))}
@@ -548,14 +559,14 @@ function getWeekDates(d){const s=getWeekStart(d);return Array.from({length:7},(_
 
 function setInputDateTime(date,time="09:00"){
   pivotDate=new Date(date);$("date").value=dateKey(pivotDate);$("time").value=time;
-  $("taskId").value="";$("submitBtn").textContent="가든 보드에 블럭 심기";$("title").focus();
+  $("taskId").value="";$("submitBtn").textContent="보드에 블럭 조립하기";$("title").focus();
 }
 function setCategory(c){selectedCategory=c;document.querySelectorAll(".chip").forEach(ch=>ch.classList.toggle("active",ch.dataset.category===c))}
 function clearForm(){
   $("taskId").value="";$("title").value="";$("date").value=dateKey(pivotDate);$("time").value="09:00";
   $("duration").value="60";$("repeat").value="none";$("priority").value="medium";$("note").value="";
   reminderEnabled=true;$("reminderSwitch").classList.add("on");setCategory("study");
-  $("submitBtn").textContent="가든 보드에 블럭 심기";
+  $("submitBtn").textContent="보드에 블럭 조립하기";
 }
 
 function makeRepeated(base){
@@ -572,21 +583,21 @@ function handleSubmit(e){
     priority:$("priority").value,note:$("note").value.trim(),reminder:reminderEnabled,
     done:id?(tasks.find(t=>t.id===id)?.done||false):false};
   if(!base.title||!base.date||!base.time)return;
-  if(id){tasks=tasks.map(t=>t.id===id?{...base,repeat:"none"}:t);toast("일정 블럭을 수정했습니다.")}
-  else{tasks.push(...makeRepeated(base));toast("일정 블럭을 추가했습니다.")}
+  if(id){tasks=tasks.map(t=>t.id===id?{...base,repeat:"none"}:t);toast("블럭을 수정했습니다.")}
+  else{tasks.push(...makeRepeated(base));toast("새 블럭을 조립했습니다.")}
   saveTasks();pivotDate=parseDate(base.date);clearForm();renderAll();
 }
 
 function buildCard(t){
   const c=document.createElement("div");
-  c.className=`task-card ${t.done?"done":""}`;
+  c.className=`task-card cat-${t.category} ${t.done?"done":""}`;
   c.style.setProperty("--task-color",colorMap[t.category]||"rgba(255,255,255,0.1)");
   c.innerHTML=`<div class="task-time">${esc(t.time)} · ${t.duration}분</div><div class="task-title">${esc(t.title)}</div><div class="task-meta"><span>${esc(t.category)}</span><span>${esc(t.priority)}</span>${t.reminder?"<span>🔔</span>":""}</div>`;
   c.addEventListener("click",e=>{e.stopPropagation();openModal(t.id)});return c;
 }
 function buildMini(t){
   const el=document.createElement("div");el.className="mini-task";
-  el.style.borderLeft=`4px solid ${colorMap[t.category]||"#fff"}`;
+  el.style.borderLeft=`6px solid ${colorMap[t.category]||"#fff"}`;
   el.innerHTML=`<b>${esc(t.title)}</b><span>${esc(t.date)} · ${esc(t.time)}</span>`;
   el.addEventListener("click",()=>openModal(t.id));return el;
 }
@@ -596,7 +607,7 @@ function renderDaily(){
   for(let h=6;h<=23;h++){
     const row=document.createElement("div");row.className="time-row";
     const lb=document.createElement("div");lb.className="time-label";lb.textContent=`${pad(h)}:00`;
-    const lane=document.createElement("div");lane.className="time-lane";lane.title="클릭해서 이 시간에 일정 추가";
+    const lane=document.createElement("div");lane.className="time-lane";lane.title="클릭해서 이 시간에 블럭 조립";
     lane.addEventListener("click",()=>setInputDateTime(pivotDate,`${pad(h)}:00`));
     dt.filter(t=>Number(t.time.split(":")[0])===h).forEach(t=>lane.appendChild(buildCard(t)));
     row.appendChild(lb);row.appendChild(lane);box.appendChild(row);
@@ -611,7 +622,7 @@ function renderWeekly(){
     const head=document.createElement("div");head.className="week-head";head.innerHTML=`<span>${names[i]}</span><span>${d.getMonth()+1}/${d.getDate()}</span>`;
     const list=document.createElement("div");list.className="week-list";
     const dt=tasksOn(d);
-    if(!dt.length)list.innerHTML=`<div class="empty">비어 있음<br>클릭해서 추가</div>`;
+    if(!dt.length)list.innerHTML=`<div class="empty">일정 없음<br>클릭해서 추가</div>`;
     else dt.forEach(t=>list.appendChild(buildCard(t)));
     col.appendChild(head);col.appendChild(list);box.appendChild(col);
   });
@@ -629,7 +640,7 @@ function renderMonthly(){
     const dt=tasksOn(cd);
     dt.slice(0,3).forEach(t=>{
       const mi=document.createElement("div");
-      mi.className=`month-task`;
+      mi.className=`month-task cat-${t.category}`;
       mi.style.setProperty("--task-color",colorMap[t.category]||"rgba(255,255,255,0.1)");
       mi.textContent=`${t.time} ${t.title}`;
       mi.addEventListener("click",e=>{e.stopPropagation();openModal(t.id)});cell.appendChild(mi)
@@ -654,7 +665,7 @@ function renderKpis(){
 
 function renderSide(){
   const tk=dateKey(new Date()),td=tasks.filter(t=>t.date===tk),dn=td.filter(t=>t.done),r=td.length?Math.round(dn.length/td.length*100):0;
-  $("todayProgressText").textContent=td.length?`오늘 블럭 ${td.length}개 중 ${dn.length}개 완료 (${r}%)`:"오늘 일정이 없습니다.";
+  $("todayProgressText").textContent=td.length?`오늘 블럭 ${td.length}개 중 ${dn.length}개 완료 (${r}%)`:"오늘 조립할 블럭이 없습니다.";
   $("todayProgressBar").style.width=`${r}%`;
   const nl=$("nextList");nl.innerHTML="";const now=new Date();
   const up=tasks.filter(t=>!t.done&&new Date(`${t.date}T${t.time}`)>=now).sort((a,b)=>new Date(`${a.date}T${a.time}`)-new Date(`${b.date}T${b.time}`)).slice(0,5);
@@ -662,7 +673,7 @@ function renderSide(){
   else up.forEach(t=>nl.appendChild(buildMini(t)));
   const hl=$("highList");hl.innerHTML="";
   const hi=tasks.filter(t=>!t.done&&t.priority==="high").sort((a,b)=>`${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)).slice(0,5);
-  if(!hi.length)hl.innerHTML=`<div class="empty">중요 일정이 없습니다.</div>`;
+  if(!hi.length)hl.innerHTML=`<div class="empty">경고 일정이 없습니다.</div>`;
   else hi.forEach(t=>hl.appendChild(buildMini(t)));
 }
 
@@ -692,18 +703,18 @@ function openModal(id){
 }
 function closeModal(){selectedTaskId=null;$("modalBackdrop").classList.remove("show")}
 
-function deleteTask(){if(!selectedTaskId)return;tasks=tasks.filter(t=>t.id!==selectedTaskId);saveTasks();closeModal();renderAll();toast("일정 블럭을 삭제했습니다.")}
+function deleteTask(){if(!selectedTaskId)return;tasks=tasks.filter(t=>t.id!==selectedTaskId);saveTasks();closeModal();renderAll();toast("블럭을 파기했습니다.")}
 function toggleDone(){
   const t=tasks.find(x=>x.id===selectedTaskId);if(!t)return;t.done=!t.done;saveTasks();closeModal();renderAll();
-  toast(t.done?"일정을 완료 처리했습니다.":"일정을 미완료로 되돌렸습니다.");
+  toast(t.done?"작업 완료를 보고했습니다.":"작업을 미완료 상태로 되돌렸습니다.");
 }
 function editTask(){
   const t=tasks.find(x=>x.id===selectedTaskId);if(!t)return;
   $("taskId").value=t.id;$("title").value=t.title;$("date").value=t.date;$("time").value=t.time;
   $("duration").value=t.duration;$("repeat").value="none";$("priority").value=t.priority;$("note").value=t.note||"";
   reminderEnabled=t.reminder;$("reminderSwitch").classList.toggle("on",reminderEnabled);setCategory(t.category);
-  pivotDate=parseDate(t.date);changeView("daily");$("submitBtn").textContent="일정 블럭 수정";closeModal();
-  toast("수정할 일정을 입력창에 불러왔습니다.");
+  pivotDate=parseDate(t.date);changeView("daily");$("submitBtn").textContent="블럭 정보 수정";closeModal();
+  toast("수정할 블럭 정보를 패널에 불러왔습니다.");
 }
 
 function reqNotify(){
@@ -713,13 +724,13 @@ function reqNotify(){
 function checkNotify(){
   if(!("Notification" in window)||Notification.permission!=="granted")return;
   const now=new Date(),td=dateKey(now),ct=`${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  tasks.forEach(t=>{const k=`${t.id}-${t.date}-${t.time}`;if(t.reminder&&!t.done&&t.date===td&&t.time===ct&&!notifiedSet.has(k)){notifiedSet.add(k);new Notification("Schedule Garden",{body:`${t.time} 일정: ${t.title}`,tag:k});toast(`🔔 지금 일정: ${t.title}`)}});
+  tasks.forEach(t=>{const k=`${t.id}-${t.date}-${t.time}`;if(t.reminder&&!t.done&&t.date===td&&t.time===ct&&!notifiedSet.has(k)){notifiedSet.add(k);new Notification("Schedule Garden",{body:`${t.time} 일정: ${t.title}`,tag:k});toast(`🔔 지금 작업: ${t.title}`)}});
 }
 function showSummary(){
   const td=dateKey(new Date()),tt=tasks.filter(t=>t.date===td).sort((a,b)=>a.time.localeCompare(b.time));
-  const msg=tt.length?tt.map(t=>`${t.time} ${t.title}`).join(" / "):"오늘 등록된 일정이 없습니다.";
-  if("Notification" in window&&Notification.permission==="granted")new Notification("오늘의 일정 요약",{body:msg});
-  toast(tt.length?`오늘 일정 ${tt.length}개가 있습니다.`:"오늘 일정이 없습니다.");
+  const msg=tt.length?tt.map(t=>`${t.time} ${t.title}`).join(" / "):"오늘 등록된 작업이 없습니다.";
+  if("Notification" in window&&Notification.permission==="granted")new Notification("오늘의 작업 요약",{body:msg});
+  toast(tt.length?`오늘 조립할 블럭 ${tt.length}개가 있습니다.`:"오늘 일정이 없습니다.");
 }
 
 // Event listeners
@@ -734,7 +745,7 @@ $("goTodayBtn").addEventListener("click",()=>{pivotDate=new Date();$("date").val
 $("todayBtn").addEventListener("click",()=>{pivotDate=new Date();$("date").value=dateKey(pivotDate);changeView("daily")});
 $("notifyBtn").addEventListener("click",reqNotify);
 $("summaryBtn").addEventListener("click",showSummary);
-$("resetAllBtn").addEventListener("click",()=>{if(!confirm("전체 일정을 모두 삭제할까요?"))return;tasks=[];saveTasks();clearForm();renderAll();toast("전체 일정을 초기화했습니다.")});
+$("resetAllBtn").addEventListener("click",()=>{if(!confirm("전체 일정을 모두 파기할까요?"))return;tasks=[];saveTasks();clearForm();renderAll();toast("전체 블럭을 초기화했습니다.")});
 $("searchInput").addEventListener("input",renderAll);
 $("filterCategory").addEventListener("change",renderAll);
 $("modalClose").addEventListener("click",closeModal);
