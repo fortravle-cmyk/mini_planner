@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="./style.css?v=31" />
+  <link rel="stylesheet" href="./style.css?v=50" />
 </head>
 
 <body>
@@ -24,6 +24,8 @@
 
       <div class="top-actions">
         <button type="button" class="btn secondary" id="selectFolderBtn">작업일지 폴더 선택</button>
+        <button type="button" class="btn secondary" id="loadYesterdayBtn">전일 데이터 이월</button>
+        <button type="button" class="btn secondary" id="autoTextBtn">작업문장 자동생성</button>
         <button type="button" class="btn secondary" id="saveCsvBtn">CSV 누적 저장</button>
         <button type="button" class="btn secondary" id="resetBtn">초기화</button>
         <button type="button" class="btn secondary" id="saveBtn">저장</button>
@@ -34,18 +36,18 @@
     <section class="hero-card">
       <div>
         <span class="hero-kicker">Template-Adaptive Daily Log Automation</span>
-        <h2>현장별 공사일보 양식을 업로드하면, 입력 화면과 일보 문서를 자동 생성합니다.</h2>
+        <h2>전일 공사일보 데이터를 기반으로 금일 공사일보 초안을 자동 생성합니다.</h2>
         <p>
-          공사현장마다 다른 일지 양식을 반영하기 위해, 업로드된 양식의 항목과 표 구조를 인식한 뒤
-          해당 양식에 맞는 입력 인터페이스와 공사일보 미리보기를 생성하는 웹 기반 프로토타입입니다.
+          전일 누계값을 금일 전일까지 수량으로 이월하고, 금일 작업량만 입력하면 누계와 작업사항 문장을 자동 생성합니다.
+          작성 결과는 날짜별 행 데이터로 누적 저장할 수 있습니다.
         </p>
       </div>
 
       <div class="hero-flow">
         <div><strong>01</strong><span>양식 업로드</span></div>
-        <div><strong>02</strong><span>항목 인식</span></div>
-        <div><strong>03</strong><span>입력폼 생성</span></div>
-        <div><strong>04</strong><span>일보 출력</span></div>
+        <div><strong>02</strong><span>전일 이월</span></div>
+        <div><strong>03</strong><span>문장 생성</span></div>
+        <div><strong>04</strong><span>CSV 누적</span></div>
       </div>
     </section>
 
@@ -93,7 +95,7 @@
         <section class="panel">
           <div class="panel-head">
             <h3>Step 3. 생성된 입력 인터페이스</h3>
-            <p>인식된 항목을 기준으로 자동 생성된 입력폼입니다.</p>
+            <p>전일 데이터 이월 후 금일 작업량만 입력하면 누계와 문장이 자동 생성됩니다.</p>
           </div>
 
           <div class="dynamic-form" id="dynamicForm"></div>
@@ -104,11 +106,13 @@
         <div class="report-toolbar">
           <div>
             <h3>공사일보 미리보기</h3>
-            <p>업로드 양식의 구조를 반영한 공사일보 문서 미리보기입니다.</p>
+            <p>입력값과 자동 생성 문장이 공사일보 양식에 반영됩니다.</p>
           </div>
 
           <div class="toolbar-actions">
             <button type="button" class="btn secondary" id="generateSampleBtn">예시 데이터 입력</button>
+            <button type="button" class="btn secondary" id="loadYesterdayBtn2">전일 누계 이월</button>
+            <button type="button" class="btn secondary" id="autoTextBtn2">금일/명일 문장 생성</button>
             <button type="button" class="btn secondary" id="printBtn">인쇄 / PDF 저장</button>
           </div>
         </div>
@@ -166,8 +170,8 @@
 
         <section class="panel">
           <div class="panel-head">
-            <h3>양식 분석 로그</h3>
-            <p>프로토타입에서 수행된 분석 과정을 표시합니다.</p>
+            <h3>자동화 로그</h3>
+            <p>전일 이월, 누계 계산, 문장 생성 과정을 표시합니다.</p>
           </div>
 
           <div class="analysis-log" id="analysisLog">
@@ -191,7 +195,9 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const STORAGE_KEY = "adaptiveDailyLogV2";
+      const STORAGE_KEY = "adaptiveDailyLogV5";
+      const HISTORY_KEY = "adaptiveDailyLogHistoryV5";
+
       const $ = (id) => document.getElementById(id);
 
       let currentTemplateName = "";
@@ -263,6 +269,13 @@
         return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       }
 
+      function addDays(dateValue, amount) {
+        const base = dateValue || todayKey();
+        const d = new Date(base + "T00:00:00");
+        d.setDate(d.getDate() + amount);
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      }
+
       function getDayName(dateValue) {
         if (!dateValue) return "";
         const days = ["일", "월", "화", "수", "목", "금", "토"];
@@ -287,29 +300,8 @@
           .replaceAll("'", "&#039;");
       }
 
-      function captureScroll() {
-        return {
-          windowY: window.scrollY,
-          dynamicY: $("dynamicForm") ? $("dynamicForm").scrollTop : 0
-        };
-      }
-
-      function restoreScroll(pos) {
-        if (!pos) return;
-        if ($("dynamicForm")) $("dynamicForm").scrollTop = pos.dynamicY;
-        window.scrollTo({ top: pos.windowY, left: 0, behavior: "instant" });
-      }
-
-      function stablePreviewUpdate() {
-        const pos = captureScroll();
-        clearTimeout(previewTimer);
-
-        previewTimer = setTimeout(() => {
-          renderPreview();
-          renderStatus();
-          saveState(false);
-          requestAnimationFrame(() => restoreScroll(pos));
-        }, 60);
+      function cloneData(data) {
+        return JSON.parse(JSON.stringify(data || {}));
       }
 
       function showToast(message) {
@@ -324,10 +316,35 @@
         item.className = `log-item ${type}`;
         item.textContent = message;
         $("analysisLog").appendChild(item);
+        $("analysisLog").scrollTop = $("analysisLog").scrollHeight;
       }
 
       function clearLog() {
         $("analysisLog").innerHTML = "";
+      }
+
+      function captureScroll() {
+        return {
+          windowY: window.scrollY,
+          formY: $("dynamicForm") ? $("dynamicForm").scrollTop : 0
+        };
+      }
+
+      function restoreScroll(pos) {
+        if (!pos) return;
+        if ($("dynamicForm")) $("dynamicForm").scrollTop = pos.formY;
+        window.scrollTo(0, pos.windowY);
+      }
+
+      function stablePreviewUpdate() {
+        const pos = captureScroll();
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(() => {
+          renderPreview();
+          renderStatus();
+          saveState(false);
+          requestAnimationFrame(() => restoreScroll(pos));
+        }, 70);
       }
 
       function detectTemplateSchema(file) {
@@ -348,18 +365,14 @@
         }
 
         log("기본정보 영역을 인식했습니다.");
-        log("금일 작업사항 및 명일 작업사항 영역을 인식했습니다.");
-        log("공사추진상황 표를 인식했습니다.");
-        log("투입현황 관련 표를 인식했습니다.");
-        log("특기사항 입력 영역을 인식했습니다.");
-
+        log("금일/명일 작업사항 영역을 인식했습니다.");
+        log("공사추진상황, 장비, 자재, 인력 관련 표 구조를 구성했습니다.");
         return schema;
       }
 
       function initializeTemplate(file) {
         currentTemplateName = file.name;
         fields = detectTemplateSchema(file);
-
         formData = {};
         tableData = {};
 
@@ -453,11 +466,11 @@
                           <tr>
                             ${field.columns.map((col, colIndex) => `
                               <td>
-                                <input 
-                                  data-table="${field.id}" 
-                                  data-row="${rowIndex}" 
-                                  data-col="${colIndex}" 
-                                  value="${escapeHtml(row[colIndex] || "")}" 
+                                <input
+                                  data-table="${field.id}"
+                                  data-row="${rowIndex}"
+                                  data-col="${colIndex}"
+                                  value="${escapeHtml(row[colIndex] || "")}"
                                   ${isAutoSumColumn(field, colIndex) ? "readonly" : ""}
                                 />
                               </td>
@@ -501,10 +514,10 @@
         return `
           <label class="dynamic-label">
             <span>${escapeHtml(field.label)}</span>
-            <input 
-              type="${field.type === "date" ? "date" : "text"}" 
-              data-field="${field.id}" 
-              value="${escapeHtml(formData[field.id] || "")}" 
+            <input
+              type="${field.type === "date" ? "date" : "text"}"
+              data-field="${field.id}"
+              value="${escapeHtml(formData[field.id] || "")}"
               placeholder="${escapeHtml(field.label)}을 입력하세요."
               ${field.readonly ? "readonly" : ""}
             />
@@ -523,7 +536,8 @@
 
             if (el.dataset.field === "date") {
               formData.day = getDayName(el.value);
-              updateDayInputOnly();
+              const dayInput = document.querySelector('[data-field="day"]');
+              if (dayInput) dayInput.value = formData.day;
             }
 
             stablePreviewUpdate();
@@ -534,7 +548,8 @@
 
             if (el.dataset.field === "date") {
               formData.day = getDayName(el.value);
-              updateDayInputOnly();
+              const dayInput = document.querySelector('[data-field="day"]');
+              if (dayInput) dayInput.value = formData.day;
             }
 
             stablePreviewUpdate();
@@ -548,17 +563,13 @@
             const col = Number(el.dataset.col);
 
             tableData[tableId][row][col] = el.value;
+
             applyAutoSum(tableId, row);
             updateAutoSumCell(tableId, row);
 
             stablePreviewUpdate();
           });
         });
-      }
-
-      function updateDayInputOnly() {
-        const dayInput = document.querySelector('[data-field="day"]');
-        if (dayInput) dayInput.value = formData.day || "";
       }
 
       function updateAutoSumCell(tableId, rowIndex) {
@@ -613,6 +624,247 @@
         });
       }
 
+      function getHistory() {
+        try {
+          return JSON.parse(localStorage.getItem(HISTORY_KEY) || "{}");
+        } catch (error) {
+          console.warn(error);
+          return {};
+        }
+      }
+
+      function setHistory(history) {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      }
+
+      function getCurrentDateKey() {
+        return formData.date || todayKey();
+      }
+
+      function saveDailySnapshot() {
+        const dateKey = getCurrentDateKey();
+        if (!dateKey || !fields.length) return;
+
+        const history = getHistory();
+
+        history[dateKey] = {
+          currentTemplateName,
+          fields: cloneData(fields),
+          formData: cloneData(formData),
+          tableData: cloneData(tableData),
+          savedAt: new Date().toLocaleString("ko-KR")
+        };
+
+        setHistory(history);
+      }
+
+      function getPreviousSnapshot() {
+        const currentDate = getCurrentDateKey();
+        const history = getHistory();
+        const yesterday = addDays(currentDate, -1);
+
+        if (history[yesterday]) {
+          return { date: yesterday, data: history[yesterday] };
+        }
+
+        const dates = Object.keys(history)
+          .filter((date) => date < currentDate)
+          .sort()
+          .reverse();
+
+        if (!dates.length) return null;
+        return { date: dates[0], data: history[dates[0]] };
+      }
+
+      function carryForwardTable(tableId, rows) {
+        const field = fields.find((f) => f.id === tableId);
+        if (!field || !Array.isArray(rows)) return [];
+
+        return rows.map((row) => {
+          const next = Array(field.columns.length).fill("");
+
+          if (tableId === "progress") {
+            next[0] = row[0] || "";
+            next[1] = row[1] || "";
+            next[2] = row[2] || "";
+            next[3] = row[5] || row[3] || "";
+            next[4] = "";
+            next[5] = next[3] || "";
+            next[6] = "전일 누계 자동 이월";
+          }
+
+          if (tableId === "equipment") {
+            next[0] = row[0] || "";
+            next[1] = row[1] || "";
+            next[2] = row[4] || row[2] || "";
+            next[3] = "";
+            next[4] = next[2] || "";
+          }
+
+          if (tableId === "material") {
+            next[0] = row[0] || "";
+            next[1] = row[1] || "";
+            next[2] = "";
+            next[3] = row[3] || "";
+          }
+
+          if (tableId === "labor") {
+            next[0] = row[0] || "";
+            next[1] = row[3] || row[1] || "";
+            next[2] = "";
+            next[3] = next[1] || "";
+            next[4] = "전일 누계 자동 이월";
+          }
+
+          return next;
+        });
+      }
+
+      function loadYesterdayData() {
+        if (!fields.length) {
+          fields = structuredClone(defaultSchema);
+          fields.forEach((field) => {
+            if (field.type === "table") tableData[field.id] = [];
+            else formData[field.id] = "";
+          });
+        }
+
+        const snapshot = getPreviousSnapshot();
+
+        if (!snapshot) {
+          showToast("이월할 전일 데이터가 없습니다. 먼저 예시 데이터 입력 후 저장을 눌러 테스트해보세요.");
+          return;
+        }
+
+        const today = getCurrentDateKey();
+        const prevForm = snapshot.data.formData || {};
+        const prevTables = snapshot.data.tableData || {};
+
+        currentTemplateName = snapshot.data.currentTemplateName || currentTemplateName || "daily_log_template";
+        fields = cloneData(snapshot.data.fields || fields);
+
+        formData = {
+          ...cloneData(prevForm),
+          date: today,
+          day: getDayName(today),
+          todayWork: "",
+          tomorrowWork: "",
+          specialNote: ""
+        };
+
+        tableData = {};
+
+        Object.keys(prevTables).forEach((tableId) => {
+          tableData[tableId] = carryForwardTable(tableId, prevTables[tableId]);
+        });
+
+        fields.forEach((field) => {
+          if (field.type === "table" && !tableData[field.id]) tableData[field.id] = [];
+          if (field.type !== "table" && formData[field.id] === undefined) formData[field.id] = "";
+        });
+
+        $("fileName").textContent = currentTemplateName || "-";
+        $("statusTemplate").textContent = "전일 이월";
+
+        renderAll();
+        generateAutoWorkText();
+
+        log(`${snapshot.date} 공사일보 데이터를 금일 일지로 이월했습니다.`, "success");
+        log("전일 누계값을 금일 전일까지 수량으로 자동 반영했습니다.", "success");
+
+        saveState(false);
+        showToast("전일 데이터가 금일 공사일보 초안으로 이월되었습니다.");
+      }
+
+      function rowValue(row, index) {
+        return row && row[index] ? String(row[index]).trim() : "";
+      }
+
+      function summarizeTodayProgress() {
+        const rows = tableData.progress || [];
+
+        return rows
+          .filter((row) => rowValue(row, 0) && rowValue(row, 4))
+          .map((row) => {
+            const trade = rowValue(row, 0);
+            const unit = rowValue(row, 2);
+            const today = rowValue(row, 4);
+            const note = rowValue(row, 6);
+            return `${trade} ${today}${unit ? unit : ""}${note ? `(${note})` : ""}`;
+          });
+      }
+
+      function summarizeTodayEquipment() {
+        const rows = tableData.equipment || [];
+
+        return rows
+          .filter((row) => rowValue(row, 0) && rowValue(row, 3))
+          .map((row) => `${rowValue(row, 0)} ${rowValue(row, 3)}대`);
+      }
+
+      function summarizeTodayLabor() {
+        const rows = tableData.labor || [];
+
+        return rows
+          .filter((row) => rowValue(row, 0) && rowValue(row, 2))
+          .map((row) => `${rowValue(row, 0)} ${rowValue(row, 2)}명`);
+      }
+
+      function generateAutoWorkText() {
+        if (!fields.length) {
+          showToast("먼저 양식을 업로드하거나 예시 데이터를 입력하세요.");
+          return;
+        }
+
+        const progress = summarizeTodayProgress();
+        const equipment = summarizeTodayEquipment();
+        const labor = summarizeTodayLabor();
+
+        let todayText = "";
+
+        if (progress.length) {
+          todayText += `금일 ${progress.join(", ")} 작업을 수행함.`;
+        } else {
+          todayText += "금일 작업량을 입력하면 작업사항 문장이 자동 생성됩니다.";
+        }
+
+        if (labor.length) {
+          todayText += ` 투입 인력은 ${labor.join(", ")}으로 확인됨.`;
+        }
+
+        if (equipment.length) {
+          todayText += ` 주요 투입 장비는 ${equipment.join(", ")}임.`;
+        }
+
+        const nextTrades = (tableData.progress || [])
+          .filter((row) => rowValue(row, 0))
+          .map((row) => rowValue(row, 0));
+
+        let tomorrowText = "";
+
+        if (nextTrades.length) {
+          tomorrowText = `명일은 ${[...new Set(nextTrades)].join(", ")} 작업을 계속 진행하고, 금일 작업 결과 및 자재·장비 투입 상태를 확인할 예정임.`;
+        } else {
+          tomorrowText = "명일 예정 공종을 입력하면 예정작업 문장이 자동 생성됩니다.";
+        }
+
+        formData.todayWork = todayText;
+        formData.tomorrowWork = tomorrowText;
+
+        const todayTextarea = document.querySelector('[data-field="todayWork"]');
+        const tomorrowTextarea = document.querySelector('[data-field="tomorrowWork"]');
+
+        if (todayTextarea) todayTextarea.value = todayText;
+        if (tomorrowTextarea) tomorrowTextarea.value = tomorrowText;
+
+        renderPreview();
+        renderStatus();
+        saveState(false);
+
+        log("공사추진상황, 장비, 인력 입력값을 기반으로 금일/명일 작업사항 문장을 자동 생성했습니다.", "success");
+        showToast("금일/명일 작업사항 문장이 자동 생성되었습니다.");
+      }
+
       function removeField(fieldId) {
         const pos = captureScroll();
 
@@ -622,7 +874,6 @@
 
         renderAll();
         saveState(false);
-
         requestAnimationFrame(() => restoreScroll(pos));
       }
 
@@ -920,6 +1171,8 @@
           await writable.write(nextText);
           await writable.close();
 
+          saveDailySnapshot();
+
           showToast("작업일지가 작업일지_누적.csv 파일에 누적 저장되었습니다.");
         } catch (error) {
           console.error(error);
@@ -936,7 +1189,9 @@
         };
 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-        if (show) showToast("저장되었습니다.");
+        saveDailySnapshot();
+
+        if (show) showToast("저장되었습니다. 날짜별 작업일지 이력에도 반영되었습니다.");
       }
 
       function loadState() {
@@ -1008,14 +1263,10 @@
         formData.temperature = "24℃";
         formData.siteAgent = "현장대리인";
         formData.supervisor = "감독자";
-        formData.todayWork = "지하 1층 A구역 철근 배근 작업 및 자재 정리 작업 수행";
-        formData.tomorrowWork = "지하 1층 A구역 철근 배근 계속 및 거푸집 설치 준비";
-        formData.participants = "작업반장 1명, 신호수 1명, 장비기사 1명";
-        formData.specialNote = "특이사항 없음";
 
         tableData.progress = [
-          ["철근공사", "500", "m²", "120", "80", "200", ""],
-          ["거푸집공사", "300", "m²", "60", "40", "100", ""]
+          ["철근공사", "500", "m²", "120", "80", "200", "A구역 기둥 및 보 배근"],
+          ["거푸집공사", "300", "m²", "60", "40", "100", "B구역 벽체 거푸집 준비"]
         ];
 
         tableData.equipment = [
@@ -1033,9 +1284,14 @@
           ["보통인부", "10", "6", "16", ""]
         ];
 
+        formData.participants = "작업반장 1명, 신호수 1명, 장비기사 1명";
+        formData.specialNote = "특이사항 없음";
+
         renderAll();
+        generateAutoWorkText();
         saveState(false);
-        showToast("예시 데이터가 입력되었습니다.");
+
+        showToast("예시 데이터가 입력되고 작업사항 문장이 자동 생성되었습니다.");
       }
 
       function renderAll() {
@@ -1086,6 +1342,14 @@
       $("generateSampleBtn").addEventListener("click", generateSampleData);
       $("selectFolderBtn").addEventListener("click", selectWorkLogFolder);
       $("saveCsvBtn").addEventListener("click", saveDailyLogToCsv);
+      $("loadYesterdayBtn").addEventListener("click", loadYesterdayData);
+      $("autoTextBtn").addEventListener("click", generateAutoWorkText);
+
+      const loadYesterdayBtn2 = $("loadYesterdayBtn2");
+      if (loadYesterdayBtn2) loadYesterdayBtn2.addEventListener("click", loadYesterdayData);
+
+      const autoTextBtn2 = $("autoTextBtn2");
+      if (autoTextBtn2) autoTextBtn2.addEventListener("click", generateAutoWorkText);
 
       loadState();
       renderAll();
