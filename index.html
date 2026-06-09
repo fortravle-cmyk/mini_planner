@@ -4,26 +4,26 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>공사일보 자동작성 시스템</title>
-  <meta name="description" content="공사일보 양식 기반 건설현장 일지 자동작성 웹 프로토타입" />
+  <title>양식 인식 기반 공사일보 자동작성 시스템</title>
+  <meta name="description" content="현장별 공사일보 양식을 업로드하면 맞춤형 입력화면과 공사일보 미리보기를 생성하는 웹 프로토타입" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="./style.css?v=10" />
+  <link rel="stylesheet" href="./style.css?v=20" />
 </head>
 
 <body>
   <div class="app-shell">
     <header class="topbar">
       <div>
-        <h1>공사일보 자동작성 시스템</h1>
-        <p>Construction Daily Log Builder</p>
+        <h1>양식 인식 기반 공사일보 자동작성 시스템</h1>
+        <p>Template-Adaptive Construction Daily Log Builder</p>
       </div>
 
       <div class="top-actions">
-        <button type="button" class="btn secondary" id="resetBtn">전체 초기화</button>
+        <button type="button" class="btn secondary" id="resetBtn">초기화</button>
         <button type="button" class="btn secondary" id="saveBtn">저장</button>
         <button type="button" class="btn primary" id="copyBtn">일보 내용 복사</button>
       </div>
@@ -31,201 +31,110 @@
 
     <section class="hero-card">
       <div>
-        <span class="hero-kicker">Construction Daily Log Automation</span>
-        <h2>반복적인 공사일보 작성 업무를 구조화된 입력 방식으로 전환합니다.</h2>
+        <span class="hero-kicker">Template-Adaptive Daily Log Automation</span>
+        <h2>현장별 공사일보 양식을 업로드하면, 입력 화면과 일보 문서를 자동 생성합니다.</h2>
         <p>
-          공종별 금일 작업량, 명일 작업계획, 인력·장비·자재 투입현황, 특기사항을 항목별로 입력하면
-          표준 공사일보 형식에 맞춰 자동으로 정리됩니다.
+          공사현장마다 다른 일지 양식을 반영하기 위해, 업로드된 양식의 항목과 표 구조를 인식한 뒤
+          해당 양식에 맞는 입력 인터페이스와 공사일보 미리보기를 생성하는 웹 기반 프로토타입입니다.
         </p>
       </div>
 
-      <div class="hero-stats">
+      <div class="hero-flow">
         <div>
-          <strong id="statProgress">0</strong>
-          <span>공종 항목</span>
+          <strong>01</strong>
+          <span>양식 업로드</span>
         </div>
         <div>
-          <strong id="statLabor">0</strong>
-          <span>금일 인원</span>
+          <strong>02</strong>
+          <span>항목 인식</span>
         </div>
         <div>
-          <strong id="statEquipment">0</strong>
-          <span>장비 항목</span>
+          <strong>03</strong>
+          <span>입력폼 생성</span>
+        </div>
+        <div>
+          <strong>04</strong>
+          <span>일보 출력</span>
         </div>
       </div>
     </section>
 
     <main class="workspace">
-      <aside class="input-panel">
+      <aside class="left-panel">
         <section class="panel">
           <div class="panel-head">
-            <h3>기본 정보</h3>
-            <p>공사일보 상단에 들어가는 기본 항목입니다.</p>
+            <h3>Step 1. 공사일보 양식 업로드</h3>
+            <p>현장에서 사용하는 PDF, Excel, Word, 이미지 양식을 업로드합니다.</p>
           </div>
 
-          <div class="form-grid">
-            <label>
-              <span>공사명</span>
-              <input id="projectName" type="text" placeholder="공사명을 입력하세요" />
-            </label>
+          <div class="upload-box" id="uploadBox">
+            <input id="templateUpload" type="file" accept=".pdf,.xlsx,.xls,.docx,.png,.jpg,.jpeg" hidden />
+            <div class="upload-icon">📄</div>
+            <h4 id="uploadTitle">공사일보 양식을 업로드하세요</h4>
+            <p id="uploadDesc">PDF, Excel, Word, 이미지 파일을 선택할 수 있습니다.</p>
+            <button type="button" class="btn primary" id="uploadBtn">양식 선택</button>
+          </div>
 
-            <label>
-              <span>일자</span>
-              <input id="logDate" type="date" />
-            </label>
-
-            <label>
-              <span>요일</span>
-              <input id="dayName" type="text" placeholder="자동 입력" readonly />
-            </label>
-
-            <label>
-              <span>날씨</span>
-              <select id="weather">
-                <option value="">선택</option>
-                <option value="맑음">맑음</option>
-                <option value="흐림">흐림</option>
-                <option value="비">비</option>
-                <option value="눈">눈</option>
-                <option value="강풍">강풍</option>
-              </select>
-            </label>
-
-            <label>
-              <span>기온</span>
-              <input id="temperature" type="text" placeholder="예: 24℃" />
-            </label>
-
-            <label>
-              <span>작성자</span>
-              <input id="writer" type="text" placeholder="작성자명" />
-            </label>
-
-            <label>
-              <span>현장대리인</span>
-              <input id="siteAgent" type="text" placeholder="확인자명" />
-            </label>
-
-            <label>
-              <span>감독</span>
-              <input id="supervisor" type="text" placeholder="감독자명" />
-            </label>
+          <div class="file-info" id="fileInfo">
+            <span>업로드 파일</span>
+            <strong id="fileName">-</strong>
           </div>
         </section>
 
         <section class="panel">
           <div class="panel-head">
-            <h3>금일/명일 작업사항</h3>
-            <p>공사일보 상단의 작업사항 박스에 반영됩니다.</p>
+            <h3>Step 2. 인식된 양식 구조</h3>
+            <p>업로드된 양식에서 추출된 항목을 확인하고 필요한 항목을 조정합니다.</p>
           </div>
 
-          <label class="full">
-            <span>금일 작업사항</span>
-            <textarea id="todayWork" placeholder="금일 주요 작업사항을 입력하세요."></textarea>
-          </label>
+          <div class="schema-list" id="schemaList"></div>
 
-          <label class="full">
-            <span>명일 작업사항</span>
-            <textarea id="tomorrowWork" placeholder="명일 예정 작업사항을 입력하세요."></textarea>
-          </label>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <h3>1. 공사추진상황</h3>
-            <p>공종별 설계량, 금일 작업량, 누계 작업량을 입력합니다.</p>
-          </div>
-
-          <div class="mini-form progress-form">
-            <input id="progressTrade" placeholder="공종" />
-            <input id="progressDesign" placeholder="설계량" />
-            <input id="progressUnit" placeholder="단위" />
-            <input id="progressPrev" type="number" placeholder="전일까지" />
-            <input id="progressToday" type="number" placeholder="금일" />
-            <input id="progressNote" placeholder="비고" />
-            <button type="button" class="btn small primary" id="addProgressBtn">추가</button>
+          <div class="custom-field">
+            <input id="customFieldName" type="text" placeholder="추가할 항목명 예: 품질점검사항" />
+            <select id="customFieldType">
+              <option value="textarea">긴 문장 입력</option>
+              <option value="input">단일 입력</option>
+              <option value="table">표 입력</option>
+            </select>
+            <button type="button" class="btn small primary" id="addCustomFieldBtn">항목 추가</button>
           </div>
         </section>
 
         <section class="panel">
           <div class="panel-head">
-            <h3>2. 장비 투입상황</h3>
+            <h3>Step 3. 생성된 입력 인터페이스</h3>
+            <p>인식된 항목을 기준으로 자동 생성된 입력폼입니다.</p>
           </div>
 
-          <div class="mini-form">
-            <input id="equipmentName" placeholder="장비명" />
-            <input id="equipmentSpec" placeholder="규격" />
-            <input id="equipmentPrev" type="number" placeholder="전일까지" />
-            <input id="equipmentToday" type="number" placeholder="금일" />
-            <button type="button" class="btn small primary" id="addEquipmentBtn">추가</button>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <h3>3. 자재 반입상황</h3>
-          </div>
-
-          <div class="mini-form">
-            <input id="materialName" placeholder="품명" />
-            <input id="materialSpec" placeholder="규격" />
-            <input id="materialToday" type="number" placeholder="금일 반입" />
-            <input id="materialTotal" type="number" placeholder="누계 반입" />
-            <button type="button" class="btn small primary" id="addMaterialBtn">추가</button>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <h3>4. 인력 투입상황</h3>
-          </div>
-
-          <div class="mini-form">
-            <input id="laborType" placeholder="구분 예: 보통인부" />
-            <input id="laborPrev" type="number" placeholder="전일까지" />
-            <input id="laborToday" type="number" placeholder="금일" />
-            <input id="laborNote" placeholder="비고" />
-            <button type="button" class="btn small primary" id="addLaborBtn">추가</button>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <h3>5. 주요 참여자 및 특기사항</h3>
-          </div>
-
-          <label class="full">
-            <span>주요 작업 참여자명단</span>
-            <textarea id="participants" placeholder="작업반장, 신호수, 장비기사, 안전관리자 등"></textarea>
-          </label>
-
-          <label class="full">
-            <span>특기사항</span>
-            <textarea id="specialNote" placeholder="우천, 자재 지연, 장비 이상, 안전조치, 민원사항 등"></textarea>
-          </label>
+          <div class="dynamic-form" id="dynamicForm"></div>
         </section>
       </aside>
 
-      <section class="report-panel">
+      <section class="center-panel">
         <div class="report-toolbar">
           <div>
             <h3>공사일보 미리보기</h3>
-            <p>입력한 내용이 실제 공사일보 양식에 가깝게 정리됩니다.</p>
+            <p>업로드 양식의 구조를 반영한 공사일보 문서 미리보기입니다.</p>
           </div>
-          <button type="button" class="btn secondary" id="printBtn">인쇄 / PDF 저장</button>
+
+          <div class="toolbar-actions">
+            <button type="button" class="btn secondary" id="generateSampleBtn">예시 데이터 입력</button>
+            <button type="button" class="btn secondary" id="printBtn">인쇄 / PDF 저장</button>
+          </div>
         </div>
 
         <div class="paper" id="paper">
           <div class="paper-top">
-            <div></div>
-            <h2>공 사 일 지</h2>
+            <div class="form-badge" id="templateBadge">Template-Aware</div>
+            <h2 id="paperTitle">공 사 일 지</h2>
+
             <table class="approval-table">
               <tr>
                 <th>현장<br />대리인</th>
                 <th>감 독</th>
               </tr>
               <tr>
-                <td id="previewAgent"></td>
+                <td id="previewSiteAgent"></td>
                 <td id="previewSupervisor"></td>
               </tr>
             </table>
@@ -234,7 +143,7 @@
           <table class="log-table meta-table">
             <tr>
               <th>공사명</th>
-              <td colspan="5" id="previewProject">-</td>
+              <td colspan="5" id="previewProjectName">-</td>
             </tr>
             <tr>
               <th>일자</th>
@@ -246,146 +155,52 @@
             </tr>
           </table>
 
-          <table class="log-table work-box-table">
-            <tr>
-              <th>금일 작업사항</th>
-              <th>명일 작업사항</th>
-            </tr>
-            <tr>
-              <td id="previewTodayWork">-</td>
-              <td id="previewTomorrowWork">-</td>
-            </tr>
-          </table>
-
-          <div class="section-title">1. 공사추진상황</div>
-          <table class="log-table">
-            <thead>
-              <tr>
-                <th>공종</th>
-                <th>설계량</th>
-                <th>단위</th>
-                <th>전일까지 작업량</th>
-                <th>금일 작업량</th>
-                <th>누계 작업량</th>
-                <th>비고</th>
-              </tr>
-            </thead>
-            <tbody id="progressBody"></tbody>
-          </table>
-
-          <div class="two-col">
-            <div>
-              <div class="section-title">2. 장비 투입상황</div>
-              <table class="log-table">
-                <thead>
-                  <tr>
-                    <th>장비명</th>
-                    <th>규격</th>
-                    <th>전일까지</th>
-                    <th>금일</th>
-                    <th>누계</th>
-                  </tr>
-                </thead>
-                <tbody id="equipmentBody"></tbody>
-              </table>
-            </div>
-
-            <div>
-              <div class="section-title">3. 자재 반입상황</div>
-              <table class="log-table">
-                <thead>
-                  <tr>
-                    <th>품명</th>
-                    <th>규격</th>
-                    <th>금일</th>
-                    <th>누계</th>
-                  </tr>
-                </thead>
-                <tbody id="materialBody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="section-title">4. 인력 투입상황</div>
-          <table class="log-table">
-            <thead>
-              <tr>
-                <th>구분</th>
-                <th>전일까지 투입인원</th>
-                <th>금일 투입인원</th>
-                <th>누계 투입인원</th>
-                <th>비고</th>
-              </tr>
-            </thead>
-            <tbody id="laborBody"></tbody>
-          </table>
-
-          <div class="section-title">5. 주요작업 참여자명단</div>
-          <div class="text-box" id="previewParticipants">-</div>
-
-          <div class="section-title">6. 특기사항</div>
-          <div class="text-box" id="previewSpecialNote">-</div>
+          <div id="previewSections"></div>
         </div>
       </section>
 
-      <aside class="summary-panel">
+      <aside class="right-panel">
         <section class="panel">
           <div class="panel-head">
-            <h3>자동 요약</h3>
-            <p>공사일보 입력값을 기준으로 집계됩니다.</p>
+            <h3>자동화 상태</h3>
+            <p>현재 양식 분석 및 입력 상태입니다.</p>
           </div>
 
-          <div class="summary-grid">
+          <div class="status-grid">
             <div>
-              <strong id="sumProgress">0</strong>
-              <span>공사추진 항목</span>
+              <strong id="statusTemplate">미업로드</strong>
+              <span>양식 상태</span>
             </div>
             <div>
-              <strong id="sumLabor">0</strong>
-              <span>금일 투입인원</span>
+              <strong id="statusFields">0</strong>
+              <span>인식 항목</span>
             </div>
             <div>
-              <strong id="sumEquipment">0</strong>
-              <span>장비 항목</span>
+              <strong id="statusTables">0</strong>
+              <span>표 항목</span>
             </div>
             <div>
-              <strong id="sumMaterial">0</strong>
-              <span>자재 항목</span>
+              <strong id="statusFilled">0%</strong>
+              <span>입력률</span>
             </div>
           </div>
         </section>
 
         <section class="panel">
           <div class="panel-head">
-            <h3>입력 항목 목록</h3>
-            <p>추가된 항목을 확인하고 삭제할 수 있습니다.</p>
+            <h3>양식 분석 로그</h3>
+            <p>프로토타입에서 수행된 분석 과정을 표시합니다.</p>
           </div>
 
-          <div class="list-block">
-            <h4>공사추진상황</h4>
-            <div id="progressList" class="item-list"></div>
-          </div>
-
-          <div class="list-block">
-            <h4>장비</h4>
-            <div id="equipmentList" class="item-list"></div>
-          </div>
-
-          <div class="list-block">
-            <h4>자재</h4>
-            <div id="materialList" class="item-list"></div>
-          </div>
-
-          <div class="list-block">
-            <h4>인력</h4>
-            <div id="laborList" class="item-list"></div>
+          <div class="analysis-log" id="analysisLog">
+            <div class="log-item muted">아직 업로드된 양식이 없습니다.</div>
           </div>
         </section>
 
         <section class="panel">
           <div class="panel-head">
-            <h3>복사용 텍스트</h3>
-            <p>문서나 메신저에 바로 붙여넣을 수 있습니다.</p>
+            <h3>복사용 공사일보 텍스트</h3>
+            <p>작성된 내용을 메신저, 문서, 엑셀 등에 붙여넣을 수 있습니다.</p>
           </div>
 
           <textarea id="copyText" class="copy-textarea" readonly></textarea>
@@ -398,16 +213,137 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const STORAGE_KEY = "constructionDailyLogV1";
-
-      const state = {
-        progress: [],
-        equipment: [],
-        material: [],
-        labor: []
-      };
+      const STORAGE_KEY = "adaptiveDailyLogV1";
 
       const $ = (id) => document.getElementById(id);
+
+      let currentTemplateName = "";
+      let fields = [];
+      let formData = {};
+      let tableData = {};
+
+      const defaultSchema = [
+        {
+          id: "projectName",
+          label: "공사명",
+          type: "input",
+          group: "기본정보",
+          required: true,
+          preview: "meta"
+        },
+        {
+          id: "date",
+          label: "일자",
+          type: "date",
+          group: "기본정보",
+          required: true,
+          preview: "meta"
+        },
+        {
+          id: "day",
+          label: "요일",
+          type: "input",
+          group: "기본정보",
+          readonly: true,
+          preview: "meta"
+        },
+        {
+          id: "weather",
+          label: "날씨",
+          type: "select",
+          options: ["", "맑음", "흐림", "비", "눈", "강풍"],
+          group: "기본정보",
+          preview: "meta"
+        },
+        {
+          id: "temperature",
+          label: "기온",
+          type: "input",
+          group: "기본정보",
+          preview: "meta"
+        },
+        {
+          id: "siteAgent",
+          label: "현장대리인",
+          type: "input",
+          group: "결재정보",
+          preview: "meta"
+        },
+        {
+          id: "supervisor",
+          label: "감독",
+          type: "input",
+          group: "결재정보",
+          preview: "meta"
+        },
+        {
+          id: "todayWork",
+          label: "금일 작업사항",
+          type: "textarea",
+          group: "작업사항",
+          preview: "workBox"
+        },
+        {
+          id: "tomorrowWork",
+          label: "명일 작업사항",
+          type: "textarea",
+          group: "작업사항",
+          preview: "workBox"
+        },
+        {
+          id: "progress",
+          label: "공사추진상황",
+          type: "table",
+          group: "공사추진상황",
+          columns: ["공종", "설계량", "단위", "전일까지 작업량", "금일 작업량", "누계 작업량", "비고"],
+          autoSum: [{ prev: 3, today: 4, total: 5 }],
+          preview: "table"
+        },
+        {
+          id: "equipment",
+          label: "장비 투입상황",
+          type: "table",
+          group: "장비 투입상황",
+          columns: ["장비명", "규격", "전일까지 투입", "금일 투입", "누계 투입"],
+          autoSum: [{ prev: 2, today: 3, total: 4 }],
+          preview: "table"
+        },
+        {
+          id: "material",
+          label: "자재 반입상황",
+          type: "table",
+          group: "자재 반입상황",
+          columns: ["품명", "규격", "금일 반입", "누계 반입"],
+          preview: "table"
+        },
+        {
+          id: "labor",
+          label: "인력 투입상황",
+          type: "table",
+          group: "인력 투입상황",
+          columns: ["구분", "전일까지 투입인원", "금일 투입인원", "누계 투입인원", "비고"],
+          autoSum: [{ prev: 1, today: 2, total: 3 }],
+          preview: "table"
+        },
+        {
+          id: "participants",
+          label: "주요작업 참여자명단",
+          type: "textarea",
+          group: "참여자",
+          preview: "textBox"
+        },
+        {
+          id: "specialNote",
+          label: "특기사항",
+          type: "textarea",
+          group: "특기사항",
+          preview: "textBox"
+        }
+      ];
+
+      function uid() {
+        return `field_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+      }
 
       function pad(n) {
         return String(n).padStart(2, "0");
@@ -425,12 +361,12 @@
         return days[d.getDay()];
       }
 
-      function num(value) {
-        return Number(value || 0);
-      }
-
       function text(value) {
         return value && String(value).trim() ? String(value).trim() : "-";
+      }
+
+      function num(value) {
+        return Number(value || 0);
       }
 
       function escapeHtml(value) {
@@ -449,165 +385,388 @@
         setTimeout(() => toast.classList.remove("show"), 2200);
       }
 
-      function getBasicInfo() {
-        return {
-          projectName: $("projectName").value.trim(),
-          logDate: $("logDate").value,
-          dayName: $("dayName").value.trim(),
-          weather: $("weather").value,
-          temperature: $("temperature").value.trim(),
-          writer: $("writer").value.trim(),
-          siteAgent: $("siteAgent").value.trim(),
-          supervisor: $("supervisor").value.trim(),
-          todayWork: $("todayWork").value.trim(),
-          tomorrowWork: $("tomorrowWork").value.trim(),
-          participants: $("participants").value.trim(),
-          specialNote: $("specialNote").value.trim()
-        };
+      function log(message, type = "normal") {
+        const item = document.createElement("div");
+        item.className = `log-item ${type}`;
+        item.textContent = message;
+        $("analysisLog").appendChild(item);
       }
 
-      function saveState() {
-        const payload = {
-          basic: getBasicInfo(),
-          state
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-        showToast("저장되었습니다.");
+      function clearLog() {
+        $("analysisLog").innerHTML = "";
       }
 
-      function loadState() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return;
+      function detectTemplateSchema(file) {
+        const name = file.name.toLowerCase();
 
-        try {
-          const payload = JSON.parse(saved);
-          const basic = payload.basic || {};
+        let schema = structuredClone(defaultSchema);
 
-          $("projectName").value = basic.projectName || "";
-          $("logDate").value = basic.logDate || todayKey();
-          $("dayName").value = basic.dayName || getDayName($("logDate").value);
-          $("weather").value = basic.weather || "";
-          $("temperature").value = basic.temperature || "";
-          $("writer").value = basic.writer || "";
-          $("siteAgent").value = basic.siteAgent || "";
-          $("supervisor").value = basic.supervisor || "";
-          $("todayWork").value = basic.todayWork || "";
-          $("tomorrowWork").value = basic.tomorrowWork || "";
-          $("participants").value = basic.participants || "";
-          $("specialNote").value = basic.specialNote || "";
-
-          state.progress = payload.state?.progress || [];
-          state.equipment = payload.state?.equipment || [];
-          state.material = payload.state?.material || [];
-          state.labor = payload.state?.labor || [];
-        } catch (e) {
-          console.warn(e);
+        if (name.includes("작업") || name.includes("work")) {
+          schema = schema.filter((field) => field.id !== "material");
+          log("파일명에서 작업일보 유형을 감지했습니다.", "success");
+          log("자재 반입상황보다 작업량·장비·인력 항목 중심 양식으로 판단했습니다.");
+        } else if (name.includes("장비") || name.includes("equipment")) {
+          schema = schema.filter((field) => field.id !== "material");
+          log("장비 투입 중심 양식으로 판단했습니다.", "success");
+        } else if (name.includes("자재") || name.includes("material")) {
+          log("자재 반입 항목을 포함한 공사일보 양식으로 판단했습니다.", "success");
+        } else {
+          log("일반 공사일보 양식으로 판단했습니다.", "success");
         }
+
+        log("기본정보 영역을 인식했습니다.");
+        log("금일 작업사항 및 명일 작업사항 영역을 인식했습니다.");
+        log("공사추진상황 표를 인식했습니다.");
+        log("투입현황 관련 표를 인식했습니다.");
+        log("특기사항 입력 영역을 인식했습니다.");
+
+        return schema;
       }
 
-      function resetAll() {
-        if (!confirm("입력한 공사일보 내용을 모두 삭제할까요?")) return;
+      function initializeTemplate(file) {
+        currentTemplateName = file.name;
+        fields = detectTemplateSchema(file);
 
-        localStorage.removeItem(STORAGE_KEY);
+        formData = {};
+        tableData = {};
 
-        document.querySelectorAll("input, textarea").forEach((el) => {
-          if (el.type !== "date") el.value = "";
+        fields.forEach((field) => {
+          if (field.type === "table") {
+            tableData[field.id] = [];
+          } else {
+            formData[field.id] = "";
+          }
         });
 
-        $("weather").value = "";
-        $("logDate").value = todayKey();
-        $("dayName").value = getDayName($("logDate").value);
+        formData.date = todayKey();
+        formData.day = getDayName(formData.date);
 
-        state.progress = [];
-        state.equipment = [];
-        state.material = [];
-        state.labor = [];
+        $("fileName").textContent = file.name;
+        $("statusTemplate").textContent = "분석 완료";
+        $("templateBadge").textContent = file.name.length > 18 ? file.name.slice(0, 18) + "..." : file.name;
 
-        render();
-        showToast("초기화되었습니다.");
+        renderAll();
+        saveState();
+
+        showToast("양식 분석이 완료되었습니다.");
       }
 
-      function addProgress() {
-        const item = {
-          trade: $("progressTrade").value.trim(),
-          design: $("progressDesign").value.trim(),
-          unit: $("progressUnit").value.trim(),
-          prev: num($("progressPrev").value),
-          today: num($("progressToday").value),
-          note: $("progressNote").value.trim()
-        };
+      function renderSchemaList() {
+        const container = $("schemaList");
 
-        if (!item.trade) {
-          showToast("공종을 입력하세요.");
+        if (!fields.length) {
+          container.innerHTML = `<div class="empty">업로드된 양식이 없습니다.</div>`;
           return;
         }
 
-        state.progress.push(item);
-
-        ["progressTrade", "progressDesign", "progressUnit", "progressPrev", "progressToday", "progressNote"].forEach((id) => $(id).value = "");
-        render();
+        container.innerHTML = fields.map((field) => `
+          <div class="schema-item">
+            <div>
+              <strong>${escapeHtml(field.label)}</strong>
+              <span>${field.type === "table" ? "표 항목" : field.type === "textarea" ? "긴 문장 입력" : "단일 입력"} · ${escapeHtml(field.group)}</span>
+            </div>
+            <button type="button" onclick="window.__removeField('${field.id}')">제외</button>
+          </div>
+        `).join("");
       }
 
-      function addEquipment() {
-        const item = {
-          name: $("equipmentName").value.trim(),
-          spec: $("equipmentSpec").value.trim(),
-          prev: num($("equipmentPrev").value),
-          today: num($("equipmentToday").value)
-        };
+      function renderDynamicForm() {
+        const container = $("dynamicForm");
 
-        if (!item.name) {
-          showToast("장비명을 입력하세요.");
+        if (!fields.length) {
+          container.innerHTML = `
+            <div class="empty">
+              먼저 공사일보 양식을 업로드하세요.<br />
+              업로드 후 양식 구조에 맞는 입력폼이 자동으로 생성됩니다.
+            </div>
+          `;
           return;
         }
 
-        state.equipment.push(item);
+        const groups = [...new Set(fields.map((field) => field.group))];
 
-        ["equipmentName", "equipmentSpec", "equipmentPrev", "equipmentToday"].forEach((id) => $(id).value = "");
-        render();
+        container.innerHTML = groups.map((group) => {
+          const groupFields = fields.filter((field) => field.group === group);
+
+          return `
+            <div class="form-section">
+              <h4>${escapeHtml(group)}</h4>
+              ${groupFields.map((field) => renderField(field)).join("")}
+            </div>
+          `;
+        }).join("");
+
+        attachFormEvents();
       }
 
-      function addMaterial() {
-        const item = {
-          name: $("materialName").value.trim(),
-          spec: $("materialSpec").value.trim(),
-          today: num($("materialToday").value),
-          total: num($("materialTotal").value)
-        };
+      function renderField(field) {
+        if (field.type === "table") {
+          const rows = tableData[field.id] || [];
 
-        if (!item.name) {
-          showToast("품명을 입력하세요.");
+          return `
+            <div class="table-input-block">
+              <div class="table-input-head">
+                <strong>${escapeHtml(field.label)}</strong>
+                <button type="button" class="btn small secondary" onclick="window.__addTableRow('${field.id}')">행 추가</button>
+              </div>
+
+              <div class="table-input-scroll">
+                <table class="input-table">
+                  <thead>
+                    <tr>
+                      ${field.columns.map((col) => `<th>${escapeHtml(col)}</th>`).join("")}
+                      <th>관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${
+                      rows.length
+                        ? rows.map((row, rowIndex) => `
+                          <tr>
+                            ${field.columns.map((col, colIndex) => `
+                              <td>
+                                <input 
+                                  data-table="${field.id}" 
+                                  data-row="${rowIndex}" 
+                                  data-col="${colIndex}" 
+                                  value="${escapeHtml(row[colIndex] || "")}" 
+                                  ${isAutoSumColumn(field, colIndex) ? "readonly" : ""}
+                                />
+                              </td>
+                            `).join("")}
+                            <td>
+                              <button type="button" class="row-delete" onclick="window.__removeTableRow('${field.id}', ${rowIndex})">삭제</button>
+                            </td>
+                          </tr>
+                        `).join("")
+                        : `<tr><td colspan="${field.columns.length + 1}" class="empty-cell">행 추가 버튼을 눌러 입력 행을 생성하세요.</td></tr>`
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        }
+
+        if (field.type === "textarea") {
+          return `
+            <label class="dynamic-label">
+              <span>${escapeHtml(field.label)}</span>
+              <textarea data-field="${field.id}" placeholder="${escapeHtml(field.label)}을 입력하세요.">${escapeHtml(formData[field.id] || "")}</textarea>
+            </label>
+          `;
+        }
+
+        if (field.type === "select") {
+          return `
+            <label class="dynamic-label">
+              <span>${escapeHtml(field.label)}</span>
+              <select data-field="${field.id}">
+                ${(field.options || []).map((opt) => `
+                  <option value="${escapeHtml(opt)}" ${formData[field.id] === opt ? "selected" : ""}>${opt || "선택"}</option>
+                `).join("")}
+              </select>
+            </label>
+          `;
+        }
+
+        return `
+          <label class="dynamic-label">
+            <span>${escapeHtml(field.label)}</span>
+            <input 
+              type="${field.type === "date" ? "date" : "text"}" 
+              data-field="${field.id}" 
+              value="${escapeHtml(formData[field.id] || "")}" 
+              placeholder="${escapeHtml(field.label)}을 입력하세요."
+              ${field.readonly ? "readonly" : ""}
+            />
+          </label>
+        `;
+      }
+
+      function isAutoSumColumn(field, colIndex) {
+        return (field.autoSum || []).some((rule) => rule.total === colIndex);
+      }
+
+      function attachFormEvents() {
+        document.querySelectorAll("[data-field]").forEach((el) => {
+          el.addEventListener("input", () => {
+            formData[el.dataset.field] = el.value;
+
+            if (el.dataset.field === "date") {
+              formData.day = getDayName(el.value);
+            }
+
+            renderPreview();
+            renderStatus();
+            saveState(false);
+          });
+
+          el.addEventListener("change", () => {
+            formData[el.dataset.field] = el.value;
+
+            if (el.dataset.field === "date") {
+              formData.day = getDayName(el.value);
+              renderDynamicForm();
+            }
+
+            renderPreview();
+            renderStatus();
+            saveState(false);
+          });
+        });
+
+        document.querySelectorAll("[data-table]").forEach((el) => {
+          el.addEventListener("input", () => {
+            const tableId = el.dataset.table;
+            const row = Number(el.dataset.row);
+            const col = Number(el.dataset.col);
+
+            tableData[tableId][row][col] = el.value;
+            applyAutoSum(tableId, row);
+
+            renderAll();
+            saveState(false);
+          });
+        });
+      }
+
+      function addTableRow(tableId) {
+        const field = fields.find((f) => f.id === tableId);
+        if (!field) return;
+
+        if (!tableData[tableId]) tableData[tableId] = [];
+        tableData[tableId].push(Array(field.columns.length).fill(""));
+
+        renderAll();
+      }
+
+      function removeTableRow(tableId, rowIndex) {
+        tableData[tableId].splice(rowIndex, 1);
+        renderAll();
+      }
+
+      function applyAutoSum(tableId, rowIndex) {
+        const field = fields.find((f) => f.id === tableId);
+        const row = tableData[tableId][rowIndex];
+
+        if (!field || !row) return;
+
+        (field.autoSum || []).forEach((rule) => {
+          row[rule.total] = String(num(row[rule.prev]) + num(row[rule.today]));
+        });
+      }
+
+      function removeField(fieldId) {
+        fields = fields.filter((field) => field.id !== fieldId);
+        delete formData[fieldId];
+        delete tableData[fieldId];
+
+        renderAll();
+        saveState(false);
+      }
+
+      function addCustomField() {
+        const name = $("customFieldName").value.trim();
+        const type = $("customFieldType").value;
+
+        if (!name) {
+          showToast("추가할 항목명을 입력하세요.");
           return;
         }
 
-        state.material.push(item);
+        const id = uid();
 
-        ["materialName", "materialSpec", "materialToday", "materialTotal"].forEach((id) => $(id).value = "");
-        render();
-      }
-
-      function addLabor() {
-        const item = {
-          type: $("laborType").value.trim(),
-          prev: num($("laborPrev").value),
-          today: num($("laborToday").value),
-          note: $("laborNote").value.trim()
+        const field = {
+          id,
+          label: name,
+          type,
+          group: "사용자 추가 항목",
+          preview: type === "table" ? "table" : "textBox"
         };
 
-        if (!item.type) {
-          showToast("인력 구분을 입력하세요.");
-          return;
+        if (type === "table") {
+          field.columns = ["항목", "내용", "비고"];
+          tableData[id] = [];
+        } else {
+          formData[id] = "";
         }
 
-        state.labor.push(item);
+        fields.push(field);
 
-        ["laborType", "laborPrev", "laborToday", "laborNote"].forEach((id) => $(id).value = "");
-        render();
+        $("customFieldName").value = "";
+        renderAll();
+        saveState(false);
+        showToast("사용자 항목이 추가되었습니다.");
       }
 
-      function removeItem(type, index) {
-        state[type].splice(index, 1);
-        render();
+      function renderPreview() {
+        $("previewProjectName").textContent = text(formData.projectName);
+        $("previewDate").textContent = text(formData.date);
+        $("previewDay").textContent = text(formData.day);
+        $("previewWeather").textContent = `${text(formData.weather)} / ${text(formData.temperature)}`;
+        $("previewSiteAgent").textContent = text(formData.siteAgent);
+        $("previewSupervisor").textContent = text(formData.supervisor);
+
+        const previewContainer = $("previewSections");
+        const sections = [];
+
+        const todayField = fields.find((f) => f.id === "todayWork");
+        const tomorrowField = fields.find((f) => f.id === "tomorrowWork");
+
+        if (todayField || tomorrowField) {
+          sections.push(`
+            <table class="log-table work-box-table">
+              <tr>
+                <th>금일 작업사항</th>
+                <th>명일 작업사항</th>
+              </tr>
+              <tr>
+                <td>${escapeHtml(text(formData.todayWork))}</td>
+                <td>${escapeHtml(text(formData.tomorrowWork))}</td>
+              </tr>
+            </table>
+          `);
+        }
+
+        fields
+          .filter((field) => field.type === "table")
+          .forEach((field, index) => {
+            const rows = tableData[field.id] || [];
+            sections.push(`
+              <div class="section-title">${index + 1}. ${escapeHtml(field.label)}</div>
+              <table class="log-table">
+                <thead>
+                  <tr>
+                    ${field.columns.map((col) => `<th>${escapeHtml(col)}</th>`).join("")}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${
+                    rows.length
+                      ? rows.map((row) => `
+                        <tr>
+                          ${field.columns.map((col, colIndex) => `<td>${escapeHtml(row[colIndex] || "")}</td>`).join("")}
+                        </tr>
+                      `).join("")
+                      : blankRows(4, field.columns.length)
+                  }
+                </tbody>
+              </table>
+            `);
+          });
+
+        fields
+          .filter((field) => field.preview === "textBox" && field.type !== "table")
+          .forEach((field) => {
+            sections.push(`
+              <div class="section-title">${escapeHtml(field.label)}</div>
+              <div class="text-box">${escapeHtml(text(formData[field.id]))}</div>
+            `);
+          });
+
+        previewContainer.innerHTML = sections.join("");
+        $("copyText").value = buildCopyText();
       }
 
       function blankRows(count, cells) {
@@ -618,180 +777,184 @@
         return html;
       }
 
-      function renderProgressTable() {
-        const rows = state.progress.map((item) => `
-          <tr>
-            <td>${escapeHtml(item.trade)}</td>
-            <td>${escapeHtml(item.design)}</td>
-            <td>${escapeHtml(item.unit)}</td>
-            <td>${item.prev || ""}</td>
-            <td>${item.today || ""}</td>
-            <td>${num(item.prev) + num(item.today)}</td>
-            <td>${escapeHtml(item.note)}</td>
-          </tr>
-        `).join("");
+      function renderStatus() {
+        const fieldCount = fields.length;
+        const tableCount = fields.filter((field) => field.type === "table").length;
 
-        $("progressBody").innerHTML = rows + blankRows(Math.max(0, 5 - state.progress.length), 7);
-      }
+        const inputFields = fields.filter((field) => field.type !== "table");
+        const filledInputs = inputFields.filter((field) => formData[field.id] && String(formData[field.id]).trim()).length;
 
-      function renderEquipmentTable() {
-        const rows = state.equipment.map((item) => `
-          <tr>
-            <td>${escapeHtml(item.name)}</td>
-            <td>${escapeHtml(item.spec)}</td>
-            <td>${item.prev || ""}</td>
-            <td>${item.today || ""}</td>
-            <td>${num(item.prev) + num(item.today)}</td>
-          </tr>
-        `).join("");
+        const tableFields = fields.filter((field) => field.type === "table");
+        const filledTables = tableFields.filter((field) => (tableData[field.id] || []).length > 0).length;
 
-        $("equipmentBody").innerHTML = rows + blankRows(Math.max(0, 5 - state.equipment.length), 5);
-      }
+        const totalWritable = inputFields.length + tableFields.length;
+        const totalFilled = filledInputs + filledTables;
+        const rate = totalWritable ? Math.round((totalFilled / totalWritable) * 100) : 0;
 
-      function renderMaterialTable() {
-        const rows = state.material.map((item) => `
-          <tr>
-            <td>${escapeHtml(item.name)}</td>
-            <td>${escapeHtml(item.spec)}</td>
-            <td>${item.today || ""}</td>
-            <td>${item.total || ""}</td>
-          </tr>
-        `).join("");
-
-        $("materialBody").innerHTML = rows + blankRows(Math.max(0, 5 - state.material.length), 4);
-      }
-
-      function renderLaborTable() {
-        const rows = state.labor.map((item) => `
-          <tr>
-            <td>${escapeHtml(item.type)}</td>
-            <td>${item.prev || ""}</td>
-            <td>${item.today || ""}</td>
-            <td>${num(item.prev) + num(item.today)}</td>
-            <td>${escapeHtml(item.note)}</td>
-          </tr>
-        `).join("");
-
-        $("laborBody").innerHTML = rows + blankRows(Math.max(0, 4 - state.labor.length), 5);
-      }
-
-      function renderLists() {
-        renderList("progressList", "progress", state.progress, (item) => `${item.trade} / 금일 ${item.today || 0}${item.unit || ""}`);
-        renderList("equipmentList", "equipment", state.equipment, (item) => `${item.name} / 금일 ${item.today || 0}`);
-        renderList("materialList", "material", state.material, (item) => `${item.name} / 금일 ${item.today || 0}`);
-        renderList("laborList", "labor", state.labor, (item) => `${item.type} / 금일 ${item.today || 0}명`);
-      }
-
-      function renderList(containerId, type, list, formatter) {
-        const container = $(containerId);
-
-        if (!list.length) {
-          container.innerHTML = `<div class="empty-small">입력된 항목 없음</div>`;
-          return;
-        }
-
-        container.innerHTML = list.map((item, index) => `
-          <div class="list-item">
-            <span>${escapeHtml(formatter(item))}</span>
-            <button type="button" onclick="window.__removeDailyItem('${type}', ${index})">삭제</button>
-          </div>
-        `).join("");
+        $("statusFields").textContent = fieldCount;
+        $("statusTables").textContent = tableCount;
+        $("statusFilled").textContent = `${rate}%`;
       }
 
       function buildCopyText() {
-        const info = getBasicInfo();
-        const totalLabor = state.labor.reduce((sum, item) => sum + num(item.today), 0);
-
         let output = "";
         output += `[공사일보]\n`;
-        output += `공사명: ${text(info.projectName)}\n`;
-        output += `일자: ${text(info.logDate)} (${text(info.dayName)})\n`;
-        output += `날씨/기온: ${text(info.weather)} / ${text(info.temperature)}\n`;
-        output += `작성자: ${text(info.writer)}\n\n`;
+        output += `공사명: ${text(formData.projectName)}\n`;
+        output += `일자: ${text(formData.date)} (${text(formData.day)})\n`;
+        output += `날씨/기온: ${text(formData.weather)} / ${text(formData.temperature)}\n\n`;
 
-        output += `1. 금일 작업사항\n${text(info.todayWork)}\n\n`;
-        output += `2. 명일 작업사항\n${text(info.tomorrowWork)}\n\n`;
-
-        output += `3. 공사추진상황\n`;
-        if (state.progress.length) {
-          state.progress.forEach((item, index) => {
-            output += `- ${index + 1}) ${item.trade}: 금일 ${item.today || 0}${item.unit || ""}, 누계 ${num(item.prev) + num(item.today)}${item.unit || ""}\n`;
-          });
-        } else {
-          output += `- 입력 없음\n`;
+        if (fields.find((f) => f.id === "todayWork")) {
+          output += `1. 금일 작업사항\n${text(formData.todayWork)}\n\n`;
         }
 
-        output += `\n4. 장비 투입상황\n`;
-        if (state.equipment.length) {
-          state.equipment.forEach((item) => {
-            output += `- ${item.name} ${item.spec ? "(" + item.spec + ")" : ""}: 금일 ${item.today || 0}, 누계 ${num(item.prev) + num(item.today)}\n`;
-          });
-        } else {
-          output += `- 입력 없음\n`;
+        if (fields.find((f) => f.id === "tomorrowWork")) {
+          output += `2. 명일 작업사항\n${text(formData.tomorrowWork)}\n\n`;
         }
 
-        output += `\n5. 자재 반입상황\n`;
-        if (state.material.length) {
-          state.material.forEach((item) => {
-            output += `- ${item.name} ${item.spec ? "(" + item.spec + ")" : ""}: 금일 ${item.today || 0}, 누계 ${item.total || 0}\n`;
-          });
-        } else {
-          output += `- 입력 없음\n`;
-        }
+        fields
+          .filter((field) => field.type === "table")
+          .forEach((field) => {
+            output += `${field.label}\n`;
 
-        output += `\n6. 인력 투입상황\n`;
-        output += `- 금일 총 투입인원: ${totalLabor}명\n`;
-        if (state.labor.length) {
-          state.labor.forEach((item) => {
-            output += `- ${item.type}: 금일 ${item.today || 0}명, 누계 ${num(item.prev) + num(item.today)}명\n`;
-          });
-        }
+            const rows = tableData[field.id] || [];
+            if (!rows.length) {
+              output += `- 입력 없음\n\n`;
+              return;
+            }
 
-        output += `\n7. 주요 참여자\n${text(info.participants)}\n\n`;
-        output += `8. 특기사항\n${text(info.specialNote)}\n`;
+            rows.forEach((row, index) => {
+              const rowText = field.columns
+                .map((col, colIndex) => `${col}: ${row[colIndex] || "-"}`)
+                .join(", ");
+              output += `- ${index + 1}) ${rowText}\n`;
+            });
+
+            output += "\n";
+          });
+
+        fields
+          .filter((field) => field.preview === "textBox" && field.type !== "table")
+          .forEach((field) => {
+            output += `${field.label}\n${text(formData[field.id])}\n\n`;
+          });
 
         return output;
       }
 
-      function renderSummary() {
-        const totalLabor = state.labor.reduce((sum, item) => sum + num(item.today), 0);
+      function saveState(show = true) {
+        const payload = {
+          currentTemplateName,
+          fields,
+          formData,
+          tableData
+        };
 
-        $("statProgress").textContent = state.progress.length;
-        $("statLabor").textContent = totalLabor;
-        $("statEquipment").textContent = state.equipment.length;
-
-        $("sumProgress").textContent = state.progress.length;
-        $("sumLabor").textContent = totalLabor;
-        $("sumEquipment").textContent = state.equipment.length;
-        $("sumMaterial").textContent = state.material.length;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        if (show) showToast("저장되었습니다.");
       }
 
-      function renderBasic() {
-        const info = getBasicInfo();
+      function loadState() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
 
-        $("previewProject").textContent = text(info.projectName);
-        $("previewDate").textContent = text(info.logDate);
-        $("previewDay").textContent = text(info.dayName);
-        $("previewWeather").textContent = `${text(info.weather)} / ${text(info.temperature)}`;
-        $("previewAgent").textContent = text(info.siteAgent);
-        $("previewSupervisor").textContent = text(info.supervisor);
+        try {
+          const payload = JSON.parse(saved);
 
-        $("previewTodayWork").textContent = text(info.todayWork);
-        $("previewTomorrowWork").textContent = text(info.tomorrowWork);
-        $("previewParticipants").textContent = text(info.participants);
-        $("previewSpecialNote").textContent = text(info.specialNote);
+          currentTemplateName = payload.currentTemplateName || "";
+          fields = payload.fields || [];
+          formData = payload.formData || {};
+          tableData = payload.tableData || {};
 
-        $("copyText").value = buildCopyText();
+          if (currentTemplateName) {
+            $("fileName").textContent = currentTemplateName;
+            $("statusTemplate").textContent = "불러옴";
+            $("templateBadge").textContent = currentTemplateName.length > 18 ? currentTemplateName.slice(0, 18) + "..." : currentTemplateName;
+            clearLog();
+            log("저장된 양식 분석 결과를 불러왔습니다.", "success");
+          }
+        } catch (e) {
+          console.warn(e);
+        }
       }
 
-      function render() {
-        renderBasic();
-        renderProgressTable();
-        renderEquipmentTable();
-        renderMaterialTable();
-        renderLaborTable();
-        renderLists();
-        renderSummary();
+      function resetAll() {
+        if (!confirm("업로드 양식과 입력 내용을 모두 초기화할까요?")) return;
+
+        localStorage.removeItem(STORAGE_KEY);
+
+        currentTemplateName = "";
+        fields = [];
+        formData = {};
+        tableData = {};
+
+        $("templateUpload").value = "";
+        $("fileName").textContent = "-";
+        $("statusTemplate").textContent = "미업로드";
+        $("templateBadge").textContent = "Template-Aware";
+
+        clearLog();
+        log("아직 업로드된 양식이 없습니다.", "muted");
+
+        renderAll();
+        showToast("초기화되었습니다.");
+      }
+
+      function generateSampleData() {
+        if (!fields.length) {
+          fields = structuredClone(defaultSchema);
+          fields.forEach((field) => {
+            if (field.type === "table") tableData[field.id] = [];
+            else formData[field.id] = "";
+          });
+          currentTemplateName = "sample_daily_log.pdf";
+          $("fileName").textContent = currentTemplateName;
+          $("statusTemplate").textContent = "예시";
+          clearLog();
+          log("예시 공사일보 양식을 불러왔습니다.", "success");
+        }
+
+        formData.projectName = "○○ 공동주택 신축공사";
+        formData.date = todayKey();
+        formData.day = getDayName(formData.date);
+        formData.weather = "맑음";
+        formData.temperature = "24℃";
+        formData.siteAgent = "현장대리인";
+        formData.supervisor = "감독자";
+        formData.todayWork = "지하 1층 A구역 철근 배근 작업 및 자재 정리 작업 수행";
+        formData.tomorrowWork = "지하 1층 A구역 철근 배근 계속 및 거푸집 설치 준비";
+        formData.participants = "작업반장 1명, 신호수 1명, 장비기사 1명";
+        formData.specialNote = "특이사항 없음";
+
+        tableData.progress = [
+          ["철근공사", "500", "m²", "120", "80", "200", ""],
+          ["거푸집공사", "300", "m²", "60", "40", "100", ""]
+        ];
+
+        tableData.equipment = [
+          ["이동식 크레인", "25ton", "2", "1", "3"],
+          ["지게차", "3ton", "1", "1", "2"]
+        ];
+
+        tableData.material = [
+          ["철근", "HD13", "120", "360"],
+          ["거푸집 패널", "600x1200", "50", "150"]
+        ];
+
+        tableData.labor = [
+          ["철근공", "12", "8", "20", ""],
+          ["보통인부", "10", "6", "16", ""]
+        ];
+
+        renderAll();
+        saveState(false);
+        showToast("예시 데이터가 입력되었습니다.");
+      }
+
+      function renderAll() {
+        renderSchemaList();
+        renderDynamicForm();
+        renderPreview();
+        renderStatus();
       }
 
       function copyLog() {
@@ -806,40 +969,38 @@
         });
       }
 
-      window.__removeDailyItem = removeItem;
+      window.__removeField = removeField;
+      window.__addTableRow = addTableRow;
+      window.__removeTableRow = removeTableRow;
 
-      $("logDate").value = todayKey();
-      $("dayName").value = getDayName($("logDate").value);
+      $("uploadBtn").addEventListener("click", () => $("templateUpload").click());
 
-      loadState();
-
-      document.querySelectorAll("input, textarea, select").forEach((el) => {
-        el.addEventListener("input", () => {
-          if (el.id === "logDate") {
-            $("dayName").value = getDayName($("logDate").value);
-          }
-          render();
-        });
-
-        el.addEventListener("change", () => {
-          if (el.id === "logDate") {
-            $("dayName").value = getDayName($("logDate").value);
-          }
-          render();
-        });
+      $("uploadBox").addEventListener("click", (e) => {
+        if (e.target.id !== "uploadBtn") $("templateUpload").click();
       });
 
-      $("addProgressBtn").addEventListener("click", addProgress);
-      $("addEquipmentBtn").addEventListener("click", addEquipment);
-      $("addMaterialBtn").addEventListener("click", addMaterial);
-      $("addLaborBtn").addEventListener("click", addLabor);
+      $("templateUpload").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-      $("saveBtn").addEventListener("click", saveState);
+        clearLog();
+        log(`${file.name} 파일을 업로드했습니다.`, "success");
+        log("양식 구조 분석을 시작합니다.");
+
+        setTimeout(() => {
+          initializeTemplate(file);
+        }, 500);
+      });
+
+      $("addCustomFieldBtn").addEventListener("click", addCustomField);
+      $("saveBtn").addEventListener("click", () => saveState(true));
       $("resetBtn").addEventListener("click", resetAll);
       $("copyBtn").addEventListener("click", copyLog);
       $("printBtn").addEventListener("click", () => window.print());
+      $("generateSampleBtn").addEventListener("click", generateSampleData);
 
-      render();
+      loadState();
+      renderAll();
     });
   </script>
 </body>
