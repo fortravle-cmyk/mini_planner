@@ -1,1134 +1,1022 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>SiteLog Mini | Construction Daily Report Builder</title>
-  <meta name="description" content="건설현장 작업일보 작성 업무를 표준화하고 간소화하는 웹 기반 프로토타입" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Varela+Round&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
-
-  <link rel="stylesheet" href="./style.css?v=4" />
-</head>
-
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-icon">🏗️</div>
-        <div>
-          <h1>SiteLog Mini</h1>
-          <p>Construction Daily Report Builder</p>
-        </div>
-      </div>
-
-      <div class="top-actions">
-        <button class="toy-btn" id="todayBtn" type="button">Today</button>
-        <button class="toy-btn warning" id="copyYesterdayBtn" type="button">전일 작업 불러오기</button>
-        <button class="toy-btn success" id="copyReportBtn" type="button">일보 복사</button>
-        <button class="toy-btn primary" id="newWorkBtn" type="button">+ 작업 추가</button>
-      </div>
-    </header>
-
-    <section class="hero-card">
-      <div class="hero-content">
-        <div>
-          <div class="hero-kicker">Construction Daily Report Automation</div>
-          <h2 class="hero-title">건설현장 작업일보 작성 업무를 표준화하고 간소화합니다.</h2>
-          <p class="hero-sub">
-            전일 작업 불러오기, 공종별 입력 템플릿, 투입 인력·장비·자재 자동 집계,
-            안전조치 및 명일 예정작업 정리를 통해 반복적인 일보 작성 과정을 줄입니다.
-          </p>
-        </div>
-
-        <div class="hero-metrics">
-          <div class="hero-metric">
-            <b id="heroWorkCount">0</b>
-            <span>금일 작업</span>
-          </div>
-          <div class="hero-metric">
-            <b id="heroWorkers">0</b>
-            <span>투입 인원</span>
-          </div>
-          <div class="hero-metric">
-            <b id="heroRisk">0</b>
-            <span>위험/지연 작업</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <main class="dashboard">
-      <aside class="panel">
-        <div class="panel-head">
-          <div class="panel-title">작업일보 입력 패널</div>
-          <div class="panel-sub">
-            현장 기본정보와 공종별 작업내용을 입력하면 작업일보 문장으로 자동 정리됩니다.
-          </div>
-        </div>
-
-        <div class="view-tabs">
-          <button type="button" class="view-tab active" data-view="daily">금일 작업</button>
-          <button type="button" class="view-tab" data-view="weekly">주간 계획</button>
-          <button type="button" class="view-tab" data-view="preview">일보 미리보기</button>
-        </div>
-
-        <form class="form-body" id="workForm">
-          <input type="hidden" id="workId" />
-
-          <div class="form-grid-2">
-            <div class="field">
-              <label for="siteName">Site</label>
-              <input id="siteName" type="text" placeholder="현장명을 입력하세요" />
-            </div>
-
-            <div class="field">
-              <label for="writer">Writer</label>
-              <input id="writer" type="text" placeholder="작성자를 입력하세요" />
-            </div>
-          </div>
-
-          <div class="form-grid-3">
-            <div class="field">
-              <label for="reportDate">Date</label>
-              <input id="reportDate" type="date" required />
-            </div>
-
-            <div class="field">
-              <label for="weather">Weather</label>
-              <select id="weather">
-                <option value="맑음">맑음</option>
-                <option value="흐림">흐림</option>
-                <option value="비">비</option>
-                <option value="눈">눈</option>
-                <option value="강풍">강풍</option>
-                <option value="미입력">미입력</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="temperature">Temp</label>
-              <input id="temperature" type="text" placeholder="예: 24℃" />
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Work Template</label>
-            <div class="template-row">
-              <button type="button" class="template-btn template-rebar" data-template="rebar">철근공사</button>
-              <button type="button" class="template-btn template-formwork" data-template="formwork">거푸집공사</button>
-              <button type="button" class="template-btn template-concrete" data-template="concrete">콘크리트공사</button>
-              <button type="button" class="template-btn template-lifting" data-template="lifting">양중작업</button>
-              <button type="button" class="template-btn template-safety" data-template="safety">안전관리</button>
-              <button type="button" class="template-btn" data-template="general">일반작업</button>
-            </div>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="field">
-              <label for="trade">Trade</label>
-              <input id="trade" type="text" placeholder="예: 철근공사" required />
-            </div>
-
-            <div class="field">
-              <label for="location">Location</label>
-              <input id="location" type="text" placeholder="예: 지하 1층 A구역" required />
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="workTitle">Work Title</label>
-            <input id="workTitle" type="text" placeholder="예: 기둥 및 보 철근 배근" required />
-          </div>
-
-          <div class="field">
-            <label for="workContent">Work Description</label>
-            <textarea id="workContent" placeholder="금일 수행한 작업내용을 입력하세요."></textarea>
-          </div>
-
-          <div class="form-grid-3">
-            <div class="field">
-              <label for="workers">Workers</label>
-              <input id="workers" type="number" min="0" placeholder="인원 수" />
-            </div>
-
-            <div class="field">
-              <label for="equipment">Equipment</label>
-              <input id="equipment" type="text" placeholder="사용 장비" />
-            </div>
-
-            <div class="field">
-              <label for="material">Material</label>
-              <input id="material" type="text" placeholder="주요 자재" />
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="hazard">Hazard</label>
-            <textarea id="hazard" placeholder="주요 위험요인을 입력하세요. 예: 추락, 협착, 낙하물"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="safetyAction">Safety Action</label>
-            <textarea id="safetyAction" placeholder="안전조치를 입력하세요. 예: TBM 실시, 작업구역 통제, 신호수 배치"></textarea>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="field">
-              <label for="tbm">TBM</label>
-              <select id="tbm">
-                <option value="실시">실시</option>
-                <option value="미실시">미실시</option>
-                <option value="해당 없음">해당 없음</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="status">Status</label>
-              <select id="status">
-                <option value="진행">진행</option>
-                <option value="완료">완료</option>
-                <option value="지연">지연</option>
-                <option value="중단">중단</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="issue">Issue / Delay</label>
-            <textarea id="issue" placeholder="특이사항 또는 지연사유를 입력하세요."></textarea>
-          </div>
-
-          <div class="field">
-            <label for="tomorrowPlan">Tomorrow Plan</label>
-            <textarea id="tomorrowPlan" placeholder="명일 예정작업을 입력하세요."></textarea>
-          </div>
-
-          <div class="form-actions">
-            <button class="toy-btn primary" type="submit">작업 저장</button>
-            <button class="toy-btn" type="button" id="clearFormBtn">초기화</button>
-          </div>
-        </form>
-      </aside>
-
-      <section class="panel main-board">
-        <div class="board-toolbar">
-          <div class="report-title">
-            <h2 id="boardTitle">Daily Site Board</h2>
-            <p id="boardSub">금일 작업일보 작성 보드</p>
-          </div>
-
-          <div class="date-nav">
-            <button class="icon-btn" id="prevBtn" type="button" title="Previous">‹</button>
-            <button class="icon-btn" id="currentBtn" type="button" title="Current">●</button>
-            <button class="icon-btn" id="nextBtn" type="button" title="Next">›</button>
-          </div>
-        </div>
-
-        <div class="board-body">
-          <div class="kpi-row">
-            <div class="kpi">
-              <b id="kpiTotal">0</b>
-              <span>작업 수</span>
-            </div>
-            <div class="kpi">
-              <b id="kpiWorkers">0</b>
-              <span>투입 인원</span>
-            </div>
-            <div class="kpi">
-              <b id="kpiDelay">0</b>
-              <span>지연/중단</span>
-            </div>
-            <div class="kpi">
-              <b id="kpiTbm">0%</b>
-              <span>TBM 실시율</span>
-            </div>
-          </div>
-
-          <div class="board-viewport">
-            <div class="daily-view active" id="dailyView">
-              <div class="report-card-list" id="dailyWorkList"></div>
-            </div>
-
-            <div class="weekly-view" id="weeklyView">
-              <div class="week-grid" id="weekGrid"></div>
-            </div>
-
-            <div class="preview-view" id="previewView">
-              <div class="report-preview" id="reportPreview"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <aside class="panel">
-        <div class="side-scroll">
-          <div class="side-section">
-            <div class="panel-title">일보 작성 현황</div>
-            <div class="panel-sub" id="briefText">금일 작업일보 요약이 표시됩니다.</div>
-            <div class="mini-progress">
-              <span id="progressBar"></span>
-            </div>
-          </div>
-
-          <div class="side-section">
-            <div class="panel-title">위험 / 지연 작업</div>
-            <div class="side-list" id="riskList"></div>
-          </div>
-
-          <div class="side-section">
-            <div class="panel-title">명일 예정작업</div>
-            <div class="side-list" id="tomorrowList"></div>
-          </div>
-
-          <div class="side-section">
-            <div class="panel-title">복사용 작업일보</div>
-            <div class="panel-sub">아래 내용을 복사해 메신저, 문서, 엑셀 등에 붙여넣을 수 있습니다.</div>
-            <textarea class="report-textarea" id="reportText" readonly></textarea>
-
-            <div class="preview-actions" style="margin-top: 8px;">
-              <button class="toy-btn success" type="button" id="copyReportBtn2">복사</button>
-              <button class="toy-btn" type="button" id="downloadTxtBtn">TXT 저장</button>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </main>
-  </div>
-
-  <div class="modal-backdrop" id="workModal">
-    <div class="modal">
-      <div class="modal-head">
-        <h3 id="modalTitle">작업 상세</h3>
-        <button class="modal-close" id="modalClose" type="button">×</button>
-      </div>
-
-      <div class="modal-body" id="modalBody"></div>
-
-      <div class="modal-actions">
-        <button class="modal-btn delete" id="modalDelete" type="button">삭제</button>
-        <button class="modal-btn cancel" id="modalDone" type="button">완료 전환</button>
-        <button class="modal-btn save" id="modalEdit" type="button">수정</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="toast" id="toast"></div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const STORAGE_KEY = "siteLogMiniWorksV2";
-      const SITE_KEY = "siteLogMiniSiteInfoV2";
-
-      const $ = (id) => document.getElementById(id);
-
-      const workColors = {
-        "철근공사": "#2563eb",
-        "거푸집공사": "#7c3aed",
-        "콘크리트공사": "#f59e0b",
-        "양중작업": "#0f766e",
-        "안전관리": "#dc2626",
-        "일반작업": "#64748b",
-        "기타": "#64748b"
-      };
-
-      const templates = {
-        rebar: {
-          trade: "철근공사",
-          title: "철근 배근 작업",
-          content: "해당 구역의 구조부재 철근 배근 작업을 수행함.",
-          workers: "",
-          equipment: "철근 절단기, 철근 절곡기",
-          material: "철근",
-          hazard: "추락, 협착, 철근 찔림, 자재 전도",
-          safety: "작업 전 TBM 실시, 안전통로 확보, 철근 적치상태 점검, 개인보호구 착용 확인",
-          tomorrow: "동일 구역 철근 배근 계속 및 배근 상태 확인 예정"
-        },
-        formwork: {
-          trade: "거푸집공사",
-          title: "거푸집 설치 작업",
-          content: "해당 구역의 거푸집 설치 및 고정 상태 확인 작업을 수행함.",
-          workers: "",
-          equipment: "작업발판, 전동공구",
-          material: "거푸집 패널, 서포트",
-          hazard: "추락, 낙하물, 협착, 전도",
-          safety: "작업발판 고정 확인, 서포트 설치상태 점검, 하부 출입통제, 보호구 착용 확인",
-          tomorrow: "거푸집 설치 구간 점검 및 추가 보강작업 예정"
-        },
-        concrete: {
-          trade: "콘크리트공사",
-          title: "콘크리트 타설 작업",
-          content: "해당 구역의 콘크리트 타설 및 다짐 작업을 수행함.",
-          workers: "",
-          equipment: "펌프카, 바이브레이터",
-          material: "레미콘",
-          hazard: "미끄러짐, 장비 접촉, 호스 반동, 타설 중 붕괴",
-          safety: "타설 전 거푸집 및 동바리 상태 점검, 신호수 배치, 작업구역 통제, 미끄럼 방지 조치",
-          tomorrow: "타설 부위 양생상태 확인 및 후속 공정 준비 예정"
-        },
-        lifting: {
-          trade: "양중작업",
-          title: "자재 양중 작업",
-          content: "크레인 또는 지게차를 이용하여 주요 자재를 지정 위치로 반입함.",
-          workers: "",
-          equipment: "크레인, 지게차",
-          material: "주요 자재",
-          hazard: "낙하물, 장비 충돌, 협착, 신호 불일치",
-          safety: "신호수 배치, 줄걸이 상태 확인, 작업반경 출입통제, 양중 전 장비점검 실시",
-          tomorrow: "잔여 자재 반입 및 적치상태 정리 예정"
-        },
-        safety: {
-          trade: "안전관리",
-          title: "TBM 및 안전점검",
-          content: "작업 전 TBM을 실시하고 주요 위험작업 구간에 대한 안전점검을 수행함.",
-          workers: "",
-          equipment: "안전점검표, 무전기",
-          material: "안전표지, 출입통제 시설",
-          hazard: "추락, 낙하물, 장비 접촉, 정리정돈 미흡",
-          safety: "TBM 실시, 위험구역 출입통제, 안전난간 및 개구부 덮개 확인, 작업자 보호구 착용 확인",
-          tomorrow: "고위험 작업구간 중심으로 안전점검 계속 예정"
-        },
-        general: {
-          trade: "일반작업",
-          title: "",
-          content: "",
-          workers: "",
-          equipment: "",
-          material: "",
-          hazard: "",
-          safety: "",
-          tomorrow: ""
-        }
-      };
-
-      let works = loadWorks();
-      let currentDate = new Date();
-      let activeView = "daily";
-      let selectedWorkId = null;
-
-      function uid() {
-        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-        return `work-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      }
-
-      function pad(n) {
-        return String(n).padStart(2, "0");
-      }
-
-      function dateKey(date) {
-        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-      }
-
-      function parseDate(key) {
-        const [y, m, d] = key.split("-").map(Number);
-        return new Date(y, m - 1, d);
-      }
-
-      function escapeHtml(text) {
-        return String(text || "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
-
-      function loadWorks() {
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) return JSON.parse(saved);
-        } catch (e) {
-          console.warn(e);
-        }
-
-        return [];
-      }
-
-      function saveWorks() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(works));
-        saveSiteInfo();
-      }
-
-      function loadSiteInfo() {
-        try {
-          const saved = localStorage.getItem(SITE_KEY);
-          if (saved) return JSON.parse(saved);
-        } catch (e) {
-          console.warn(e);
-        }
-
-        return {
-          siteName: "",
-          writer: "",
-          weather: "맑음",
-          temperature: ""
-        };
-      }
-
-      function saveSiteInfo() {
-        const info = {
-          siteName: $("siteName").value,
-          writer: $("writer").value,
-          weather: $("weather").value,
-          temperature: $("temperature").value
-        };
-
-        localStorage.setItem(SITE_KEY, JSON.stringify(info));
-      }
-
-      function showToast(message) {
-        const toast = $("toast");
-        toast.textContent = message;
-        toast.classList.add("show");
-        setTimeout(() => toast.classList.remove("show"), 2400);
-      }
-
-      function getWorksForDate(date) {
-        const key = dateKey(date);
-        return works.filter((w) => w.date === key);
-      }
-
-      function getColor(trade) {
-        return workColors[trade] || workColors["기타"];
-      }
-
-      function clearForm() {
-        const siteInfo = loadSiteInfo();
-
-        $("workId").value = "";
-        $("siteName").value = siteInfo.siteName || "";
-        $("writer").value = siteInfo.writer || "";
-        $("reportDate").value = dateKey(currentDate);
-        $("weather").value = siteInfo.weather || "맑음";
-        $("temperature").value = siteInfo.temperature || "";
-
-        $("trade").value = "";
-        $("location").value = "";
-        $("workTitle").value = "";
-        $("workContent").value = "";
-        $("workers").value = "";
-        $("equipment").value = "";
-        $("material").value = "";
-        $("hazard").value = "";
-        $("safetyAction").value = "";
-        $("tbm").value = "실시";
-        $("status").value = "진행";
-        $("issue").value = "";
-        $("tomorrowPlan").value = "";
-      }
-
-      function applyTemplate(key) {
-        const t = templates[key];
-        if (!t) return;
-
-        $("trade").value = t.trade;
-        $("workTitle").value = t.title;
-        $("workContent").value = t.content;
-        $("workers").value = t.workers;
-        $("equipment").value = t.equipment;
-        $("material").value = t.material;
-        $("hazard").value = t.hazard;
-        $("safetyAction").value = t.safety;
-        $("tomorrowPlan").value = t.tomorrow;
-
-        showToast("공종 템플릿이 입력되었습니다. 현장에 맞게 위치와 세부사항을 수정하세요.");
-      }
-
-      function saveForm(e) {
-        e.preventDefault();
-
-        const id = $("workId").value;
-
-        const work = {
-          id: id || uid(),
-          date: $("reportDate").value,
-          siteName: $("siteName").value.trim(),
-          writer: $("writer").value.trim(),
-          weather: $("weather").value,
-          temperature: $("temperature").value.trim(),
-          trade: $("trade").value.trim() || "기타",
-          location: $("location").value.trim(),
-          title: $("workTitle").value.trim(),
-          content: $("workContent").value.trim(),
-          workers: Number($("workers").value || 0),
-          equipment: $("equipment").value.trim(),
-          material: $("material").value.trim(),
-          hazard: $("hazard").value.trim(),
-          safetyAction: $("safetyAction").value.trim(),
-          tbm: $("tbm").value,
-          status: $("status").value,
-          issue: $("issue").value.trim(),
-          tomorrowPlan: $("tomorrowPlan").value.trim(),
-          done: $("status").value === "완료"
-        };
-
-        if (!work.date || !work.location || !work.title) {
-          showToast("날짜, 작업위치, 작업명은 필수 입력 항목입니다.");
-          return;
-        }
-
-        if (id) {
-          works = works.map((w) => (w.id === id ? work : w));
-          showToast("작업 내용이 수정되었습니다.");
-        } else {
-          works.push(work);
-          showToast("작업 블록이 작업일보에 추가되었습니다.");
-        }
-
-        currentDate = parseDate(work.date);
-        saveWorks();
-        clearForm();
-        renderAll();
-      }
-
-      function createWorkCard(work) {
-        const card = document.createElement("div");
-        card.className = `work-card ${work.done || work.status === "완료" ? "done" : ""}`;
-        card.style.setProperty("--work-color", getColor(work.trade));
-
-        card.innerHTML = `
-          <div class="work-top">
-            <div>
-              <div class="work-title">${escapeHtml(work.title)}</div>
-              <div class="work-sub">${escapeHtml(work.trade)} · ${escapeHtml(work.location)}</div>
-            </div>
-            <div class="status-pill">${escapeHtml(work.status)}</div>
-          </div>
-
-          <div class="work-content">
-            ${escapeHtml(work.content || "작업내용이 입력되지 않았습니다.")}
-          </div>
-
-          <div class="work-meta">
-            <span>인원 ${work.workers || 0}명</span>
-            <span>TBM ${escapeHtml(work.tbm)}</span>
-            ${work.equipment ? `<span>${escapeHtml(work.equipment)}</span>` : ""}
-            ${work.hazard ? `<span>위험요인 입력</span>` : ""}
-          </div>
-        `;
-
-        card.addEventListener("click", () => openModal(work.id));
-        return card;
-      }
-
-      function renderDaily() {
-        const list = $("dailyWorkList");
-        const dayWorks = getWorksForDate(currentDate);
-        list.innerHTML = "";
-
-        if (!dayWorks.length) {
-          list.innerHTML = `
-            <div class="empty">
-              금일 등록된 작업이 없습니다.<br />
-              왼쪽 입력 패널에서 공종 템플릿을 선택하거나 전일 작업을 불러와 작업일보를 작성하세요.
-            </div>
-          `;
-          return;
-        }
-
-        dayWorks.forEach((work) => list.appendChild(createWorkCard(work)));
-      }
-
-      function startOfWeek(date) {
-        const d = new Date(date);
-        d.setDate(d.getDate() - d.getDay());
-        d.setHours(0, 0, 0, 0);
-        return d;
-      }
-
-      function renderWeekly() {
-        const grid = $("weekGrid");
-        grid.innerHTML = "";
-
-        const start = startOfWeek(currentDate);
-        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(start);
-          d.setDate(start.getDate() + i);
-
-          const dayWorks = getWorksForDate(d);
-          const day = document.createElement("div");
-          day.className = "week-day";
-
-          if (dateKey(d) === dateKey(new Date())) {
-            day.classList.add("today");
-          }
-
-          day.innerHTML = `
-            <div class="week-day-head">
-              <span>${days[i]}</span>
-              <span>${d.getMonth() + 1}/${d.getDate()}</span>
-            </div>
-          `;
-
-          if (!dayWorks.length) {
-            const empty = document.createElement("div");
-            empty.className = "empty";
-            empty.textContent = "등록된 작업 없음";
-            day.appendChild(empty);
-          } else {
-            dayWorks.forEach((work) => day.appendChild(createWorkCard(work)));
-          }
-
-          day.addEventListener("click", () => {
-            currentDate = d;
-            $("reportDate").value = dateKey(d);
-            setView("daily");
-          });
-
-          grid.appendChild(day);
-        }
-      }
-
-      function buildReportText() {
-        const dayWorks = getWorksForDate(currentDate);
-        const formInfo = {
-          siteName: $("siteName").value.trim(),
-          writer: $("writer").value.trim(),
-          weather: $("weather").value,
-          temperature: $("temperature").value.trim()
-        };
-
-        const firstWork = dayWorks[0] || {};
-        const info = {
-          siteName: firstWork.siteName || formInfo.siteName || "-",
-          writer: firstWork.writer || formInfo.writer || "-",
-          weather: firstWork.weather || formInfo.weather || "-",
-          temperature: firstWork.temperature || formInfo.temperature || "-"
-        };
-
-        const totalWorkers = dayWorks.reduce((sum, w) => sum + Number(w.workers || 0), 0);
-
-        const titleDate = currentDate.toLocaleDateString("ko-KR", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          weekday: "long"
-        });
-
-        let text = "";
-        text += `[${titleDate} 작업일보]\n\n`;
-        text += `현장명: ${info.siteName}\n`;
-        text += `작성자: ${info.writer}\n`;
-        text += `날씨: ${info.weather} / 온도: ${info.temperature}\n\n`;
-
-        text += `1. 금일 작업내용\n`;
-        if (!dayWorks.length) {
-          text += `- 등록된 작업 없음\n`;
-        } else {
-          dayWorks.forEach((w, idx) => {
-            text += `- ${idx + 1}) ${w.trade} / ${w.location} / ${w.title}\n`;
-            text += `  · 작업내용: ${w.content || "-"}\n`;
-            text += `  · 작업상태: ${w.status}\n`;
-          });
-        }
-
-        text += `\n2. 투입 현황\n`;
-        text += `- 총 투입 인원: ${totalWorkers}명\n`;
-
-        const equipments = [...new Set(dayWorks.map((w) => w.equipment).filter(Boolean))];
-        const materials = [...new Set(dayWorks.map((w) => w.material).filter(Boolean))];
-
-        text += `- 장비: ${equipments.length ? equipments.join(", ") : "-"}\n`;
-        text += `- 자재: ${materials.length ? materials.join(", ") : "-"}\n\n`;
-
-        text += `3. 안전관리\n`;
-        const tbmCount = dayWorks.filter((w) => w.tbm === "실시").length;
-        text += `- TBM 실시: ${dayWorks.length ? `${tbmCount}/${dayWorks.length}건` : "-"}\n`;
-
-        const hazards = [...new Set(dayWorks.map((w) => w.hazard).filter(Boolean))];
-        const actions = [...new Set(dayWorks.map((w) => w.safetyAction).filter(Boolean))];
-
-        text += `- 주요 위험요인: ${hazards.length ? hazards.join(" / ") : "-"}\n`;
-        text += `- 안전조치: ${actions.length ? actions.join(" / ") : "-"}\n\n`;
-
-        text += `4. 특이사항 및 지연사유\n`;
-        const issues = dayWorks.map((w) => w.issue).filter(Boolean);
-        text += issues.length ? issues.map((x) => `- ${x}`).join("\n") + "\n" : "- 특이사항 없음\n";
-
-        text += `\n5. 명일 예정작업\n`;
-        const tomorrow = dayWorks.map((w) => w.tomorrowPlan).filter(Boolean);
-        text += tomorrow.length ? tomorrow.map((x) => `- ${x}`).join("\n") : "- 등록된 명일 예정작업 없음";
-
-        return text;
-      }
-
-      function renderPreview() {
-        const text = buildReportText();
-        const dayWorks = getWorksForDate(currentDate);
-
-        $("reportText").value = text;
-
-        const previewDate = currentDate.toLocaleDateString("ko-KR", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          weekday: "long"
-        });
-
-        $("reportPreview").innerHTML = `
-          <div class="preview-paper">
-            <h3>${previewDate} 작업일보</h3>
-
-            <h4>금일 작업내용</h4>
-            <ul>
-              ${
-                dayWorks.length
-                  ? dayWorks.map((w) => `<li>${escapeHtml(w.trade)} / ${escapeHtml(w.location)} / ${escapeHtml(w.title)}</li>`).join("")
-                  : "<li>등록된 작업 없음</li>"
-              }
-            </ul>
-
-            <h4>투입 현황</h4>
-            <p>총 투입 인원: ${dayWorks.reduce((sum, w) => sum + Number(w.workers || 0), 0)}명</p>
-
-            <h4>안전관리</h4>
-            <p>TBM 실시: ${dayWorks.length ? `${dayWorks.filter((w) => w.tbm === "실시").length}/${dayWorks.length}건` : "-"}</p>
-
-            <h4>명일 예정작업</h4>
-            <ul>
-              ${
-                dayWorks.filter((w) => w.tomorrowPlan).length
-                  ? dayWorks.filter((w) => w.tomorrowPlan).map((w) => `<li>${escapeHtml(w.tomorrowPlan)}</li>`).join("")
-                  : "<li>등록된 명일 예정작업 없음</li>"
-              }
-            </ul>
-          </div>
-        `;
-      }
-
-      function renderKpis() {
-        const dayWorks = getWorksForDate(currentDate);
-
-        const total = dayWorks.length;
-        const workers = dayWorks.reduce((sum, w) => sum + Number(w.workers || 0), 0);
-        const delay = dayWorks.filter((w) => w.status === "지연" || w.status === "중단").length;
-        const tbm = total ? Math.round((dayWorks.filter((w) => w.tbm === "실시").length / total) * 100) : 0;
-        const risk = dayWorks.filter((w) => w.hazard || w.status === "지연" || w.status === "중단").length;
-
-        $("kpiTotal").textContent = total;
-        $("kpiWorkers").textContent = workers;
-        $("kpiDelay").textContent = delay;
-        $("kpiTbm").textContent = `${tbm}%`;
-
-        $("heroWorkCount").textContent = total;
-        $("heroWorkers").textContent = workers;
-        $("heroRisk").textContent = risk;
-
-        $("briefText").textContent = total
-          ? `금일 ${total}개 작업, 총 ${workers}명 투입, TBM 실시율 ${tbm}%`
-          : "금일 작업이 아직 등록되지 않았습니다.";
-
-        $("progressBar").style.width = `${tbm}%`;
-      }
-
-      function renderSide() {
-        const dayWorks = getWorksForDate(currentDate);
-
-        const riskList = $("riskList");
-        riskList.innerHTML = "";
-
-        const risks = dayWorks.filter((w) => w.hazard || w.status === "지연" || w.status === "중단");
-
-        if (!risks.length) {
-          riskList.innerHTML = `<div class="empty">위험 또는 지연 작업이 없습니다.</div>`;
-        } else {
-          risks.forEach((w) => {
-            const item = document.createElement("div");
-            item.className = "compact-item";
-            item.innerHTML = `
-              <span class="compact-dot" style="background:${getColor(w.trade)}"></span>
-              <span>${escapeHtml(w.title)}</span>
-              <span class="small-chip">${escapeHtml(w.status)}</span>
-            `;
-            item.addEventListener("click", () => openModal(w.id));
-            riskList.appendChild(item);
-          });
-        }
-
-        const tomorrowList = $("tomorrowList");
-        tomorrowList.innerHTML = "";
-
-        const tomorrow = dayWorks.filter((w) => w.tomorrowPlan);
-
-        if (!tomorrow.length) {
-          tomorrowList.innerHTML = `<div class="empty">명일 예정작업이 없습니다.</div>`;
-        } else {
-          tomorrow.forEach((w) => {
-            const item = document.createElement("div");
-            item.className = "compact-item";
-            item.innerHTML = `
-              <span class="compact-dot" style="background:${getColor(w.trade)}"></span>
-              <span>${escapeHtml(w.tomorrowPlan)}</span>
-              <span class="small-chip">명일</span>
-            `;
-            item.addEventListener("click", () => openModal(w.id));
-            tomorrowList.appendChild(item);
-          });
-        }
-      }
-
-      function updateTitle() {
-        const dateText = currentDate.toLocaleDateString("ko-KR", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          weekday: "long"
-        });
-
-        if (activeView === "daily") {
-          $("boardTitle").textContent = "Daily Site Board";
-          $("boardSub").textContent = `${dateText} 작업일보 작성 보드`;
-        } else if (activeView === "weekly") {
-          $("boardTitle").textContent = "Weekly Work Plan";
-          $("boardSub").textContent = "주간 작업계획 및 작업일보 흐름";
-        } else {
-          $("boardTitle").textContent = "Report Preview";
-          $("boardSub").textContent = "복사 가능한 작업일보 미리보기";
-        }
-      }
-
-      function renderAll() {
-        updateTitle();
-        renderKpis();
-        renderDaily();
-        renderWeekly();
-        renderPreview();
-        renderSide();
-      }
-
-      function setView(view) {
-        activeView = view;
-
-        document.querySelectorAll(".view-tab").forEach((btn) => {
-          btn.classList.toggle("active", btn.dataset.view === view);
-        });
-
-        $("dailyView").classList.toggle("active", view === "daily");
-        $("weeklyView").classList.toggle("active", view === "weekly");
-        $("previewView").classList.toggle("active", view === "preview");
-
-        renderAll();
-      }
-
-      function openModal(id) {
-        const work = works.find((w) => w.id === id);
-        if (!work) return;
-
-        selectedWorkId = id;
-        $("modalTitle").textContent = work.title;
-
-        $("modalBody").innerHTML = `
-          <div class="field">
-            <label>작업 정보</label>
-            <input value="${escapeHtml(work.trade)} / ${escapeHtml(work.location)} / ${escapeHtml(work.status)}" readonly />
-          </div>
-
-          <div class="field">
-            <label>작업내용</label>
-            <textarea readonly>${escapeHtml(work.content || "-")}</textarea>
-          </div>
-
-          <div class="field">
-            <label>투입 현황</label>
-            <input value="인원 ${work.workers || 0}명 / 장비 ${escapeHtml(work.equipment || "-")} / 자재 ${escapeHtml(work.material || "-")}" readonly />
-          </div>
-
-          <div class="field">
-            <label>위험요인</label>
-            <textarea readonly>${escapeHtml(work.hazard || "-")}</textarea>
-          </div>
-
-          <div class="field">
-            <label>안전조치</label>
-            <textarea readonly>${escapeHtml(work.safetyAction || "-")}</textarea>
-          </div>
-
-          <div class="field">
-            <label>명일 예정작업</label>
-            <textarea readonly>${escapeHtml(work.tomorrowPlan || "-")}</textarea>
-          </div>
-        `;
-
-        $("workModal").classList.add("show");
-      }
-
-      function closeModal() {
-        selectedWorkId = null;
-        $("workModal").classList.remove("show");
-      }
-
-      function editSelected() {
-        const work = works.find((w) => w.id === selectedWorkId);
-        if (!work) return;
-
-        $("workId").value = work.id;
-        $("siteName").value = work.siteName;
-        $("writer").value = work.writer;
-        $("reportDate").value = work.date;
-        $("weather").value = work.weather;
-        $("temperature").value = work.temperature;
-
-        $("trade").value = work.trade;
-        $("location").value = work.location;
-        $("workTitle").value = work.title;
-        $("workContent").value = work.content;
-        $("workers").value = work.workers;
-        $("equipment").value = work.equipment;
-        $("material").value = work.material;
-        $("hazard").value = work.hazard;
-        $("safetyAction").value = work.safetyAction;
-        $("tbm").value = work.tbm;
-        $("status").value = work.status;
-        $("issue").value = work.issue;
-        $("tomorrowPlan").value = work.tomorrowPlan;
-
-        currentDate = parseDate(work.date);
-        closeModal();
-        setView("daily");
-        showToast("왼쪽 입력 패널에서 작업 내용을 수정하세요.");
-      }
-
-      function deleteSelected() {
-        if (!selectedWorkId) return;
-
-        works = works.filter((w) => w.id !== selectedWorkId);
-        saveWorks();
-        closeModal();
-        renderAll();
-        showToast("작업이 삭제되었습니다.");
-      }
-
-      function toggleDoneSelected() {
-        const work = works.find((w) => w.id === selectedWorkId);
-        if (!work) return;
-
-        work.done = !work.done;
-        work.status = work.done ? "완료" : "진행";
-
-        saveWorks();
-        closeModal();
-        renderAll();
-        showToast(work.done ? "작업을 완료 처리했습니다." : "작업을 진행 상태로 되돌렸습니다.");
-      }
-
-      function copyYesterday() {
-        const todayKey = dateKey(currentDate);
-        const yesterday = new Date(currentDate);
-        yesterday.setDate(currentDate.getDate() - 1);
-
-        const yesterdayWorks = getWorksForDate(yesterday);
-
-        if (!yesterdayWorks.length) {
-          showToast("전일 작업이 없어 불러올 수 없습니다.");
-          return;
-        }
-
-        const copied = yesterdayWorks.map((w) => ({
-          ...w,
-          id: uid(),
-          date: todayKey,
-          title: w.tomorrowPlan ? w.tomorrowPlan : w.title,
-          content: w.tomorrowPlan ? `${w.tomorrowPlan} 작업을 수행함.` : w.content,
-          status: "진행",
-          done: false,
-          issue: "",
-          tomorrowPlan: ""
-        }));
-
-        works.push(...copied);
-        saveWorks();
-        renderAll();
-        showToast(`전일 작업 ${copied.length}건을 금일 작업일보로 불러왔습니다.`);
-      }
-
-      async function copyReport() {
-        const text = buildReportText();
-
-        try {
-          await navigator.clipboard.writeText(text);
-          showToast("작업일보 내용이 복사되었습니다.");
-        } catch (e) {
-          $("reportText").select();
-          document.execCommand("copy");
-          showToast("작업일보 내용이 복사되었습니다.");
-        }
-      }
-
-      function downloadTxt() {
-        const text = buildReportText();
-        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-
-        a.href = url;
-        a.download = `작업일보_${dateKey(currentDate)}.txt`;
-
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        URL.revokeObjectURL(url);
-      }
-
-      function moveDate(amount) {
-        currentDate.setDate(currentDate.getDate() + amount);
-        $("reportDate").value = dateKey(currentDate);
-        renderAll();
-      }
-
-      document.querySelectorAll(".view-tab").forEach((btn) => {
-        btn.addEventListener("click", () => setView(btn.dataset.view));
-      });
-
-      document.querySelectorAll(".template-btn").forEach((btn) => {
-        btn.addEventListener("click", () => applyTemplate(btn.dataset.template));
-      });
-
-      $("workForm").addEventListener("submit", saveForm);
-      $("clearFormBtn").addEventListener("click", clearForm);
-
-      $("todayBtn").addEventListener("click", () => {
-        currentDate = new Date();
-        $("reportDate").value = dateKey(currentDate);
-        setView("daily");
-      });
-
-      $("newWorkBtn").addEventListener("click", () => {
-        clearForm();
-        $("workTitle").focus();
-      });
-
-      $("copyYesterdayBtn").addEventListener("click", copyYesterday);
-      $("copyReportBtn").addEventListener("click", copyReport);
-      $("copyReportBtn2").addEventListener("click", copyReport);
-      $("downloadTxtBtn").addEventListener("click", downloadTxt);
-
-      $("prevBtn").addEventListener("click", () => moveDate(-1));
-      $("nextBtn").addEventListener("click", () => moveDate(1));
-
-      $("currentBtn").addEventListener("click", () => {
-        currentDate = new Date();
-        $("reportDate").value = dateKey(currentDate);
-        renderAll();
-      });
-
-      $("modalClose").addEventListener("click", closeModal);
-      $("modalEdit").addEventListener("click", editSelected);
-      $("modalDelete").addEventListener("click", deleteSelected);
-      $("modalDone").addEventListener("click", toggleDoneSelected);
-
-      $("workModal").addEventListener("click", (e) => {
-        if (e.target.id === "workModal") closeModal();
-      });
-
-      clearForm();
-      renderAll();
-    });
-  </script>
-</body>
-</html>
+:root {
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --line: #e5e7eb;
+  --line-dark: #cbd5e1;
+  --text: #111827;
+  --text-soft: #4b5563;
+  --muted: #6b7280;
+  --navy: #1e3a8a;
+  --blue: #2563eb;
+  --green: #0f766e;
+  --yellow: #f59e0b;
+  --red: #dc2626;
+  --purple: #7c3aed;
+  --shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: "Noto Sans KR", "Nunito", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+.app-shell {
+  width: min(1480px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 24px 0 32px;
+}
+
+/* HEADER */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--navy);
+  color: #ffffff;
+  font-size: 1.25rem;
+  flex: 0 0 auto;
+}
+
+.brand h1 {
+  font-size: 1.75rem;
+  line-height: 1;
+  font-weight: 900;
+  color: var(--text);
+  letter-spacing: -0.03em;
+}
+
+.brand p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toy-btn,
+.icon-btn,
+.view-tab,
+.template-btn,
+.modal-btn {
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.84rem;
+  font-weight: 700;
+  transition: 0.15s ease;
+}
+
+.toy-btn {
+  padding: 9px 13px;
+  white-space: nowrap;
+}
+
+.toy-btn:hover,
+.icon-btn:hover,
+.view-tab:hover,
+.template-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.toy-btn.primary,
+.modal-btn.save {
+  background: var(--navy);
+  color: #ffffff;
+  border-color: var(--navy);
+}
+
+.toy-btn.success {
+  background: var(--green);
+  color: #ffffff;
+  border-color: var(--green);
+}
+
+.toy-btn.warning {
+  background: var(--yellow);
+  color: #111827;
+  border-color: var(--yellow);
+}
+
+/* HERO */
+
+.hero-card {
+  margin-bottom: 18px;
+  padding: 24px 26px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  box-shadow: 0 12px 32px rgba(30, 58, 138, 0.18);
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 24px;
+  align-items: center;
+}
+
+.hero-kicker {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #dbeafe;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.hero-title {
+  color: #ffffff;
+  font-size: clamp(1.5rem, 2.4vw, 2.25rem);
+  line-height: 1.18;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  word-break: keep-all;
+}
+
+.hero-sub {
+  margin-top: 10px;
+  color: #dbeafe;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  font-weight: 500;
+  word-break: keep-all;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+}
+
+.hero-metric {
+  height: 88px;
+  border-radius: 16px;
+  padding: 12px 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  text-align: center;
+}
+
+.hero-metric b {
+  display: block;
+  font-size: 1.45rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.hero-metric span {
+  display: block;
+  margin-top: 9px;
+  color: #dbeafe;
+  font-size: 0.72rem;
+  font-weight: 700;
+  word-break: keep-all;
+}
+
+/* LAYOUT */
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 380px minmax(580px, 1fr) 390px;
+  gap: 18px;
+  align-items: stretch;
+  height: clamp(700px, calc(100vh - 240px), 840px);
+  min-height: 0;
+}
+
+.panel {
+  min-height: 0;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-head {
+  flex: 0 0 auto;
+  padding: 18px 18px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-title {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.panel-sub {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  font-weight: 500;
+  word-break: keep-all;
+}
+
+/* TABS */
+
+.view-tabs {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.view-tab {
+  padding: 9px 8px;
+  color: var(--muted);
+  background: #f9fafb;
+  font-size: 0.78rem;
+}
+
+.view-tab.active {
+  background: var(--navy);
+  color: #ffffff;
+  border-color: var(--navy);
+}
+
+/* FORM */
+
+.form-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 16px 18px 18px;
+  display: grid;
+  gap: 13px;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.field {
+  min-width: 0;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field input,
+.field select,
+.field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: var(--text);
+  outline: none;
+  font-size: 0.86rem;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.field textarea {
+  min-height: 78px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.template-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.template-btn {
+  padding: 9px 8px;
+  background: #f8fafc;
+  color: #374151;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.template-btn:hover {
+  background: #eef2ff;
+  border-color: #93c5fd;
+}
+
+.form-actions {
+  display: grid;
+  grid-template-columns: 1fr 0.7fr;
+  gap: 8px;
+}
+
+/* MAIN BOARD */
+
+.main-board {
+  min-width: 0;
+}
+
+.board-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 18px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+}
+
+.report-title h2 {
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.report-title p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.date-nav {
+  display: flex;
+  gap: 7px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.board-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.kpi-row {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.kpi {
+  min-height: 66px;
+  padding: 11px 8px;
+  border-radius: var(--radius-md);
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.kpi b {
+  display: block;
+  color: var(--navy);
+  font-size: 1.4rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.kpi span {
+  display: block;
+  margin-top: 7px;
+  color: #64748b;
+  font-size: 0.66rem;
+  font-weight: 800;
+  word-break: keep-all;
+}
+
+.board-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.daily-view,
+.weekly-view,
+.preview-view {
+  display: none;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.daily-view.active,
+.weekly-view.active,
+.preview-view.active {
+  display: block;
+}
+
+/* WORK CARDS */
+
+.report-card-list {
+  display: grid;
+  gap: 10px;
+}
+
+.work-card {
+  position: relative;
+  min-width: 0;
+  padding: 15px 15px 14px 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.work-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: var(--work-color, var(--blue));
+}
+
+.work-card:hover {
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.work-card.done {
+  opacity: 0.72;
+}
+
+.work-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.work-title {
+  color: var(--text);
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.work-sub {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.status-pill {
+  flex: 0 0 auto;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.work-content {
+  margin-top: 10px;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  font-weight: 500;
+  word-break: keep-all;
+}
+
+.work-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.work-meta span {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #4b5563;
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.empty {
+  border-radius: 16px;
+  padding: 18px 14px;
+  background: #f9fafb;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  word-break: keep-all;
+}
+
+/* WEEKLY */
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(130px, 1fr));
+  gap: 8px;
+  min-width: 900px;
+}
+
+.week-day {
+  min-height: 330px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+
+.week-day.today {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.week-day-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.week-day-head span:last-child {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+/* PREVIEW */
+
+.report-preview {
+  display: grid;
+  gap: 12px;
+}
+
+.preview-paper {
+  border-radius: 16px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+}
+
+.preview-paper h3 {
+  color: var(--text);
+  font-size: 1.18rem;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.preview-paper h4 {
+  margin-top: 16px;
+  margin-bottom: 7px;
+  color: var(--navy);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.preview-paper p,
+.preview-paper li {
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.preview-paper ul {
+  padding-left: 18px;
+}
+
+.preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* RIGHT SIDE */
+
+.side-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+}
+
+.side-section {
+  padding: 16px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.side-section:first-child {
+  border-top: 0;
+}
+
+.mini-progress {
+  height: 10px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.mini-progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--blue);
+  transition: width 0.28s ease;
+}
+
+.side-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.compact-item {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.compact-item span:nth-child(2) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.small-chip {
+  border-radius: 999px;
+  padding: 3px 6px;
+  background: #eef2ff;
+  color: #475569;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.report-textarea {
+  width: 100%;
+  min-height: 240px;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.55;
+  resize: vertical;
+  outline: none;
+}
+
+/* MODAL & TOAST */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: none;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.modal-backdrop.show {
+  display: grid;
+}
+
+.modal {
+  width: min(600px, 100%);
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.24);
+  overflow: hidden;
+}
+
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 18px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-head h3 {
+  color: var(--text);
+  font-size: 1.16rem;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.modal-body {
+  padding: 16px 18px 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 9px;
+  justify-content: flex-end;
+  padding: 13px 18px 18px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.modal-btn {
+  padding: 10px 13px;
+}
+
+.modal-btn.delete {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+  margin-right: auto;
+}
+
+.modal-btn.cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.toast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 3000;
+  display: none;
+  max-width: 360px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.16);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.toast.show {
+  display: block;
+  animation: toastUp 0.25s ease;
+}
+
+@keyframes toastUp {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1280px) {
+  .dashboard {
+    grid-template-columns: 380px minmax(0, 1fr);
+    height: auto;
+  }
+
+  .dashboard > aside:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-shell {
+    width: min(100% - 24px, 1480px);
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .top-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero-content {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-metrics {
+    display: none;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .main-board {
+    height: 720px;
+  }
+
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .brand h1 {
+    font-size: 1.55rem;
+  }
+
+  .top-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid-2,
+  .form-grid-3,
+  .template-row {
+    grid-template-columns: 1fr;
+  }
+
+  .board-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .date-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .week-grid {
+    min-width: 0;
+    grid-template-columns: 1fr;
+  }
+}
