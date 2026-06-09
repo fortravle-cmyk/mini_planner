@@ -1,277 +1,1010 @@
-:root {
-  --sky: #bfe8ff;
-  --sky-deep: #84cfff;
-  --ground: #bde8bd;
-  --ground-deep: #79c77c;
-  --ink: #172033;
-  --ink-soft: #4b5a70;
-  --muted: #718096;
-  --white: #ffffff;
-  --panel: rgba(255, 255, 255, 0.84);
-  --blue: #18b7e8;
-  --purple: #9457e8;
-  --orange: #ff9f1c;
-  --green: #33c481;
-  --red: #ff5a4f;
-  --yellow: #ffd43b;
-  --shadow: 0 20px 50px rgba(39, 64, 98, 0.20);
-  --toy-shadow: 0 7px 0 rgba(23, 32, 51, 0.13);
-  --toy-shadow-small: 0 4px 0 rgba(23, 32, 51, 0.10);
-  --radius-xl: 26px;
-}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SiteLog Mini | Construction Daily Report Builder</title>
+  <meta name="description" content="건설현장 작업일보 반복작성 자동화를 위한 미니어처형 현장 일보 작성 도구" />
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { height: 100%; }
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Varela+Round&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="sitelog-mini.css" />
+</head>
 
-body {
-  min-height: 100%;
-  font-family: "Nunito", "Noto Sans KR", sans-serif;
-  color: var(--ink);
-  overflow-x: hidden;
-  background:
-    radial-gradient(circle at 14% 10%, rgba(255,255,255,0.9) 0 90px, transparent 96px),
-    radial-gradient(circle at 86% 12%, rgba(255,212,59,0.72) 0 72px, transparent 76px),
-    linear-gradient(180deg, var(--sky) 0%, var(--sky-deep) 38%, var(--ground) 38%, var(--ground-deep) 100%);
-}
+<body>
+  <div class="mini-world" aria-hidden="true">
+    <div class="cloud one"></div>
+    <div class="cloud two"></div>
+    <div class="model-plane"></div>
+    <div class="model-road"></div>
+    <div class="toy-building b1"></div>
+    <div class="toy-building b2"></div>
+    <div class="toy-building b3"></div>
+    <div class="crane">
+      <div class="mast"></div>
+      <div class="arm"></div>
+      <div class="hook"></div>
+    </div>
+    <div class="cone c1"></div>
+    <div class="cone c2"></div>
+  </div>
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -5;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(255,255,255,0.18) 1px, transparent 1px);
-  background-size: 42px 42px;
-  opacity: 0.48;
-  pointer-events: none;
-}
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">🏗️</div>
+        <div>
+          <h1>SiteLog Mini</h1>
+          <p>Construction Daily Report Builder</p>
+        </div>
+      </div>
 
-button, input, select, textarea { font: inherit; }
-button { border: 0; }
-h1, h2, h3, h4, .brand-icon, .toy-btn, .view-tab, .kpi b, .time-label, .month-date { font-family: "Varela Round", "Noto Sans KR", sans-serif; }
+      <div class="top-actions">
+        <button class="toy-btn" id="todayBtn" type="button">Today</button>
+        <button class="toy-btn" id="copyYesterdayBtn" type="button">전일 작업 복사</button>
+        <button class="toy-btn success" id="templateBtn" type="button">템플릿 불러오기</button>
+        <button class="toy-btn primary" id="quickAddBtn" type="button">+ 작업 추가</button>
+      </div>
+    </header>
 
-/* Miniature background */
-.mini-world { position: fixed; inset: 0; z-index: -4; pointer-events: none; overflow: hidden; filter: saturate(1.15); }
-.cloud { position: absolute; width: 138px; height: 42px; border-radius: 999px; background: rgba(255,255,255,0.80); box-shadow: 0 8px 20px rgba(62, 97, 135, 0.10); animation: cloudMove 48s ease-in-out infinite; }
-.cloud::before, .cloud::after { content: ""; position: absolute; border-radius: 50%; background: rgba(255,255,255,0.9); }
-.cloud::before { width: 58px; height: 58px; left: 22px; top: -24px; }
-.cloud::after { width: 44px; height: 44px; right: 26px; top: -14px; }
-.cloud.one { left: 5vw; top: 11vh; }
-.cloud.two { right: 14vw; top: 16vh; transform: scale(0.76); animation-delay: -16s; }
-@keyframes cloudMove { 0%, 100% { translate: -24px 0; } 50% { translate: 50px 0; } }
-.model-plane { position: absolute; left: 50%; bottom: -190px; width: min(1400px, 120vw); height: 520px; transform: translateX(-50%) perspective(1000px) rotateX(62deg) rotateZ(-1.5deg); border-radius: 110px; background: linear-gradient(90deg, rgba(255,255,255,0.17) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.17) 1px, transparent 1px), #76c979; background-size: 54px 54px; box-shadow: inset 0 -18px 60px rgba(48, 112, 55, 0.20); }
-.model-road { position: absolute; left: 50%; bottom: -114px; width: 300px; height: 590px; transform: translateX(-50%) perspective(780px) rotateX(62deg); border-radius: 82px 82px 0 0; background: #566273; box-shadow: 0 18px 45px rgba(23,32,51,0.18); }
-.model-road::before { content: ""; position: absolute; left: 50%; top: 24px; width: 7px; height: 500px; transform: translateX(-50%); border-radius: 999px; background: repeating-linear-gradient(180deg, #fff 0 26px, transparent 26px 54px); opacity: 0.78; }
-.toy-building { position: absolute; bottom: 146px; width: 66px; height: 86px; border-radius: 15px 15px 7px 7px; background: linear-gradient(180deg, #ffffff, #dff3ff); box-shadow: 0 10px 0 rgba(23,32,51,0.11); opacity: 0.92; }
-.toy-building::before { content: ""; position: absolute; inset: 13px 10px; border-radius: 5px; background: repeating-linear-gradient(90deg, #18b7e8 0 7px, transparent 7px 14px), repeating-linear-gradient(0deg, rgba(23,32,51,0.08) 0 9px, transparent 9px 18px); opacity: 0.68; }
-.toy-building.b1 { left: 9vw; transform: scale(0.92); }
-.toy-building.b2 { right: 10vw; bottom: 190px; transform: scale(1.06); }
-.toy-building.b3 { left: 23vw; bottom: 105px; transform: scale(0.72); }
-.crane { position: absolute; right: 23vw; bottom: 165px; width: 120px; height: 115px; opacity: 0.75; }
-.crane .mast { position: absolute; left: 30px; bottom: 0; width: 12px; height: 95px; border-radius: 4px; background: #ffb703; box-shadow: 0 7px 0 rgba(23,32,51,0.10); }
-.crane .arm { position: absolute; left: 16px; top: 20px; width: 100px; height: 10px; border-radius: 999px; background: #ffd43b; }
-.crane .hook { position: absolute; right: 12px; top: 29px; width: 3px; height: 36px; background: #172033; opacity: 0.45; }
-.crane .hook::after { content: ""; position: absolute; left: -7px; bottom: -8px; width: 16px; height: 12px; border-radius: 3px; border: 3px solid #172033; border-top: 0; }
-.cone { position: absolute; width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent; border-bottom: 42px solid #ff7a1a; filter: drop-shadow(0 8px 0 rgba(23,32,51,0.10)); }
-.cone::after { content: ""; position: absolute; left: -9px; top: 25px; width: 18px; height: 5px; border-radius: 999px; background: #fff; }
-.cone.c1 { left: 34vw; bottom: 120px; transform: scale(0.7); }
-.cone.c2 { right: 33vw; bottom: 130px; transform: scale(0.58); }
+    <section class="hero-card">
+      <div class="hero-content">
+        <div>
+          <div class="hero-kicker">Reduce repetitive copy-paste in daily site reports</div>
+          <h2 class="hero-title">반복되는 작업일보를 현장 작업 블록으로 자동 정리하세요.</h2>
+          <p class="hero-sub">전일 작업 복사 · 공종 템플릿 · 인원/장비/자재/안전조치 자동요약 · 작업일보 미리보기까지 한 화면에서 관리합니다.</p>
+        </div>
 
-/* Layout */
-.app-shell { width: min(1440px, calc(100% - 32px)); margin: 0 auto; padding: 18px 0 22px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
-.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-icon { flex: 0 0 auto; width: 52px; height: 52px; border-radius: 17px; display: grid; place-items: center; font-size: 1.55rem; color: #172033; background: linear-gradient(145deg, #fff6b8, #ffd43b 60%, #ffb703); border: 3px solid rgba(255,255,255,0.95); box-shadow: var(--toy-shadow); }
-.brand h1 { font-size: clamp(1.6rem, 2.5vw, 2.25rem); line-height: 1; font-weight: 900; color: var(--white); text-shadow: 0 2px 12px rgba(23,32,51,0.16); white-space: nowrap; }
-.brand p { margin-top: 4px; color: rgba(255,255,255,0.88); font-size: 0.82rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
-.top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
-.toy-btn { cursor: pointer; border-radius: 13px; padding: 9px 13px; background: rgba(255,255,255,0.78); color: var(--ink); font-size: 0.82rem; font-weight: 900; border: 2px solid rgba(255,255,255,0.92); box-shadow: var(--toy-shadow-small); transition: 0.14s ease; white-space: nowrap; }
-.toy-btn:hover { transform: translateY(-2px); background: #fff; }
-.toy-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(23,32,51,0.12); }
-.toy-btn.primary { background: var(--blue); color: #04202b; border-color: rgba(255,255,255,0.95); }
-.toy-btn.success { background: var(--green); color: #082d1d; border-color: rgba(255,255,255,0.95); }
+        <div class="today-mini" aria-hidden="true">
+          <div class="mini-grid"></div>
+          <div class="mini-road"></div>
+          <div class="mini-block m1">철근 배근</div>
+          <div class="mini-block m2">TBM 완료</div>
+          <div class="mini-block m3">일보 생성</div>
+        </div>
+      </div>
+    </section>
 
-.hero-card { position: relative; height: 124px; margin-bottom: 14px; padding: 16px 18px; border-radius: 24px; overflow: hidden; background: rgba(255,255,255,0.28); border: 2px solid rgba(255,255,255,0.55); backdrop-filter: blur(18px); box-shadow: var(--shadow); }
-.hero-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 78% 28%, rgba(255,255,255,0.46), transparent 9rem), linear-gradient(120deg, rgba(255,255,255,0.18), transparent 50%); pointer-events: none; }
-.hero-content { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.2fr) 300px; gap: 18px; align-items: center; height: 100%; }
-.hero-kicker { display: inline-flex; align-items: center; width: fit-content; margin-bottom: 7px; padding: 5px 9px; border-radius: 999px; background: rgba(255,255,255,0.72); color: #0f7894; font-size: 0.72rem; font-weight: 900; border: 1px solid rgba(255,255,255,0.88); }
-.hero-title { font-size: clamp(1.55rem, 3vw, 2.55rem); line-height: 1.02; font-weight: 900; color: #fff; letter-spacing: -0.04em; text-shadow: 0 2px 12px rgba(23,32,51,0.16); word-break: keep-all; }
-.hero-sub { margin-top: 6px; color: rgba(255,255,255,0.88); font-size: 0.86rem; line-height: 1.45; font-weight: 800; word-break: keep-all; }
-.today-mini { position: relative; height: 94px; border-radius: 21px; overflow: hidden; background: linear-gradient(180deg, rgba(255,255,255,0.42), rgba(255,255,255,0.16)), rgba(255,255,255,0.20); border: 2px solid rgba(255,255,255,0.55); box-shadow: 0 7px 0 rgba(23,32,51,0.10); }
-.today-mini .mini-grid { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0.25) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.25) 1px, transparent 1px); background-size: 22px 22px; opacity: 0.7; }
-.today-mini .mini-road { position: absolute; left: 50%; bottom: -80px; width: 125px; height: 180px; transform: translateX(-50%) perspective(420px) rotateX(62deg); border-radius: 54px 54px 0 0; background: #566273; }
-.today-mini .mini-block { position: absolute; min-width: 72px; padding: 6px 9px; border-radius: 13px; background: rgba(255,255,255,0.95); color: var(--ink); font-size: 0.68rem; font-weight: 900; box-shadow: 0 5px 0 rgba(23,32,51,0.12); text-align: center; }
-.mini-block.m1 { left: 18px; top: 16px; rotate: -5deg; }
-.mini-block.m2 { right: 20px; top: 20px; rotate: 4deg; }
-.mini-block.m3 { left: 50%; bottom: 14px; translate: -50% 0; }
+    <main class="dashboard">
+      <aside class="panel input-panel">
+        <div class="panel-head">
+          <div class="panel-title">작업일보 입력 패널</div>
+          <div class="panel-sub">공종별 작업을 입력하면 오늘 작업일보 문장으로 자동 정리됩니다.</div>
+        </div>
 
-.dashboard { display: grid; grid-template-columns: 350px minmax(520px, 1fr) 350px; gap: 14px; align-items: stretch; height: clamp(660px, calc(100vh - 198px), 780px); min-height: 0; }
-.panel { min-height: 0; height: 100%; border-radius: var(--radius-xl); background-color: var(--panel); background-image: linear-gradient(rgba(24,183,232,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(24,183,232,0.10) 1px, transparent 1px); background-size: 24px 24px; border: 2px solid rgba(255,255,255,0.78); backdrop-filter: blur(18px); box-shadow: var(--shadow), inset 0 3px 0 rgba(255,255,255,0.55); overflow: hidden; display: flex; flex-direction: column; }
-.panel-head { flex: 0 0 auto; padding: 15px 16px 10px; border-bottom: 2px dashed rgba(23,32,51,0.11); background: rgba(255,255,255,0.32); }
-.panel-title { color: var(--ink); font-size: 1.05rem; font-weight: 900; line-height: 1.15; letter-spacing: -0.02em; }
-.panel-sub { margin-top: 3px; color: var(--ink-soft); font-size: 0.76rem; font-weight: 800; line-height: 1.35; word-break: keep-all; }
-.view-tabs { flex: 0 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; padding: 10px 16px; border-bottom: 1px solid rgba(23,32,51,0.08); }
-.view-tab { cursor: pointer; border-radius: 12px; padding: 8px 4px; background: rgba(255,255,255,0.72); color: var(--ink-soft); border: 2px solid rgba(23,32,51,0.08); box-shadow: 0 3px 0 rgba(23,32,51,0.08); font-size: 0.78rem; font-weight: 900; transition: 0.13s ease; }
-.view-tab.active { background: var(--yellow); color: #2c2400; border-color: rgba(255,255,255,0.9); box-shadow: 0 4px 0 rgba(164,124,0,0.17); }
+        <div class="view-tabs">
+          <button type="button" class="view-tab active" data-view="daily">일보</button>
+          <button type="button" class="view-tab" data-view="weekly">주간</button>
+          <button type="button" class="view-tab" data-view="monthly">월간</button>
+        </div>
 
-/* Form */
-.form-body { flex: 1 1 auto; min-height: 0; padding: 12px 16px 14px; display: grid; gap: 9px; overflow-y: auto; align-content: start; }
-.field label { display: block; margin-bottom: 4px; color: #52637a; font-size: 0.68rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px; }
-.field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border-radius: 12px; border: 2px solid rgba(23,32,51,0.10); background: rgba(255,255,255,0.92); color: var(--ink); outline: none; font-size: 0.82rem; font-weight: 800; transition: 0.15s ease; box-shadow: inset 0 2px 4px rgba(23,32,51,0.04); }
-.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(24,183,232,0.18); }
-.field textarea { min-height: 58px; resize: vertical; line-height: 1.35; }
-.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.form-grid-3 { display: grid; grid-template-columns: 1fr 0.72fr 0.9fr; gap: 8px; }
-.category-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.cat-pill { cursor: pointer; border-radius: 999px; padding: 6px 8px; color: var(--ink); font-size: 0.68rem; font-weight: 900; opacity: 0.58; border: 2px solid rgba(255,255,255,0.7); box-shadow: 0 3px 0 rgba(23,32,51,0.10); transition: 0.13s ease; }
-.cat-pill.active { opacity: 1; translate: 0 -1px; box-shadow: 0 4px 0 rgba(23,32,51,0.14); }
-.cat-structure { background: #d9f6ff; color: #07566b; }
-.cat-form { background: #eadfff; color: #57328c; }
-.cat-concrete { background: #fff0c2; color: #6c5300; }
-.cat-lift { background: #ffe2df; color: #9e2b1f; }
-.cat-safety { background: #dff8ea; color: #136b44; }
-.cat-etc { background: #edf2f7; color: #4a5568; }
-.toggle-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 13px; background: rgba(255,255,255,0.62); border: 2px solid rgba(23,32,51,0.08); color: var(--ink); font-size: 0.78rem; font-weight: 900; }
-.switch { flex: 0 0 auto; width: 43px; height: 24px; border-radius: 999px; padding: 3px; background: #cbd5e1; border: 2px solid rgba(255,255,255,0.9); cursor: pointer; transition: 0.15s; }
-.switch span { display: block; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(23,32,51,0.18); transition: 0.15s; }
-.switch.on { background: var(--green); }
-.switch.on span { translate: 19px 0; }
-.form-actions { display: grid; grid-template-columns: 1fr 0.55fr; gap: 8px; }
+        <form class="form-body" id="siteForm">
+          <input type="hidden" id="workId" />
 
-/* Main board */
-.main-board { min-width: 0; }
-.calendar-toolbar { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 15px 16px 12px; border-bottom: 2px dashed rgba(23,32,51,0.11); background: rgba(255,255,255,0.34); }
-.date-title h2 { color: var(--ink); font-size: clamp(1.28rem, 2vw, 1.75rem); line-height: 1.05; font-weight: 900; }
-.date-title p { margin-top: 3px; color: var(--ink-soft); font-size: 0.78rem; font-weight: 800; }
-.date-nav { display: flex; gap: 7px; }
-.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: rgba(255,255,255,0.85); color: var(--ink); border: 2px solid rgba(23,32,51,0.08); box-shadow: var(--toy-shadow-small); cursor: pointer; font-size: 1rem; font-weight: 900; transition: 0.13s; }
-.icon-btn:hover { translate: 0 -2px; background: #fff; }
-.icon-btn:active { translate: 0 3px; box-shadow: 0 1px 0 rgba(23,32,51,0.1); }
-.calendar-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 12px 16px 14px; overflow: hidden; }
-.kpi-row { flex: 0 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
-.kpi { min-height: 60px; border-radius: 16px; padding: 9px 8px; background: rgba(255,255,255,0.70); border: 2px solid rgba(255,255,255,0.88); box-shadow: 0 4px 0 rgba(23,32,51,0.06); text-align: center; }
-.kpi b { display: block; color: var(--ink); font-size: clamp(1.15rem, 2vw, 1.48rem); line-height: 1; font-weight: 900; }
-.kpi span { display: block; margin-top: 5px; color: #0f7894; font-size: 0.63rem; font-weight: 900; line-height: 1.15; text-transform: uppercase; letter-spacing: 0.4px; word-break: keep-all; }
-.calendar-viewport { flex: 1 1 auto; min-height: 0; overflow: hidden; }
-.daily-view, .weekly-view, .monthly-view { display: none; height: 100%; min-height: 0; overflow-y: auto; padding-right: 4px; }
-.daily-view.active, .weekly-view.active, .monthly-view.active { display: block; }
-.work-board { display: grid; gap: 12px; }
-.trade-section { padding: 10px; border-radius: 19px; background: rgba(255,255,255,0.50); border: 2px solid rgba(255,255,255,0.78); box-shadow: 0 4px 0 rgba(23,32,51,0.05); }
-.trade-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px dashed rgba(23,32,51,0.12); }
-.trade-section-head h3 { font-size: 0.95rem; font-weight: 900; }
-.trade-section-head span { padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,0.85); color: #0f7894; font-size: 0.68rem; font-weight: 900; }
-.trade-work-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; }
-.work-card { position: relative; min-width: 0; cursor: pointer; border-radius: 16px; padding: 10px 11px 10px 15px; background: var(--task-bg, #fff); color: var(--ink); border: 2px solid rgba(255,255,255,0.78); box-shadow: 0 5px 0 rgba(23,32,51,0.13), inset 0 3px 7px rgba(255,255,255,0.38); overflow: hidden; transition: 0.15s ease; }
-.work-card::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--task-color, var(--blue)); }
-.work-card:hover { transform: translateY(-2px) rotate(-0.2deg); box-shadow: 0 8px 0 rgba(23,32,51,0.12), 0 12px 20px rgba(23,32,51,0.12); z-index: 2; }
-.work-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
-.work-card-head span, .work-card-head b { padding: 2px 7px; border-radius: 999px; background: rgba(255,255,255,0.66); color: rgba(23,32,51,0.72); font-size: 0.6rem; font-weight: 900; }
-.work-card.status-지연 .work-card-head b, .work-card.status-중단 .work-card-head b { background: #ff5a4f; color: #fff; }
-.task-title { font-size: 0.86rem; font-weight: 900; line-height: 1.24; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.work-location { margin-top: 3px; color: rgba(23,32,51,0.65); font-size: 0.68rem; font-weight: 900; }
-.work-card p { margin-top: 6px; color: var(--ink-soft); font-size: 0.75rem; line-height: 1.4; font-weight: 800; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.task-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
-.task-meta span { padding: 2px 6px; border-radius: 999px; background: rgba(255,255,255,0.50); color: rgba(23,32,51,0.72); font-size: 0.58rem; font-weight: 900; text-transform: uppercase; }
-.large-empty { padding: 36px 20px !important; font-size: 0.95rem !important; }
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="siteName">현장명</label>
+              <input id="siteName" type="text" placeholder="예: ○○ 복합시설 신축공사" />
+            </div>
+            <div class="field">
+              <label for="reportDate">작업일자</label>
+              <input id="reportDate" type="date" required />
+            </div>
+          </div>
 
-/* Weekly / Monthly */
-.week-grid { display: grid; grid-template-columns: repeat(7, minmax(112px, 1fr)); gap: 8px; min-width: 820px; }
-.week-day { min-height: 330px; max-height: 500px; overflow-y: auto; padding: 8px; border-radius: 17px; display: flex; flex-direction: column; gap: 7px; background: rgba(255,255,255,0.52); border: 2px solid rgba(255,255,255,0.84); box-shadow: 0 4px 0 rgba(23,32,51,0.05); cursor: pointer; transition: 0.14s; }
-.week-day:hover { background: rgba(255,255,255,0.78); border-color: rgba(24,183,232,0.45); }
-.week-day.today { background: rgba(255,243,191,0.92); border-color: var(--yellow); box-shadow: 0 5px 0 rgba(164,124,0,0.14); }
-.week-day-head { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding-bottom: 6px; border-bottom: 2px dashed rgba(23,32,51,0.13); color: var(--ink); font-size: 0.8rem; font-weight: 900; }
-.week-day-head span:last-child { color: var(--ink-soft); font-size: 0.68rem; white-space: nowrap; }
-.weekday-row { display: grid; grid-template-columns: repeat(7, minmax(86px, 1fr)); gap: 7px; min-width: 700px; margin-bottom: 7px; }
-.weekday-name { text-align: center; color: #0f7894; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; }
-.month-grid { display: grid; grid-template-columns: repeat(7, minmax(86px, 1fr)); gap: 7px; min-width: 700px; }
-.month-cell { min-height: 84px; padding: 7px; border-radius: 15px; display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,0.52); border: 2px solid rgba(255,255,255,0.84); box-shadow: 0 4px 0 rgba(23,32,51,0.05); cursor: pointer; transition: 0.14s; overflow: hidden; }
-.month-cell:hover { background: rgba(255,255,255,0.78); border-color: rgba(24,183,232,0.45); transform: translateY(-1px); }
-.month-cell.muted { opacity: 0.42; }
-.month-cell.today { background: rgba(255,243,191,0.92); border-color: var(--yellow); }
-.month-date { flex: 0 0 auto; color: var(--ink); font-size: 0.78rem; font-weight: 900; }
-.month-preview { display: grid; gap: 3px; margin-top: auto; min-width: 0; }
-.month-mini-task { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 999px; padding: 2px 6px; background: rgba(255,255,255,0.88); color: var(--ink); font-size: 0.56rem; font-weight: 900; box-shadow: 0 2px 0 rgba(23,32,51,0.08); }
-.empty { border-radius: 14px; padding: 12px 10px; background: rgba(255,255,255,0.45); border: 2px dashed rgba(23,32,51,0.14); color: var(--muted); font-size: 0.76rem; font-weight: 900; line-height: 1.45; text-align: center; word-break: keep-all; }
+          <div class="form-grid-3">
+            <div class="field">
+              <label for="weather">날씨</label>
+              <select id="weather">
+                <option value="맑음">맑음</option>
+                <option value="흐림">흐림</option>
+                <option value="비">비</option>
+                <option value="눈">눈</option>
+                <option value="강풍">강풍</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="temperature">온도</label>
+              <input id="temperature" type="text" placeholder="예: 24℃" />
+            </div>
+            <div class="field">
+              <label for="writer">작성자</label>
+              <input id="writer" type="text" placeholder="예: 현장관리자" />
+            </div>
+          </div>
 
-/* Preview side */
-.side-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: grid; align-content: start; }
-.side-section { padding: 14px 16px; border-top: 2px dashed rgba(23,32,51,0.10); }
-.side-section:first-child { border-top: 0; }
-.mini-progress { height: 12px; margin-top: 10px; border-radius: 999px; background: rgba(23,32,51,0.10); border: 1px solid rgba(23,32,51,0.08); overflow: hidden; }
-.mini-progress span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--orange), var(--yellow), var(--green)); transition: width 0.28s ease; }
-.report-preview { margin-top: 10px; max-height: 330px; overflow: auto; white-space: pre-wrap; word-break: keep-all; padding: 12px; border-radius: 16px; background: rgba(255,255,255,0.82); border: 2px solid rgba(23,32,51,0.08); color: #263248; font-family: "Noto Sans KR", sans-serif; font-size: 0.75rem; line-height: 1.55; font-weight: 700; box-shadow: inset 0 2px 8px rgba(23,32,51,0.04); }
-.side-buttons { display: grid; grid-template-columns: 1fr 0.8fr; gap: 8px; margin-top: 8px; }
-.focus-list { display: grid; gap: 8px; margin-top: 10px; }
-.focus-item { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 9px; border-radius: 14px; background: rgba(255,255,255,0.58); border: 2px solid rgba(255,255,255,0.82); box-shadow: 0 3px 0 rgba(23,32,51,0.06); color: var(--ink); font-size: 0.78rem; font-weight: 900; cursor: pointer; }
-.focus-item span:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.focus-dot { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 4px rgba(255,255,255,0.5); }
-.delete-btn { border-radius: 10px; padding: 4px 7px; background: rgba(23,32,51,0.08); color: var(--ink); font-weight: 900; cursor: pointer; }
+          <div class="field">
+            <label>공종</label>
+            <div class="category-row" id="tradeRow">
+              <button type="button" class="cat-pill cat-structure active" data-trade="철근콘크리트공사">RC</button>
+              <button type="button" class="cat-pill cat-form" data-trade="거푸집공사">거푸집</button>
+              <button type="button" class="cat-pill cat-concrete" data-trade="콘크리트공사">타설</button>
+              <button type="button" class="cat-pill cat-lift" data-trade="양중작업">양중</button>
+              <button type="button" class="cat-pill cat-safety" data-trade="안전관리">안전</button>
+              <button type="button" class="cat-pill cat-etc" data-trade="기타공사">기타</button>
+            </div>
+          </div>
 
-/* Modal */
-.modal-backdrop { position: fixed; inset: 0; z-index: 2000; display: none; place-items: center; padding: 20px; background: rgba(23,32,51,0.42); backdrop-filter: blur(14px); }
-.modal-backdrop.show { display: grid; }
-.modal { width: min(580px, 100%); max-height: min(90vh, 780px); overflow: hidden; border-radius: 26px; background: rgba(255,255,255,0.96); color: var(--ink); box-shadow: 0 32px 90px rgba(23,32,51,0.32); border: 2px solid rgba(255,255,255,0.94); display: flex; flex-direction: column; }
-.template-modal { width: min(760px, 100%); }
-.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 18px 10px; background: rgba(255,243,191,0.72); border-bottom: 2px dashed rgba(23,32,51,0.10); }
-.modal-head h3 { color: var(--ink); font-size: 1.22rem; line-height: 1.25; font-weight: 900; word-break: keep-all; }
-.modal-close { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 13px; background: #f1f5f9; color: var(--ink); cursor: pointer; font-size: 1.2rem; font-weight: 900; }
-.modal-body { padding: 16px 18px 18px; display: grid; gap: 10px; overflow: auto; }
-.modal .field input, .modal .field textarea, .modal .field select { background: #f8fafc; border: 2px solid #dbe3ef; }
-.modal-actions { display: flex; gap: 9px; justify-content: flex-end; padding: 13px 18px 18px; border-top: 1px solid #e2e8f0; flex-wrap: wrap; }
-.modal-btn { border-radius: 13px; padding: 10px 13px; cursor: pointer; font-size: 0.84rem; font-weight: 900; }
-.modal-btn.save { background: var(--blue); color: #04202b; }
-.modal-btn.delete { background: #fee2e2; color: #b91c1c; margin-right: auto; }
-.modal-btn.cancel { background: #f1f5f9; color: #334155; }
-.template-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-.template-card { text-align: left; cursor: pointer; padding: 13px; border-radius: 18px; background: #f8fafc; border: 2px solid #dbe3ef; box-shadow: 0 4px 0 rgba(23,32,51,0.08); transition: 0.14s ease; }
-.template-card:hover { transform: translateY(-2px); background: #fff; border-color: rgba(24,183,232,0.45); }
-.template-card strong { display: block; margin-top: 7px; color: var(--ink); font-size: 0.92rem; font-weight: 900; }
-.template-card small { display: block; margin-top: 5px; color: var(--ink-soft); font-size: 0.75rem; font-weight: 800; line-height: 1.45; }
-.template-chip { display: inline-flex; padding: 3px 8px; border-radius: 999px; font-size: 0.62rem; font-weight: 900; }
-.toast { position: fixed; right: 18px; bottom: 18px; z-index: 3000; display: none; max-width: 360px; padding: 13px 15px; border-radius: 18px; background: rgba(255,255,255,0.96); color: var(--ink); border: 2px solid rgba(255,255,255,0.95); box-shadow: 0 20px 50px rgba(23,32,51,0.22); font-size: 0.86rem; font-weight: 900; line-height: 1.45; }
-.toast.show { display: block; animation: toastUp 0.25s ease; }
-@keyframes toastUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+          <div class="form-grid-2">
+            <div class="field">
+              <label for="location">작업위치</label>
+              <input id="location" type="text" placeholder="예: 지하1층 A구역" required />
+            </div>
+            <div class="field">
+              <label for="status">작업상태</label>
+              <select id="status">
+                <option value="진행">진행</option>
+                <option value="완료">완료</option>
+                <option value="지연">지연</option>
+                <option value="중단">중단</option>
+              </select>
+            </div>
+          </div>
 
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(23,32,51,0.20); border-radius: 999px; border: 2px solid rgba(255,255,255,0.6); }
+          <div class="field">
+            <label for="workTitle">작업명</label>
+            <input id="workTitle" type="text" placeholder="예: 기둥 및 보 철근 배근" required />
+          </div>
 
-/* Responsive */
-@media (max-width: 1240px) {
-  .dashboard { grid-template-columns: 350px minmax(0, 1fr); height: auto; }
-  .dashboard > aside:last-child { grid-column: 1 / -1; min-height: 260px; display: flex; }
-  .side-scroll { grid-template-columns: 0.8fr 1.3fr 0.9fr; display: grid; }
-  .side-section { border-top: 0; border-left: 2px dashed rgba(23,32,51,0.10); }
-  .side-section:first-child { border-left: 0; }
-  .main-board { height: 760px; }
-}
+          <div class="field">
+            <label for="workContent">금일 작업내용</label>
+            <textarea id="workContent" placeholder="예: 기둥 및 보 부재 철근 배근 작업을 수행함."></textarea>
+          </div>
 
-@media (max-width: 920px) {
-  .app-shell { width: min(100% - 24px, 1440px); padding-top: 16px; }
-  .topbar { flex-direction: column; align-items: flex-start; }
-  .top-actions { width: 100%; justify-content: flex-start; }
-  .hero-card { height: auto; }
-  .hero-content { grid-template-columns: 1fr; }
-  .today-mini { display: none; }
-  .dashboard { grid-template-columns: 1fr; }
-  .main-board { height: 760px; }
-  .dashboard > aside:last-child { display: block; }
-  .side-scroll { display: block; }
-  .side-section { border-left: 0; border-top: 2px dashed rgba(23,32,51,0.10); }
-  .side-section:first-child { border-top: 0; }
-  .kpi-row { grid-template-columns: repeat(2, 1fr); }
-}
+          <div class="form-grid-3">
+            <div class="field">
+              <label for="workers">인원</label>
+              <input id="workers" type="text" placeholder="예: 철근공 8명" />
+            </div>
+            <div class="field">
+              <label for="equipment">장비</label>
+              <input id="equipment" type="text" placeholder="예: 이동식 크레인 1대" />
+            </div>
+            <div class="field">
+              <label for="materials">자재</label>
+              <input id="materials" type="text" placeholder="예: HD13 철근" />
+            </div>
+          </div>
 
-@media (max-width: 640px) {
-  .brand h1 { white-space: normal; font-size: 1.8rem; }
-  .brand p { white-space: normal; }
-  .top-actions { display: grid; grid-template-columns: 1fr; }
-  .hero-title { font-size: 1.9rem; }
-  .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
-  .calendar-toolbar { align-items: flex-start; flex-direction: column; }
-  .date-nav { width: 100%; justify-content: space-between; }
-  .week-grid, .month-grid, .weekday-row { min-width: 0; grid-template-columns: 1fr; }
-  .month-cell { min-height: 74px; }
-  .trade-work-list { grid-template-columns: 1fr; }
-}
+          <div class="field">
+            <label for="hazards">위험요인</label>
+            <input id="hazards" type="text" placeholder="예: 추락, 협착, 자재 전도" />
+          </div>
+
+          <div class="field">
+            <label for="safetyActions">안전조치</label>
+            <textarea id="safetyActions" placeholder="예: 작업 전 TBM 실시, 안전난간 확인, 신호수 배치"></textarea>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="toggle-line">
+              <span>TBM 실시</span>
+              <div class="switch on" id="tbmSwitch" role="button" tabindex="0" aria-label="Toggle TBM"><span></span></div>
+            </div>
+            <div class="toggle-line">
+              <span>사진 첨부</span>
+              <div class="switch" id="photoSwitch" role="button" tabindex="0" aria-label="Toggle Photo"><span></span></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="delayReason">지연/특이사항</label>
+            <textarea id="delayReason" placeholder="예: 우천으로 외부 작업 일부 지연"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="tomorrowPlan">명일 예정작업</label>
+            <textarea id="tomorrowPlan" placeholder="예: A구역 철근 배근 계속, B구역 거푸집 설치 예정"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="toy-btn primary" type="submit">작업 저장</button>
+            <button class="toy-btn" type="button" id="clearFormBtn">초기화</button>
+          </div>
+        </form>
+      </aside>
+
+      <section class="panel main-board">
+        <div class="calendar-toolbar">
+          <div class="date-title">
+            <h2 id="boardTitle">Daily Site Report</h2>
+            <p id="boardSub">오늘 작업일보 보드</p>
+          </div>
+
+          <div class="date-nav">
+            <button class="icon-btn" id="prevBtn" title="Previous" type="button">‹</button>
+            <button class="icon-btn" id="currentBtn" title="Current" type="button">●</button>
+            <button class="icon-btn" id="nextBtn" title="Next" type="button">›</button>
+          </div>
+        </div>
+
+        <div class="calendar-body">
+          <div class="kpi-row">
+            <div class="kpi"><b id="kpiTotal">0</b><span>금일 작업</span></div>
+            <div class="kpi"><b id="kpiWorkers">0</b><span>투입 인원</span></div>
+            <div class="kpi"><b id="kpiRisk">0</b><span>위험 작업</span></div>
+            <div class="kpi"><b id="kpiDelay">0</b><span>지연/중단</span></div>
+          </div>
+
+          <div class="calendar-viewport">
+            <div class="daily-view active" id="dailyView">
+              <div class="work-board" id="workBoard"></div>
+            </div>
+
+            <div class="weekly-view" id="weeklyView">
+              <div class="week-grid" id="weekGrid"></div>
+            </div>
+
+            <div class="monthly-view" id="monthlyView">
+              <div class="weekday-row" id="weekdayRow"></div>
+              <div class="month-grid" id="monthGrid"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel preview-panel">
+        <div class="side-scroll">
+          <div class="side-section">
+            <div class="panel-title">일보 자동요약</div>
+            <div class="panel-sub" id="reportBriefText">금일 작업 요약</div>
+            <div class="mini-progress"><span id="progressBar"></span></div>
+          </div>
+
+          <div class="side-section">
+            <div class="panel-title">작업일보 미리보기</div>
+            <pre class="report-preview" id="reportPreview"></pre>
+            <div class="side-buttons">
+              <button class="toy-btn primary" type="button" id="copyReportBtn">일보 복사</button>
+              <button class="toy-btn" type="button" id="downloadReportBtn">TXT 저장</button>
+            </div>
+          </div>
+
+          <div class="side-section">
+            <div class="panel-title">위험/지연 작업</div>
+            <div class="focus-list" id="riskList"></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="workModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">작업 상세</h3>
+        <button class="modal-close" id="modalClose" type="button">×</button>
+      </div>
+
+      <div class="modal-body" id="modalBody"></div>
+
+      <div class="modal-actions">
+        <button class="modal-btn delete" id="modalDelete" type="button">Delete</button>
+        <button class="modal-btn cancel" id="modalDuplicate" type="button">오늘로 복제</button>
+        <button class="modal-btn save" id="modalEdit" type="button">Edit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="templateModal">
+    <div class="modal template-modal">
+      <div class="modal-head">
+        <h3>공종 템플릿 선택</h3>
+        <button class="modal-close" id="templateClose" type="button">×</button>
+      </div>
+      <div class="modal-body template-grid" id="templateGrid"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const STORAGE_KEY = 'siteLogMiniDailyReportV1';
+      const META_KEY = 'siteLogMiniMetaV1';
+
+      const tradeColors = {
+        '철근콘크리트공사': '#18b7e8',
+        '거푸집공사': '#9457e8',
+        '콘크리트공사': '#ff9f1c',
+        '양중작업': '#ff5a4f',
+        '안전관리': '#33c481',
+        '기타공사': '#718096'
+      };
+
+      const tradeBackgrounds = {
+        '철근콘크리트공사': '#d9f6ff',
+        '거푸집공사': '#eadfff',
+        '콘크리트공사': '#fff0c2',
+        '양중작업': '#ffe2df',
+        '안전관리': '#dff8ea',
+        '기타공사': '#edf2f7'
+      };
+
+      const templates = [
+        {
+          name: '철근 배근 작업',
+          trade: '철근콘크리트공사',
+          location: '지하1층 A구역',
+          workTitle: '기둥 및 보 철근 배근',
+          workContent: '기둥 및 보 부재의 철근 배근 작업을 수행함.',
+          workers: '철근공 8명',
+          equipment: '절단기 1대, 절곡기 1대',
+          materials: 'HD13, HD16 철근',
+          hazards: '협착, 자재 전도, 절단 작업 중 베임',
+          safetyActions: '작업 전 TBM 실시, 철근 적치상태 확인, 절단기 방호장치 점검',
+          tomorrowPlan: '동일 구역 철근 배근 계속 및 배근 상태 확인 예정'
+        },
+        {
+          name: '거푸집 설치 작업',
+          trade: '거푸집공사',
+          location: '지하1층 B구역',
+          workTitle: '벽체 거푸집 설치',
+          workContent: '벽체 구간의 거푸집 조립 및 고정 작업을 수행함.',
+          workers: '형틀공 6명',
+          equipment: '이동식 작업대 2대',
+          materials: '거푸집 패널, 동바리, 체결재',
+          hazards: '추락, 낙하물, 전도',
+          safetyActions: '작업발판 고정상태 확인, 안전난간 설치 확인, 하부 출입통제 실시',
+          tomorrowPlan: '잔여 벽체 거푸집 설치 및 체결상태 점검 예정'
+        },
+        {
+          name: '콘크리트 타설 작업',
+          trade: '콘크리트공사',
+          location: '1층 슬래브 구간',
+          workTitle: '슬래브 콘크리트 타설',
+          workContent: '슬래브 구간 콘크리트 타설 및 다짐 작업을 수행함.',
+          workers: '타설공 7명, 신호수 1명',
+          equipment: '펌프카 1대, 바이브레이터 2대',
+          materials: '레미콘 120㎥',
+          hazards: '장비 충돌, 미끄러짐, 호스 반동',
+          safetyActions: '펌프카 아웃트리거 확인, 작업구간 미끄럼 방지, 신호수 배치',
+          tomorrowPlan: '타설면 양생상태 확인 및 후속 작업 준비 예정'
+        },
+        {
+          name: '자재 양중 작업',
+          trade: '양중작업',
+          location: '타워크레인 작업반경 내',
+          workTitle: '철근 및 거푸집 자재 양중',
+          workContent: '상부 작업구간으로 철근 및 거푸집 자재 양중 작업을 수행함.',
+          workers: '양중공 3명, 신호수 1명',
+          equipment: '타워크레인 1대, 슬링벨트',
+          materials: '철근 다발, 거푸집 패널',
+          hazards: '낙하, 충돌, 협착',
+          safetyActions: '인양 전 결속상태 확인, 작업반경 출입통제, 신호체계 확인',
+          tomorrowPlan: '상부층 후속 자재 양중 및 적치상태 점검 예정'
+        },
+        {
+          name: '안전점검 및 TBM',
+          trade: '안전관리',
+          location: '전 구역',
+          workTitle: '작업 전 TBM 및 안전점검',
+          workContent: '작업 전 TBM을 실시하고 주요 위험구역 안전상태를 점검함.',
+          workers: '관리자 2명, 작업반장 4명',
+          equipment: '안전점검표, 무전기',
+          materials: '안전표지, 출입통제 라인',
+          hazards: '추락, 낙하, 장비 접촉, 화재',
+          safetyActions: '고위험 작업 전 안전교육 실시, 보호구 착용상태 확인, 위험구역 출입통제',
+          tomorrowPlan: '작업 전 TBM 지속 실시 및 지적사항 조치 확인 예정'
+        }
+      ];
+
+      const $ = (id) => document.getElementById(id);
+      const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `work-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+      let works = loadWorks();
+      let meta = loadMeta();
+      let activeView = 'daily';
+      let currentDate = new Date();
+      let selectedTrade = '철근콘크리트공사';
+      let tbmDone = true;
+      let photoAttached = false;
+      let selectedWorkId = null;
+
+      function pad(n) { return String(n).padStart(2, '0'); }
+      function toDateKey(date) { return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`; }
+      function parseLocalDate(key) { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); }
+      function startOfWeek(date) { const d = new Date(date); d.setDate(d.getDate() - d.getDay()); d.setHours(0, 0, 0, 0); return d; }
+      function sameDate(a, b) { return toDateKey(a) === toDateKey(b); }
+      function escapeHtml(text) {
+        return String(text || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#039;');
+      }
+
+      function loadWorks() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) return JSON.parse(saved);
+        } catch (e) { console.warn(e); }
+
+        const today = toDateKey(new Date());
+        return [
+          {
+            id: uid(), date: today, siteName: '○○ 복합시설 신축공사', weather: '맑음', temperature: '24℃', writer: '현장관리자',
+            trade: '철근콘크리트공사', location: '지하1층 A구역', workTitle: '기둥 및 보 철근 배근',
+            workContent: '기둥 및 보 부재의 철근 배근 작업을 수행함.', workers: '철근공 8명', equipment: '절단기 1대, 절곡기 1대', materials: 'HD13, HD16 철근',
+            hazards: '협착, 자재 전도', safetyActions: '작업 전 TBM 실시, 철근 적치상태 확인, 절단기 방호장치 점검', status: '진행', tbm: true, photo: false,
+            delayReason: '', tomorrowPlan: '동일 구역 철근 배근 계속 예정'
+          },
+          {
+            id: uid(), date: today, siteName: '○○ 복합시설 신축공사', weather: '맑음', temperature: '24℃', writer: '현장관리자',
+            trade: '안전관리', location: '전 구역', workTitle: '작업 전 TBM 및 안전점검',
+            workContent: '작업 전 TBM을 실시하고 주요 위험구역 안전상태를 점검함.', workers: '관리자 2명, 작업반장 4명', equipment: '안전점검표, 무전기', materials: '안전표지',
+            hazards: '추락, 낙하, 장비 접촉', safetyActions: '보호구 착용상태 확인, 위험구역 출입통제, 작업 전 안전교육 실시', status: '완료', tbm: true, photo: true,
+            delayReason: '', tomorrowPlan: '작업 전 TBM 지속 실시 예정'
+          }
+        ];
+      }
+
+      function loadMeta() {
+        try {
+          const saved = localStorage.getItem(META_KEY);
+          if (saved) return JSON.parse(saved);
+        } catch (e) { console.warn(e); }
+        return { siteName: '○○ 복합시설 신축공사', writer: '현장관리자', weather: '맑음', temperature: '24℃' };
+      }
+
+      function saveWorks() { localStorage.setItem(STORAGE_KEY, JSON.stringify(works)); }
+      function saveMeta() { localStorage.setItem(META_KEY, JSON.stringify(meta)); }
+
+      function showToast(message) {
+        const toast = $('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2400);
+      }
+
+      function getWorksForDate(date) {
+        const key = toDateKey(date);
+        return works.filter(work => work.date === key).sort((a, b) => a.trade.localeCompare(b.trade));
+      }
+
+      function getWeekDates(date) {
+        const start = startOfWeek(date);
+        return Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          return d;
+        });
+      }
+
+      function extractNumber(text) {
+        const nums = String(text || '').match(/\d+/g);
+        if (!nums) return 0;
+        return nums.map(Number).reduce((a, b) => a + b, 0);
+      }
+
+      function updateTitles() {
+        const dateText = currentDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        const monthText = currentDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
+
+        if (activeView === 'daily') {
+          $('boardTitle').textContent = 'Daily Site Report';
+          $('boardSub').textContent = dateText;
+        } else if (activeView === 'weekly') {
+          const week = getWeekDates(currentDate);
+          $('boardTitle').textContent = 'Weekly Work Plan';
+          $('boardSub').textContent = `${week[0].toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} - ${week[6].toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}`;
+        } else {
+          $('boardTitle').textContent = 'Monthly Site Map';
+          $('boardSub').textContent = monthText;
+        }
+      }
+
+      function setTrade(trade) {
+        selectedTrade = trade;
+        document.querySelectorAll('.cat-pill').forEach(btn => btn.classList.toggle('active', btn.dataset.trade === trade));
+      }
+
+      function updateSwitch(el, state) { el.classList.toggle('on', state); }
+
+      function fillDefaultsFromMeta() {
+        $('siteName').value = meta.siteName || '';
+        $('writer').value = meta.writer || '';
+        $('weather').value = meta.weather || '맑음';
+        $('temperature').value = meta.temperature || '';
+      }
+
+      function clearForm() {
+        $('workId').value = '';
+        fillDefaultsFromMeta();
+        $('reportDate').value = toDateKey(currentDate);
+        $('location').value = '';
+        $('status').value = '진행';
+        $('workTitle').value = '';
+        $('workContent').value = '';
+        $('workers').value = '';
+        $('equipment').value = '';
+        $('materials').value = '';
+        $('hazards').value = '';
+        $('safetyActions').value = '';
+        $('delayReason').value = '';
+        $('tomorrowPlan').value = '';
+        tbmDone = true;
+        photoAttached = false;
+        updateSwitch($('tbmSwitch'), tbmDone);
+        updateSwitch($('photoSwitch'), photoAttached);
+        setTrade('철근콘크리트공사');
+      }
+
+      function applyTemplate(template) {
+        setTrade(template.trade);
+        $('location').value = template.location;
+        $('workTitle').value = template.workTitle;
+        $('workContent').value = template.workContent;
+        $('workers').value = template.workers;
+        $('equipment').value = template.equipment;
+        $('materials').value = template.materials;
+        $('hazards').value = template.hazards;
+        $('safetyActions').value = template.safetyActions;
+        $('tomorrowPlan').value = template.tomorrowPlan;
+        $('status').value = '진행';
+        closeTemplateModal();
+        showToast(`${template.name} 템플릿을 입력했습니다.`);
+      }
+
+      function renderTemplates() {
+        const grid = $('templateGrid');
+        grid.innerHTML = '';
+        templates.forEach(template => {
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'template-card';
+          card.innerHTML = `
+            <span class="template-chip" style="background:${tradeBackgrounds[template.trade]};color:${tradeColors[template.trade]}">${escapeHtml(template.trade)}</span>
+            <strong>${escapeHtml(template.name)}</strong>
+            <small>${escapeHtml(template.workContent)}</small>
+          `;
+          card.addEventListener('click', () => applyTemplate(template));
+          grid.appendChild(card);
+        });
+      }
+
+      function openTemplateModal() {
+        renderTemplates();
+        $('templateModal').classList.add('show');
+      }
+
+      function closeTemplateModal() { $('templateModal').classList.remove('show'); }
+
+      function saveForm(e) {
+        e.preventDefault();
+
+        meta = {
+          siteName: $('siteName').value.trim(),
+          writer: $('writer').value.trim(),
+          weather: $('weather').value,
+          temperature: $('temperature').value.trim()
+        };
+        saveMeta();
+
+        const id = $('workId').value;
+        const work = {
+          id: id || uid(),
+          date: $('reportDate').value,
+          siteName: $('siteName').value.trim(),
+          weather: $('weather').value,
+          temperature: $('temperature').value.trim(),
+          writer: $('writer').value.trim(),
+          trade: selectedTrade,
+          location: $('location').value.trim(),
+          status: $('status').value,
+          workTitle: $('workTitle').value.trim(),
+          workContent: $('workContent').value.trim(),
+          workers: $('workers').value.trim(),
+          equipment: $('equipment').value.trim(),
+          materials: $('materials').value.trim(),
+          hazards: $('hazards').value.trim(),
+          safetyActions: $('safetyActions').value.trim(),
+          tbm: tbmDone,
+          photo: photoAttached,
+          delayReason: $('delayReason').value.trim(),
+          tomorrowPlan: $('tomorrowPlan').value.trim()
+        };
+
+        if (!work.date || !work.location || !work.workTitle) return;
+
+        if (id) {
+          works = works.map(item => item.id === id ? work : item);
+          showToast('작업 내용이 수정되었습니다.');
+        } else {
+          works.push(work);
+          showToast('금일 작업이 저장되었습니다.');
+        }
+
+        saveWorks();
+        currentDate = parseLocalDate(work.date);
+        clearForm();
+        renderAll();
+      }
+
+      function createWorkCard(work) {
+        const card = document.createElement('div');
+        card.className = `work-card status-${work.status}`;
+        card.style.setProperty('--task-color', tradeColors[work.trade] || tradeColors['기타공사']);
+        card.style.setProperty('--task-bg', tradeBackgrounds[work.trade] || '#edf2f7');
+        card.innerHTML = `
+          <div class="work-card-head">
+            <span>${escapeHtml(work.trade)}</span>
+            <b>${escapeHtml(work.status)}</b>
+          </div>
+          <div class="task-title">${escapeHtml(work.workTitle)}</div>
+          <div class="work-location">📍 ${escapeHtml(work.location)}</div>
+          <p>${escapeHtml(work.workContent || '작업내용 미입력')}</p>
+          <div class="task-meta">
+            ${work.workers ? `<span>👷 ${escapeHtml(work.workers)}</span>` : ''}
+            ${work.equipment ? `<span>🚜 ${escapeHtml(work.equipment)}</span>` : ''}
+            ${work.hazards ? `<span>⚠️ ${escapeHtml(work.hazards)}</span>` : ''}
+            ${work.tbm ? '<span>TBM</span>' : ''}
+            ${work.photo ? '<span>Photo</span>' : ''}
+          </div>
+        `;
+        card.addEventListener('click', () => openWorkModal(work.id));
+        return card;
+      }
+
+      function renderDaily() {
+        const board = $('workBoard');
+        board.innerHTML = '';
+        const dayWorks = getWorksForDate(currentDate);
+
+        if (!dayWorks.length) {
+          board.innerHTML = `
+            <div class="empty large-empty">
+              아직 등록된 작업이 없습니다.<br />왼쪽 패널에서 작업을 추가하거나 전일 작업을 복사하세요.
+            </div>
+          `;
+          return;
+        }
+
+        const grouped = dayWorks.reduce((acc, work) => {
+          acc[work.trade] = acc[work.trade] || [];
+          acc[work.trade].push(work);
+          return acc;
+        }, {});
+
+        Object.entries(grouped).forEach(([trade, list]) => {
+          const section = document.createElement('section');
+          section.className = 'trade-section';
+          section.innerHTML = `
+            <div class="trade-section-head">
+              <h3>${escapeHtml(trade)}</h3>
+              <span>${list.length}건</span>
+            </div>
+            <div class="trade-work-list"></div>
+          `;
+          const listEl = section.querySelector('.trade-work-list');
+          list.forEach(work => listEl.appendChild(createWorkCard(work)));
+          board.appendChild(section);
+        });
+      }
+
+      function renderWeekly() {
+        const grid = $('weekGrid');
+        grid.innerHTML = '';
+        const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        getWeekDates(currentDate).forEach((date, idx) => {
+          const day = document.createElement('div');
+          day.className = 'week-day';
+          if (sameDate(date, new Date())) day.classList.add('today');
+          const dayWorks = getWorksForDate(date);
+          day.innerHTML = `
+            <div class="week-day-head">
+              <span>${weekdays[idx]}</span>
+              <span>${date.getMonth() + 1}/${date.getDate()} · ${dayWorks.length}건</span>
+            </div>
+          `;
+          day.addEventListener('click', () => {
+            currentDate = new Date(date);
+            $('reportDate').value = toDateKey(currentDate);
+            setView('daily');
+          });
+          if (dayWorks.length) dayWorks.forEach(work => day.appendChild(createWorkCard(work)));
+          else {
+            const empty = document.createElement('div');
+            empty.className = 'empty';
+            empty.textContent = '작업 없음';
+            day.appendChild(empty);
+          }
+          grid.appendChild(day);
+        });
+      }
+
+      function renderMonthly() {
+        $('weekdayRow').innerHTML = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+          .map(d => `<div class="weekday-name">${d}</div>`).join('');
+
+        const grid = $('monthGrid');
+        grid.innerHTML = '';
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const first = new Date(year, month, 1);
+        const start = new Date(first);
+        start.setDate(1 - first.getDay());
+
+        for (let i = 0; i < 42; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          const dayWorks = getWorksForDate(d);
+          const cell = document.createElement('div');
+          cell.className = 'month-cell';
+          if (d.getMonth() !== month) cell.classList.add('muted');
+          if (sameDate(d, new Date())) cell.classList.add('today');
+          cell.innerHTML = `
+            <div class="month-date">${d.getDate()}</div>
+            <div class="month-preview"></div>
+          `;
+          cell.addEventListener('click', () => {
+            currentDate = new Date(d);
+            $('reportDate').value = toDateKey(currentDate);
+            setView('daily');
+          });
+          const preview = cell.querySelector('.month-preview');
+          dayWorks.slice(0, 3).forEach(work => {
+            const mini = document.createElement('div');
+            mini.className = 'month-mini-task';
+            mini.style.borderLeft = `5px solid ${tradeColors[work.trade] || '#718096'}`;
+            mini.textContent = work.workTitle;
+            mini.addEventListener('click', (e) => { e.stopPropagation(); openWorkModal(work.id); });
+            preview.appendChild(mini);
+          });
+          if (dayWorks.length > 3) {
+            const more = document.createElement('div');
+            more.className = 'month-mini-task';
+            more.textContent = `+${dayWorks.length - 3} more`;
+            preview.appendChild(more);
+          }
+          grid.appendChild(cell);
+        }
+      }
+
+      function buildReportText(date = currentDate) {
+        const dayWorks = getWorksForDate(date);
+        const first = dayWorks[0] || meta;
+        const dateText = date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' });
+
+        if (!dayWorks.length) {
+          return `[${dateText} 작업일보]\n\n등록된 작업이 없습니다.`;
+        }
+
+        const workers = dayWorks.map(w => w.workers).filter(Boolean).join(', ');
+        const equipment = dayWorks.map(w => w.equipment).filter(Boolean).join(', ');
+        const materials = dayWorks.map(w => w.materials).filter(Boolean).join(', ');
+        const hazards = [...new Set(dayWorks.flatMap(w => String(w.hazards || '').split(',').map(v => v.trim()).filter(Boolean)))].join(', ');
+        const safetyActions = [...new Set(dayWorks.flatMap(w => String(w.safetyActions || '').split(',').map(v => v.trim()).filter(Boolean)))].join(', ');
+        const tomorrow = dayWorks.map(w => w.tomorrowPlan).filter(Boolean).join('\n- ');
+        const issues = dayWorks.map(w => w.delayReason).filter(Boolean).join('\n- ');
+
+        return `[${dateText} 작업일보]\n` +
+          `현장명: ${first.siteName || '-'}\n` +
+          `날씨/온도: ${first.weather || '-'} / ${first.temperature || '-'}\n` +
+          `작성자: ${first.writer || '-'}\n\n` +
+          `1. 금일 작업내용\n` +
+          dayWorks.map((w, i) => `${i + 1}) [${w.trade}] ${w.location} - ${w.workTitle} (${w.status})\n   - ${w.workContent || '작업내용 미입력'}`).join('\n') +
+          `\n\n2. 투입 현황\n` +
+          `- 인원: ${workers || '-'}\n` +
+          `- 장비: ${equipment || '-'}\n` +
+          `- 자재: ${materials || '-'}\n\n` +
+          `3. 안전관리\n` +
+          `- TBM 실시: ${dayWorks.some(w => w.tbm) ? '완료' : '미입력'}\n` +
+          `- 주요 위험요인: ${hazards || '-'}\n` +
+          `- 조치사항: ${safetyActions || '-'}\n\n` +
+          `4. 특이사항\n` +
+          `${issues ? '- ' + issues : '- 특이사항 없음'}\n\n` +
+          `5. 명일 예정작업\n` +
+          `${tomorrow ? '- ' + tomorrow : '- 미입력'}`;
+      }
+
+      function renderKpisAndPreview() {
+        const dayWorks = getWorksForDate(currentDate);
+        const totalWorkers = dayWorks.reduce((sum, work) => sum + extractNumber(work.workers), 0);
+        const riskCount = dayWorks.filter(work => work.hazards && work.hazards.trim()).length;
+        const delayCount = dayWorks.filter(work => ['지연', '중단'].includes(work.status)).length;
+        const completeCount = dayWorks.filter(work => work.status === '완료').length;
+        const completeRate = dayWorks.length ? Math.round((completeCount / dayWorks.length) * 100) : 0;
+
+        $('kpiTotal').textContent = dayWorks.length;
+        $('kpiWorkers').textContent = totalWorkers;
+        $('kpiRisk').textContent = riskCount;
+        $('kpiDelay').textContent = delayCount;
+        $('reportBriefText').textContent = dayWorks.length ? `${dayWorks.length}건 작업 · 완료율 ${completeRate}% · 위험요인 ${riskCount}건` : '오늘 등록된 작업이 없습니다.';
+        $('progressBar').style.width = `${completeRate}%`;
+        $('reportPreview').textContent = buildReportText(currentDate);
+
+        const riskList = $('riskList');
+        riskList.innerHTML = '';
+        const risky = dayWorks.filter(w => w.hazards || ['지연', '중단'].includes(w.status));
+        if (!risky.length) {
+          riskList.innerHTML = '<div class="empty">위험/지연 작업이 없습니다.</div>';
+        } else {
+          risky.slice(0, 5).forEach(work => {
+            const item = document.createElement('div');
+            item.className = 'focus-item';
+            item.innerHTML = `
+              <span class="focus-dot" style="background:${tradeColors[work.trade] || '#718096'}"></span>
+              <span>${escapeHtml(work.workTitle)}</span>
+              <button class="delete-btn" title="Open">›</button>
+            `;
+            item.addEventListener('click', () => openWorkModal(work.id));
+            riskList.appendChild(item);
+          });
+        }
+      }
+
+      function renderAll() {
+        updateTitles();
+        renderDaily();
+        renderWeekly();
+        renderMonthly();
+        renderKpisAndPreview();
+      }
+
+      function setView(view) {
+        activeView = view;
+        document.querySelectorAll('.view-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+        $('dailyView').classList.toggle('active', view === 'daily');
+        $('weeklyView').classList.toggle('active', view === 'weekly');
+        $('monthlyView').classList.toggle('active', view === 'monthly');
+        renderAll();
+      }
+
+      function openWorkModal(id) {
+        const work = works.find(w => w.id === id);
+        if (!work) return;
+        selectedWorkId = id;
+        $('modalTitle').textContent = work.workTitle;
+        $('modalBody').innerHTML = `
+          <div class="field"><label>공종 / 위치 / 상태</label><input value="${escapeHtml(work.trade)} · ${escapeHtml(work.location)} · ${escapeHtml(work.status)}" readonly /></div>
+          <div class="field"><label>금일 작업내용</label><textarea readonly>${escapeHtml(work.workContent || '작업내용 미입력')}</textarea></div>
+          <div class="field"><label>투입 현황</label><textarea readonly>인원: ${escapeHtml(work.workers || '-')}\n장비: ${escapeHtml(work.equipment || '-')}\n자재: ${escapeHtml(work.materials || '-')}</textarea></div>
+          <div class="field"><label>안전관리</label><textarea readonly>위험요인: ${escapeHtml(work.hazards || '-')}\n안전조치: ${escapeHtml(work.safetyActions || '-')}\nTBM: ${work.tbm ? '실시' : '미실시'} / 사진: ${work.photo ? '첨부' : '미첨부'}</textarea></div>
+          <div class="field"><label>명일 예정작업</label><textarea readonly>${escapeHtml(work.tomorrowPlan || '미입력')}</textarea></div>
+        `;
+        $('workModal').classList.add('show');
+      }
+
+      function closeWorkModal() { selectedWorkId = null; $('workModal').classList.remove('show'); }
+
+      function editSelectedWork() {
+        const work = works.find(w => w.id === selectedWorkId);
+        if (!work) return;
+        $('workId').value = work.id;
+        $('siteName').value = work.siteName || '';
+        $('reportDate').value = work.date;
+        $('weather').value = work.weather || '맑음';
+        $('temperature').value = work.temperature || '';
+        $('writer').value = work.writer || '';
+        setTrade(work.trade);
+        $('location').value = work.location || '';
+        $('status').value = work.status || '진행';
+        $('workTitle').value = work.workTitle || '';
+        $('workContent').value = work.workContent || '';
+        $('workers').value = work.workers || '';
+        $('equipment').value = work.equipment || '';
+        $('materials').value = work.materials || '';
+        $('hazards').value = work.hazards || '';
+        $('safetyActions').value = work.safetyActions || '';
+        $('delayReason').value = work.delayReason || '';
+        $('tomorrowPlan').value = work.tomorrowPlan || '';
+        tbmDone = !!work.tbm;
+        photoAttached = !!work.photo;
+        updateSwitch($('tbmSwitch'), tbmDone);
+        updateSwitch($('photoSwitch'), photoAttached);
+        currentDate = parseLocalDate(work.date);
+        closeWorkModal();
+        setView('daily');
+        showToast('왼쪽 입력 패널에서 작업을 수정하세요.');
+      }
+
+      function deleteSelectedWork() {
+        if (!selectedWorkId) return;
+        works = works.filter(w => w.id !== selectedWorkId);
+        saveWorks();
+        closeWorkModal();
+        renderAll();
+        showToast('작업이 삭제되었습니다.');
+      }
+
+      function duplicateSelectedToToday() {
+        const work = works.find(w => w.id === selectedWorkId);
+        if (!work) return;
+        const copy = { ...work, id: uid(), date: toDateKey(new Date()), status: '진행' };
+        works.push(copy);
+        saveWorks();
+        closeWorkModal();
+        currentDate = new Date();
+        setView('daily');
+        showToast('선택한 작업을 오늘 날짜로 복제했습니다.');
+      }
+
+      function copyYesterdayWorks() {
+        const target = toDateKey(currentDate);
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(currentDate.getDate() - 1);
+        const sourceWorks = getWorksForDate(yesterday);
+
+        if (!sourceWorks.length) {
+          showToast('전일 등록 작업이 없습니다.');
+          return;
+        }
+
+        const copies = sourceWorks.map(work => ({
+          ...work,
+          id: uid(),
+          date: target,
+          status: work.status === '완료' ? '진행' : work.status,
+          delayReason: '',
+          workContent: work.tomorrowPlan ? work.tomorrowPlan : work.workContent,
+          tomorrowPlan: ''
+        }));
+        works.push(...copies);
+        saveWorks();
+        renderAll();
+        showToast(`전일 작업 ${copies.length}건을 오늘 일보로 복사했습니다.`);
+      }
+
+      function moveDate(direction) {
+        if (activeView === 'daily') currentDate.setDate(currentDate.getDate() + direction);
+        if (activeView === 'weekly') currentDate.setDate(currentDate.getDate() + direction * 7);
+        if (activeView === 'monthly') currentDate.setMonth(currentDate.getMonth() + direction);
+        $('reportDate').value = toDateKey(currentDate);
+        renderAll();
+      }
+
+      function copyReport() {
+        const text = buildReportText(currentDate);
+        navigator.clipboard.writeText(text).then(() => showToast('작업일보 내용을 클립보드에 복사했습니다.'));
+      }
+
+      function downloadReport() {
+        const text = buildReportText(currentDate);
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `작업일보_${toDateKey(currentDate)}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      document.querySelectorAll('.view-tab').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+      document.querySelectorAll('.cat-pill').forEach(btn => btn.addEventListener('click', () => setTrade(btn.dataset.trade)));
+      $('siteForm').addEventListener('submit', saveForm);
+      $('clearFormBtn').addEventListener('click', clearForm);
+      $('templateBtn').addEventListener('click', openTemplateModal);
+      $('templateClose').addEventListener('click', closeTemplateModal);
+      $('copyYesterdayBtn').addEventListener('click', copyYesterdayWorks);
+      $('quickAddBtn').addEventListener('click', () => { clearForm(); $('workTitle').focus(); });
+      $('todayBtn').addEventListener('click', () => { currentDate = new Date(); $('reportDate').value = toDateKey(currentDate); setView('daily'); });
+      $('currentBtn').addEventListener('click', () => { currentDate = new Date(); $('reportDate').value = toDateKey(currentDate); renderAll(); });
+      $('prevBtn').addEventListener('click', () => moveDate(-1));
+      $('nextBtn').addEventListener('click', () => moveDate(1));
+      $('modalClose').addEventListener('click', closeWorkModal);
+      $('modalDelete').addEventListener('click', deleteSelectedWork);
+      $('modalDuplicate').addEventListener('click', duplicateSelectedToToday);
+      $('modalEdit').addEventListener('click', editSelectedWork);
+      $('copyReportBtn').addEventListener('click', copyReport);
+      $('downloadReportBtn').addEventListener('click', downloadReport);
+      $('workModal').addEventListener('click', (e) => { if (e.target.id === 'workModal') closeWorkModal(); });
+      $('templateModal').addEventListener('click', (e) => { if (e.target.id === 'templateModal') closeTemplateModal(); });
+      $('tbmSwitch').addEventListener('click', () => { tbmDone = !tbmDone; updateSwitch($('tbmSwitch'), tbmDone); });
+      $('photoSwitch').addEventListener('click', () => { photoAttached = !photoAttached; updateSwitch($('photoSwitch'), photoAttached); });
+      ['tbmSwitch', 'photoSwitch'].forEach(id => {
+        $(id).addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $(id).click(); }
+        });
+      });
+
+      clearForm();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
