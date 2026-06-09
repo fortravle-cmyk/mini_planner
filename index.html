@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="./style.css?v=30" />
+  <link rel="stylesheet" href="./style.css?v=31" />
 </head>
 
 <body>
@@ -42,22 +42,10 @@
       </div>
 
       <div class="hero-flow">
-        <div>
-          <strong>01</strong>
-          <span>양식 업로드</span>
-        </div>
-        <div>
-          <strong>02</strong>
-          <span>항목 인식</span>
-        </div>
-        <div>
-          <strong>03</strong>
-          <span>입력폼 생성</span>
-        </div>
-        <div>
-          <strong>04</strong>
-          <span>일보 출력</span>
-        </div>
+        <div><strong>01</strong><span>양식 업로드</span></div>
+        <div><strong>02</strong><span>항목 인식</span></div>
+        <div><strong>03</strong><span>입력폼 생성</span></div>
+        <div><strong>04</strong><span>일보 출력</span></div>
       </div>
     </section>
 
@@ -169,22 +157,10 @@
           </div>
 
           <div class="status-grid">
-            <div>
-              <strong id="statusTemplate">미업로드</strong>
-              <span>양식 상태</span>
-            </div>
-            <div>
-              <strong id="statusFields">0</strong>
-              <span>인식 항목</span>
-            </div>
-            <div>
-              <strong id="statusTables">0</strong>
-              <span>표 항목</span>
-            </div>
-            <div>
-              <strong id="statusFilled">0%</strong>
-              <span>입력률</span>
-            </div>
+            <div><strong id="statusTemplate">미업로드</strong><span>양식 상태</span></div>
+            <div><strong id="statusFields">0</strong><span>인식 항목</span></div>
+            <div><strong id="statusTables">0</strong><span>표 항목</span></div>
+            <div><strong id="statusFilled">0%</strong><span>입력률</span></div>
           </div>
         </section>
 
@@ -215,8 +191,7 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const STORAGE_KEY = "adaptiveDailyLogV1";
-
+      const STORAGE_KEY = "adaptiveDailyLogV2";
       const $ = (id) => document.getElementById(id);
 
       let currentTemplateName = "";
@@ -224,75 +199,18 @@
       let formData = {};
       let tableData = {};
       let directoryHandle = null;
+      let previewTimer = null;
 
       const defaultSchema = [
-        {
-          id: "projectName",
-          label: "공사명",
-          type: "input",
-          group: "기본정보",
-          required: true,
-          preview: "meta"
-        },
-        {
-          id: "date",
-          label: "일자",
-          type: "date",
-          group: "기본정보",
-          required: true,
-          preview: "meta"
-        },
-        {
-          id: "day",
-          label: "요일",
-          type: "input",
-          group: "기본정보",
-          readonly: true,
-          preview: "meta"
-        },
-        {
-          id: "weather",
-          label: "날씨",
-          type: "select",
-          options: ["", "맑음", "흐림", "비", "눈", "강풍"],
-          group: "기본정보",
-          preview: "meta"
-        },
-        {
-          id: "temperature",
-          label: "기온",
-          type: "input",
-          group: "기본정보",
-          preview: "meta"
-        },
-        {
-          id: "siteAgent",
-          label: "현장대리인",
-          type: "input",
-          group: "결재정보",
-          preview: "meta"
-        },
-        {
-          id: "supervisor",
-          label: "감독",
-          type: "input",
-          group: "결재정보",
-          preview: "meta"
-        },
-        {
-          id: "todayWork",
-          label: "금일 작업사항",
-          type: "textarea",
-          group: "작업사항",
-          preview: "workBox"
-        },
-        {
-          id: "tomorrowWork",
-          label: "명일 작업사항",
-          type: "textarea",
-          group: "작업사항",
-          preview: "workBox"
-        },
+        { id: "projectName", label: "공사명", type: "input", group: "기본정보", required: true, preview: "meta" },
+        { id: "date", label: "일자", type: "date", group: "기본정보", required: true, preview: "meta" },
+        { id: "day", label: "요일", type: "input", group: "기본정보", readonly: true, preview: "meta" },
+        { id: "weather", label: "날씨", type: "select", options: ["", "맑음", "흐림", "비", "눈", "강풍"], group: "기본정보", preview: "meta" },
+        { id: "temperature", label: "기온", type: "input", group: "기본정보", preview: "meta" },
+        { id: "siteAgent", label: "현장대리인", type: "input", group: "결재정보", preview: "meta" },
+        { id: "supervisor", label: "감독", type: "input", group: "결재정보", preview: "meta" },
+        { id: "todayWork", label: "금일 작업사항", type: "textarea", group: "작업사항", preview: "workBox" },
+        { id: "tomorrowWork", label: "명일 작업사항", type: "textarea", group: "작업사항", preview: "workBox" },
         {
           id: "progress",
           label: "공사추진상황",
@@ -328,20 +246,8 @@
           autoSum: [{ prev: 1, today: 2, total: 3 }],
           preview: "table"
         },
-        {
-          id: "participants",
-          label: "주요작업 참여자명단",
-          type: "textarea",
-          group: "참여자",
-          preview: "textBox"
-        },
-        {
-          id: "specialNote",
-          label: "특기사항",
-          type: "textarea",
-          group: "특기사항",
-          preview: "textBox"
-        }
+        { id: "participants", label: "주요작업 참여자명단", type: "textarea", group: "참여자", preview: "textBox" },
+        { id: "specialNote", label: "특기사항", type: "textarea", group: "특기사항", preview: "textBox" }
       ];
 
       function uid() {
@@ -379,6 +285,31 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#039;");
+      }
+
+      function captureScroll() {
+        return {
+          windowY: window.scrollY,
+          dynamicY: $("dynamicForm") ? $("dynamicForm").scrollTop : 0
+        };
+      }
+
+      function restoreScroll(pos) {
+        if (!pos) return;
+        if ($("dynamicForm")) $("dynamicForm").scrollTop = pos.dynamicY;
+        window.scrollTo({ top: pos.windowY, left: 0, behavior: "instant" });
+      }
+
+      function stablePreviewUpdate() {
+        const pos = captureScroll();
+        clearTimeout(previewTimer);
+
+        previewTimer = setTimeout(() => {
+          renderPreview();
+          renderStatus();
+          saveState(false);
+          requestAnimationFrame(() => restoreScroll(pos));
+        }, 60);
       }
 
       function showToast(message) {
@@ -433,11 +364,8 @@
         tableData = {};
 
         fields.forEach((field) => {
-          if (field.type === "table") {
-            tableData[field.id] = [];
-          } else {
-            formData[field.id] = "";
-          }
+          if (field.type === "table") tableData[field.id] = [];
+          else formData[field.id] = "";
         });
 
         formData.date = todayKey();
@@ -449,7 +377,6 @@
 
         renderAll();
         saveState(false);
-
         showToast("양식 분석이 완료되었습니다.");
       }
 
@@ -489,7 +416,6 @@
 
         container.innerHTML = groups.map((group) => {
           const groupFields = fields.filter((field) => field.group === group);
-
           return `
             <div class="form-section">
               <h4>${escapeHtml(group)}</h4>
@@ -591,78 +517,89 @@
       }
 
       function attachFormEvents() {
-  document.querySelectorAll("[data-field]").forEach((el) => {
-    el.addEventListener("input", () => {
-      formData[el.dataset.field] = el.value;
+        document.querySelectorAll("[data-field]").forEach((el) => {
+          el.addEventListener("input", () => {
+            formData[el.dataset.field] = el.value;
 
-      if (el.dataset.field === "date") {
-        formData.day = getDayName(el.value);
+            if (el.dataset.field === "date") {
+              formData.day = getDayName(el.value);
+              updateDayInputOnly();
+            }
+
+            stablePreviewUpdate();
+          });
+
+          el.addEventListener("change", () => {
+            formData[el.dataset.field] = el.value;
+
+            if (el.dataset.field === "date") {
+              formData.day = getDayName(el.value);
+              updateDayInputOnly();
+            }
+
+            stablePreviewUpdate();
+          });
+        });
+
+        document.querySelectorAll("[data-table]").forEach((el) => {
+          el.addEventListener("input", () => {
+            const tableId = el.dataset.table;
+            const row = Number(el.dataset.row);
+            const col = Number(el.dataset.col);
+
+            tableData[tableId][row][col] = el.value;
+            applyAutoSum(tableId, row);
+            updateAutoSumCell(tableId, row);
+
+            stablePreviewUpdate();
+          });
+        });
       }
 
-      renderPreview();
-      renderStatus();
-      saveState(false);
-    });
-
-    el.addEventListener("change", () => {
-      formData[el.dataset.field] = el.value;
-
-      if (el.dataset.field === "date") {
-        formData.day = getDayName(el.value);
-        renderDynamicForm();
+      function updateDayInputOnly() {
+        const dayInput = document.querySelector('[data-field="day"]');
+        if (dayInput) dayInput.value = formData.day || "";
       }
 
-      renderPreview();
-      renderStatus();
-      saveState(false);
-    });
-  });
+      function updateAutoSumCell(tableId, rowIndex) {
+        const field = fields.find((f) => f.id === tableId);
+        if (!field || !field.autoSum) return;
 
-  document.querySelectorAll("[data-table]").forEach((el) => {
-    el.addEventListener("input", () => {
-      const tableId = el.dataset.table;
-      const row = Number(el.dataset.row);
-      const col = Number(el.dataset.col);
+        field.autoSum.forEach((rule) => {
+          const selector = `[data-table="${tableId}"][data-row="${rowIndex}"][data-col="${rule.total}"]`;
+          const totalInput = document.querySelector(selector);
+          if (totalInput) totalInput.value = tableData[tableId][rowIndex][rule.total] || "";
+        });
+      }
 
-      tableData[tableId][row][col] = el.value;
-
-      applyAutoSum(tableId, row);
-      updateAutoSumCell(tableId, row);
-
-      renderPreview();
-      renderStatus();
-      saveState(false);
-    });
-  });
-}
-
-function updateAutoSumCell(tableId, rowIndex) {
-  const field = fields.find((f) => f.id === tableId);
-  if (!field || !field.autoSum) return;
-
-  field.autoSum.forEach((rule) => {
-    const selector = `[data-table="${tableId}"][data-row="${rowIndex}"][data-col="${rule.total}"]`;
-    const totalInput = document.querySelector(selector);
-
-    if (totalInput) {
-      totalInput.value = tableData[tableId][rowIndex][rule.total] || "";
-    }
-  });
-}
-      
       function addTableRow(tableId) {
         const field = fields.find((f) => f.id === tableId);
         if (!field) return;
 
+        const pos = captureScroll();
+
         if (!tableData[tableId]) tableData[tableId] = [];
         tableData[tableId].push(Array(field.columns.length).fill(""));
 
-        renderAll();
+        renderDynamicForm();
+        renderPreview();
+        renderStatus();
+        saveState(false);
+
+        requestAnimationFrame(() => restoreScroll(pos));
       }
 
       function removeTableRow(tableId, rowIndex) {
+        const pos = captureScroll();
+
         tableData[tableId].splice(rowIndex, 1);
-        renderAll();
+
+        renderDynamicForm();
+        renderPreview();
+        renderStatus();
+        saveState(false);
+
+        requestAnimationFrame(() => restoreScroll(pos));
       }
 
       function applyAutoSum(tableId, rowIndex) {
@@ -677,12 +614,16 @@ function updateAutoSumCell(tableId, rowIndex) {
       }
 
       function removeField(fieldId) {
+        const pos = captureScroll();
+
         fields = fields.filter((field) => field.id !== fieldId);
         delete formData[fieldId];
         delete tableData[fieldId];
 
         renderAll();
         saveState(false);
+
+        requestAnimationFrame(() => restoreScroll(pos));
       }
 
       function addCustomField() {
@@ -694,6 +635,7 @@ function updateAutoSumCell(tableId, rowIndex) {
           return;
         }
 
+        const pos = captureScroll();
         const id = uid();
 
         const field = {
@@ -712,10 +654,11 @@ function updateAutoSumCell(tableId, rowIndex) {
         }
 
         fields.push(field);
-
         $("customFieldName").value = "";
+
         renderAll();
         saveState(false);
+        requestAnimationFrame(() => restoreScroll(pos));
         showToast("사용자 항목이 추가되었습니다.");
       }
 
@@ -935,10 +878,7 @@ function updateAutoSumCell(tableId, rowIndex) {
         }
 
         try {
-          directoryHandle = await window.showDirectoryPicker({
-            mode: "readwrite"
-          });
-
+          directoryHandle = await window.showDirectoryPicker({ mode: "readwrite" });
           showToast("작업일지 저장 폴더가 선택되었습니다.");
         } catch (error) {
           console.warn(error);
@@ -954,10 +894,7 @@ function updateAutoSumCell(tableId, rowIndex) {
 
         try {
           const fileName = "작업일지_누적.csv";
-
-          const fileHandle = await directoryHandle.getFileHandle(fileName, {
-            create: true
-          });
+          const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
 
           let existingText = "";
 
@@ -1056,6 +993,7 @@ function updateAutoSumCell(tableId, rowIndex) {
             if (field.type === "table") tableData[field.id] = [];
             else formData[field.id] = "";
           });
+
           currentTemplateName = "sample_daily_log.pdf";
           $("fileName").textContent = currentTemplateName;
           $("statusTemplate").textContent = "예시";
@@ -1137,9 +1075,7 @@ function updateAutoSumCell(tableId, rowIndex) {
         log(`${file.name} 파일을 업로드했습니다.`, "success");
         log("양식 구조 분석을 시작합니다.");
 
-        setTimeout(() => {
-          initializeTemplate(file);
-        }, 500);
+        setTimeout(() => initializeTemplate(file), 500);
       });
 
       $("addCustomFieldBtn").addEventListener("click", addCustomField);
@@ -1148,7 +1084,6 @@ function updateAutoSumCell(tableId, rowIndex) {
       $("copyBtn").addEventListener("click", copyLog);
       $("printBtn").addEventListener("click", () => window.print());
       $("generateSampleBtn").addEventListener("click", generateSampleData);
-
       $("selectFolderBtn").addEventListener("click", selectWorkLogFolder);
       $("saveCsvBtn").addEventListener("click", saveDailyLogToCsv);
 
