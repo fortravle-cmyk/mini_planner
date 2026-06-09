@@ -591,48 +591,65 @@
       }
 
       function attachFormEvents() {
-        document.querySelectorAll("[data-field]").forEach((el) => {
-          el.addEventListener("input", () => {
-            formData[el.dataset.field] = el.value;
+  document.querySelectorAll("[data-field]").forEach((el) => {
+    el.addEventListener("input", () => {
+      formData[el.dataset.field] = el.value;
 
-            if (el.dataset.field === "date") {
-              formData.day = getDayName(el.value);
-            }
-
-            renderPreview();
-            renderStatus();
-            saveState(false);
-          });
-
-          el.addEventListener("change", () => {
-            formData[el.dataset.field] = el.value;
-
-            if (el.dataset.field === "date") {
-              formData.day = getDayName(el.value);
-              renderDynamicForm();
-            }
-
-            renderPreview();
-            renderStatus();
-            saveState(false);
-          });
-        });
-
-        document.querySelectorAll("[data-table]").forEach((el) => {
-          el.addEventListener("input", () => {
-            const tableId = el.dataset.table;
-            const row = Number(el.dataset.row);
-            const col = Number(el.dataset.col);
-
-            tableData[tableId][row][col] = el.value;
-            applyAutoSum(tableId, row);
-
-            renderAll();
-            saveState(false);
-          });
-        });
+      if (el.dataset.field === "date") {
+        formData.day = getDayName(el.value);
       }
 
+      renderPreview();
+      renderStatus();
+      saveState(false);
+    });
+
+    el.addEventListener("change", () => {
+      formData[el.dataset.field] = el.value;
+
+      if (el.dataset.field === "date") {
+        formData.day = getDayName(el.value);
+        renderDynamicForm();
+      }
+
+      renderPreview();
+      renderStatus();
+      saveState(false);
+    });
+  });
+
+  document.querySelectorAll("[data-table]").forEach((el) => {
+    el.addEventListener("input", () => {
+      const tableId = el.dataset.table;
+      const row = Number(el.dataset.row);
+      const col = Number(el.dataset.col);
+
+      tableData[tableId][row][col] = el.value;
+
+      applyAutoSum(tableId, row);
+      updateAutoSumCell(tableId, row);
+
+      renderPreview();
+      renderStatus();
+      saveState(false);
+    });
+  });
+}
+
+function updateAutoSumCell(tableId, rowIndex) {
+  const field = fields.find((f) => f.id === tableId);
+  if (!field || !field.autoSum) return;
+
+  field.autoSum.forEach((rule) => {
+    const selector = `[data-table="${tableId}"][data-row="${rowIndex}"][data-col="${rule.total}"]`;
+    const totalInput = document.querySelector(selector);
+
+    if (totalInput) {
+      totalInput.value = tableData[tableId][rowIndex][rule.total] || "";
+    }
+  });
+}
+      
       function addTableRow(tableId) {
         const field = fields.find((f) => f.id === tableId);
         if (!field) return;
