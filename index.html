@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="./style.css?v=20" />
+  <link rel="stylesheet" href="./style.css?v=30" />
 </head>
 
 <body>
@@ -23,12 +23,12 @@
       </div>
 
       <div class="top-actions">
-  <button type="button" class="btn secondary" id="selectFolderBtn">작업일지 폴더 선택</button>
-  <button type="button" class="btn secondary" id="saveCsvBtn">CSV 누적 저장</button>
-  <button type="button" class="btn secondary" id="resetBtn">초기화</button>
-  <button type="button" class="btn secondary" id="saveBtn">저장</button>
-  <button type="button" class="btn primary" id="copyBtn">일보 내용 복사</button>
-</div>
+        <button type="button" class="btn secondary" id="selectFolderBtn">작업일지 폴더 선택</button>
+        <button type="button" class="btn secondary" id="saveCsvBtn">CSV 누적 저장</button>
+        <button type="button" class="btn secondary" id="resetBtn">초기화</button>
+        <button type="button" class="btn secondary" id="saveBtn">저장</button>
+        <button type="button" class="btn primary" id="copyBtn">일보 내용 복사</button>
+      </div>
     </header>
 
     <section class="hero-card">
@@ -223,6 +223,7 @@
       let fields = [];
       let formData = {};
       let tableData = {};
+      let directoryHandle = null;
 
       const defaultSchema = [
         {
@@ -384,7 +385,7 @@
         const toast = $("toast");
         toast.textContent = message;
         toast.classList.add("show");
-        setTimeout(() => toast.classList.remove("show"), 2200);
+        setTimeout(() => toast.classList.remove("show"), 2400);
       }
 
       function log(message, type = "normal") {
@@ -400,7 +401,6 @@
 
       function detectTemplateSchema(file) {
         const name = file.name.toLowerCase();
-
         let schema = structuredClone(defaultSchema);
 
         if (name.includes("작업") || name.includes("work")) {
@@ -448,7 +448,7 @@
         $("templateBadge").textContent = file.name.length > 18 ? file.name.slice(0, 18) + "..." : file.name;
 
         renderAll();
-        saveState();
+        saveState(false);
 
         showToast("양식 분석이 완료되었습니다.");
       }
@@ -843,6 +843,136 @@
         return output;
       }
 
+      function makeCsvCell(value) {
+        const safe = String(value ?? "").replaceAll('"', '""');
+        return `"${safe}"`;
+      }
+
+      function summarizeTable(tableId) {
+        const field = fields.find((f) => f.id === tableId);
+        const rows = tableData[tableId] || [];
+
+        if (!field || !rows.length) return "";
+
+        return rows.map((row) => {
+          return field.columns
+            .map((col, index) => `${col}: ${row[index] || "-"}`)
+            .join(" / ");
+        }).join(" || ");
+      }
+
+      function buildCsvHeader() {
+        return [
+          "저장일시",
+          "작성일자",
+          "요일",
+          "공사명",
+          "날씨",
+          "기온",
+          "현장대리인",
+          "감독",
+          "금일 작업사항",
+          "명일 작업사항",
+          "공사추진상황",
+          "장비 투입상황",
+          "자재 반입상황",
+          "인력 투입상황",
+          "주요작업 참여자명단",
+          "특기사항",
+          "업로드 양식명",
+          "전체 복사용 텍스트"
+        ].map(makeCsvCell).join(",");
+      }
+
+      function buildCsvRow() {
+        const now = new Date().toLocaleString("ko-KR");
+
+        const row = [
+          now,
+          formData.date || "",
+          formData.day || "",
+          formData.projectName || "",
+          formData.weather || "",
+          formData.temperature || "",
+          formData.siteAgent || "",
+          formData.supervisor || "",
+          formData.todayWork || "",
+          formData.tomorrowWork || "",
+          summarizeTable("progress"),
+          summarizeTable("equipment"),
+          summarizeTable("material"),
+          summarizeTable("labor"),
+          formData.participants || "",
+          formData.specialNote || "",
+          currentTemplateName || "",
+          buildCopyText()
+        ];
+
+        return row.map(makeCsvCell).join(",");
+      }
+
+      async function selectWorkLogFolder() {
+        if (!window.showDirectoryPicker) {
+          showToast("현재 브라우저는 폴더 선택 저장을 지원하지 않습니다. Chrome 또는 Edge에서 실행해 주세요.");
+          return;
+        }
+
+        try {
+          directoryHandle = await window.showDirectoryPicker({
+            mode: "readwrite"
+          });
+
+          showToast("작업일지 저장 폴더가 선택되었습니다.");
+        } catch (error) {
+          console.warn(error);
+          showToast("폴더 선택이 취소되었습니다.");
+        }
+      }
+
+      async function saveDailyLogToCsv() {
+        if (!directoryHandle) {
+          showToast("먼저 작업일지 폴더를 선택해 주세요.");
+          return;
+        }
+
+        try {
+          const fileName = "작업일지_누적.csv";
+
+          const fileHandle = await directoryHandle.getFileHandle(fileName, {
+            create: true
+          });
+
+          let existingText = "";
+
+          try {
+            const file = await fileHandle.getFile();
+            existingText = await file.text();
+          } catch (error) {
+            existingText = "";
+          }
+
+          const header = buildCsvHeader();
+          const row = buildCsvRow();
+
+          let nextText = "";
+
+          if (!existingText.trim()) {
+            nextText = "\uFEFF" + header + "\n" + row + "\n";
+          } else {
+            nextText = existingText.trimEnd() + "\n" + row + "\n";
+          }
+
+          const writable = await fileHandle.createWritable();
+          await writable.write(nextText);
+          await writable.close();
+
+          showToast("작업일지가 작업일지_누적.csv 파일에 누적 저장되었습니다.");
+        } catch (error) {
+          console.error(error);
+          showToast("CSV 저장 중 오류가 발생했습니다.");
+        }
+      }
+
       function saveState(show = true) {
         const payload = {
           currentTemplateName,
@@ -888,6 +1018,7 @@
         fields = [];
         formData = {};
         tableData = {};
+        directoryHandle = null;
 
         $("templateUpload").value = "";
         $("fileName").textContent = "-";
@@ -1000,6 +1131,9 @@
       $("copyBtn").addEventListener("click", copyLog);
       $("printBtn").addEventListener("click", () => window.print());
       $("generateSampleBtn").addEventListener("click", generateSampleData);
+
+      $("selectFolderBtn").addEventListener("click", selectWorkLogFolder);
+      $("saveCsvBtn").addEventListener("click", saveDailyLogToCsv);
 
       loadState();
       renderAll();
